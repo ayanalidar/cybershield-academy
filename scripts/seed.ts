@@ -3,449 +3,270 @@ import bcrypt from 'bcryptjs';
 
 const db = new PrismaClient();
 
-async function seed() {
-  // --- Hash passwords ---
-  const passwordHash = await bcrypt.hash('password123', 10);
+async function main() {
+  console.log('🌱 Seeding CyberShield Academy...');
 
-  // --- Users ---
-  const admin = await db.user.upsert({
-    where: { email: 'alex@cybershield.academy' },
-    update: { passwordHash },
-    create: {
+  // Clean existing data
+  await db.userBadge.deleteMany();
+  await db.xpLog.deleteMany();
+  await db.ctfSubmission.deleteMany();
+  await db.ctfChallenge.deleteMany();
+  await db.badge.deleteMany();
+  await db.notification.deleteMany();
+  await db.certificate.deleteMany();
+  await db.quizAttempt.deleteMany();
+  await db.quizQuestion.deleteMany();
+  await db.quiz.deleteMany();
+  await db.performanceMetrics.deleteMany();
+  await db.interactionHistory.deleteMany();
+  await db.telemetryLog.deleteMany();
+  await db.labSession.deleteMany();
+  await db.enrollment.deleteMany();
+  await db.embedding.deleteMany();
+  await db.module.deleteMany();
+  await db.course.deleteMany();
+  await db.user.deleteMany();
+
+  // ── Users ──
+  const passwordHash = await bcrypt.hash('demo1234', 10);
+
+  const alex = await db.user.create({
+    data: {
       email: 'alex@cybershield.academy',
       name: 'Alex Chen',
+      passwordHash,
+      role: 'student',
+      xp: 1450,
+      level: 6,
+      streakDays: 7,
+      bio: 'Aspiring cybersecurity professional',
+    },
+  });
+
+  const sarah = await db.user.create({
+    data: {
+      email: 'sarah@cybershield.academy',
+      name: 'Sarah Kim',
+      passwordHash,
+      role: 'student',
+      xp: 8750,
+      level: 11,
+      streakDays: 15,
+    },
+  });
+
+  const james = await db.user.create({
+    data: {
+      email: 'james@cybershield.academy',
+      name: 'James Rodriguez',
+      passwordHash,
+      role: 'student',
+      xp: 7200,
+      level: 10,
+      streakDays: 12,
+    },
+  });
+
+  const admin = await db.user.create({
+    data: {
+      email: 'admin@cybershield.academy',
+      name: 'Admin',
+      passwordHash,
       role: 'admin',
-      passwordHash,
-      bio: 'Platform administrator and cybersecurity expert.',
+      xp: 99999,
+      level: 15,
     },
   });
-  console.log('Admin user:', admin.id, admin.email);
 
-  const instructor = await db.user.upsert({
-    where: { email: 'instructor@example.com' },
-    update: {},
-    create: {
-      email: 'instructor@example.com',
-      name: 'Sarah Mitchell',
-      role: 'instructor',
-      passwordHash,
-      bio: 'Senior penetration tester and course instructor.',
-    },
-  });
-  console.log('Instructor user:', instructor.id, instructor.email);
-
-  // --- Courses ---
-  const course1 = await db.course.upsert({
-    where: { id: 'demo-course' },
-    update: {
-      durationHours: 24,
-      rating: 4.7,
-      studentCount: 128,
-    },
-    create: {
-      id: 'demo-course',
+  // ── Courses ──
+  const course1 = await db.course.create({
+    data: {
+      id: 'c1',
       title: 'Network Security Fundamentals',
-      description:
-        'Comprehensive network security training covering the OSI model, TCP/IP, scanning, cryptography, firewalls, web app security, and incident response.',
-      category: 'cybersecurity',
+      description: 'Master TCP/IP, firewalls, IDS/IPS, and network scanning with hands-on labs.',
+      category: 'networking',
       difficulty: 'intermediate',
       durationHours: 24,
-      rating: 4.7,
-      studentCount: 128,
-      isPublished: true,
+      rating: 4.8,
+      studentCount: 1247,
     },
   });
-  console.log('Course 1:', course1.id, course1.title);
 
-  const course2 = await db.course.upsert({
-    where: { id: 'course-webapp-sec' },
-    update: {},
-    create: {
-      id: 'course-webapp-sec',
+  const course2 = await db.course.create({
+    data: {
+      id: 'c2',
       title: 'Web Application Security',
-      description:
-        'Master the OWASP Top 10 vulnerabilities. Learn to identify, exploit, and remediate SQL injection, XSS, CSRF, SSRF, and modern web application threats.',
-      category: 'web-security',
+      description: 'Deep dive into OWASP Top 10, XSS, SQLi, CSRF, and modern web exploits.',
+      category: 'web',
       difficulty: 'advanced',
-      durationHours: 32,
-      rating: 4.9,
-      studentCount: 85,
-      isPublished: true,
-    },
-  });
-  console.log('Course 2:', course2.id, course2.title);
-
-  const course3 = await db.course.upsert({
-    where: { id: 'course-cloud-sec' },
-    update: {},
-    create: {
-      id: 'course-cloud-sec',
-      title: 'Cloud Security Fundamentals',
-      description:
-        'Learn to secure cloud infrastructure across AWS, Azure, and GCP. Covers IAM, network security, data protection, compliance, and cloud-native threat detection.',
-      category: 'cloud-security',
-      difficulty: 'beginner',
       durationHours: 18,
-      rating: 4.5,
-      studentCount: 210,
-      isPublished: true,
+      rating: 4.9,
+      studentCount: 834,
     },
   });
-  console.log('Course 3:', course3.id, course3.title);
 
-  // --- Modules for Course 1 (Network Security Fundamentals) ---
-  const c1Modules = [
-    {
-      id: 'demo-course-0',
-      title: 'Network Fundamentals',
-      content:
-        'Network fundamentals cover the OSI model and TCP/IP protocol suite. Understanding IP addressing, subnetting, routing, and switching is critical for any cybersecurity professional. The OSI model provides a conceptual framework for understanding how data flows across networks.',
-      orderIndex: 0,
-      isPublished: true,
-      durationMinutes: 45,
+  const course3 = await db.course.create({
+    data: {
+      id: 'c3',
+      title: 'Ethical Hacking & Penetration Testing',
+      description: 'Learn reconnaissance, exploitation, post-exploitation, and report writing.',
+      category: 'pentesting',
+      difficulty: 'advanced',
+      durationHours: 40,
+      rating: 4.7,
+      studentCount: 2103,
     },
-    {
-      id: 'demo-course-1',
-      title: 'TCP/IP Deep Dive',
-      content:
-        'The TCP/IP protocol stack is the backbone of modern networking. This module covers the four layers in detail. We examine the TCP three-way handshake (SYN, SYN-ACK, ACK), sequence numbers, windowing, and flow control mechanisms that ensure reliable data delivery.',
-      orderIndex: 1,
-      isPublished: true,
-      durationMinutes: 50,
-    },
-    {
-      id: 'demo-course-2',
-      title: 'Network Scanning',
-      content:
-        'Network scanning is a critical reconnaissance technique in penetration testing. Tools like Nmap, Masscan, and Zmap allow security professionals to discover hosts, open ports, running services, and operating system fingerprints on target networks.',
-      orderIndex: 2,
-      isPublished: true,
-      durationMinutes: 40,
-    },
-    {
-      id: 'demo-course-3',
-      title: 'Cryptography Basics',
-      content:
-        'Cryptography provides the mathematical foundations for information security. This module covers symmetric encryption (AES, ChaCha20), asymmetric encryption (RSA, ECC), hash functions (SHA-256, bcrypt), digital signatures, and PKI infrastructure.',
-      orderIndex: 3,
-      isPublished: true,
-      durationMinutes: 55,
-    },
-    {
-      id: 'demo-course-4',
-      title: 'Firewall Configuration',
-      content:
-        'Firewalls are the first line of network defense. This module covers iptables, nftables, and cloud-native firewall rules. Students learn to write effective rules for ingress and egress filtering, stateful packet inspection, and NAT configuration.',
-      orderIndex: 4,
-      isPublished: true,
-      durationMinutes: 35,
-    },
-    {
-      id: 'demo-course-5',
-      title: 'Web Application Security',
-      content:
-        'Web application security focuses on the OWASP Top 10 vulnerabilities including SQL injection, cross-site scripting (XSS), cross-site request forgery (CSRF), and server-side request forgery (SSRF).',
-      orderIndex: 5,
-      isPublished: true,
-      durationMinutes: 45,
-    },
-    {
-      id: 'demo-course-6',
-      title: 'Incident Response',
-      content:
-        'Incident response follows the NIST framework covering preparation, detection and analysis, containment, eradication, recovery, and post-incident activity. This module covers SIEM tools, alert triage, and playbook automation.',
-      orderIndex: 6,
-      isPublished: true,
-      durationMinutes: 40,
-    },
-    {
-      id: 'demo-course-7',
-      title: 'Capstone Challenge',
-      content:
-        'The capstone challenge combines all learned skills in a simulated enterprise environment. Students perform a full security assessment including reconnaissance, vulnerability scanning, exploitation, and reporting.',
-      orderIndex: 7,
-      isPublished: true,
-      durationMinutes: 60,
-    },
+  });
+
+  // ── Modules for course1 ──
+  const moduleData = [
+    { title: 'Network Fundamentals', orderIndex: 0, content: '# Network Fundamentals\n\n## OSI Model\nThe OSI (Open Systems Interconnection) model is a conceptual framework...' },
+    { title: 'TCP/IP Deep Dive', orderIndex: 1, content: '# TCP/IP Protocol Suite\n\n## TCP Three-Way Handshake\n1. SYN\n2. SYN-ACK\n3. ACK...' },
+    { title: 'Network Scanning', orderIndex: 2, content: '# Network Scanning\n\n## Nmap\nNmap is the most popular network scanner...' },
+    { title: 'Cryptography Basics', orderIndex: 3, content: '# Cryptography\n\n## Symmetric vs Asymmetric\n...' },
+    { title: 'Firewall Configuration', orderIndex: 4, content: '# Firewall Configuration\n\n## iptables\n...' },
+    { title: 'Web App Security', orderIndex: 5, content: '# Web Application Security\n...' },
+    { title: 'Incident Response', orderIndex: 6, content: '# Incident Response\n...' },
+    { title: 'Capstone Challenge', orderIndex: 7, content: '# Capstone\n...' },
   ];
 
-  for (const m of c1Modules) {
-    await db.module.upsert({
-      where: { id: m.id },
-      update: {},
-      create: {
-        id: m.id,
+  const modules = [];
+  for (const m of moduleData) {
+    const mod = await db.module.create({
+      data: {
         courseId: course1.id,
         title: m.title,
         content: m.content,
-        isPublished: m.isPublished,
         orderIndex: m.orderIndex,
-        durationMinutes: m.durationMinutes,
+        durationMinutes: 30,
+        isPublished: true,
       },
     });
+    modules.push(mod);
   }
-  console.log('Course 1 modules created');
 
-  // --- Quizzes for Course 1 ---
-
-  // Quiz 1: Network Fundamentals
-  const quiz1 = await db.quiz.upsert({
-    where: { id: 'quiz-demo-course-0' },
-    update: {},
-    create: {
-      id: 'quiz-demo-course-0',
-      moduleId: 'demo-course-0',
-      title: 'Network Fundamentals Quiz',
+  // ── Quiz for course1 ──
+  const quiz = await db.quiz.create({
+    data: {
+      moduleId: modules[3].id,
+      title: 'Cryptography Fundamentals Quiz',
       timeLimitSec: 300,
       passingScore: 0.7,
     },
   });
 
-  const quiz1Questions = [
-    {
-      id: 'q1-nf-1',
-      quizId: quiz1.id,
-      questionText: 'How many layers does the OSI model have?',
-      questionType: 'multiple_choice',
-      options: JSON.stringify(['4 layers', '5 layers', '7 layers', '10 layers']),
-      correctAnswer: '7 layers',
-      explanation: 'The OSI (Open Systems Interconnection) model consists of 7 layers: Physical, Data Link, Network, Transport, Session, Presentation, and Application.',
-      points: 1,
-      orderIndex: 0,
-    },
-    {
-      id: 'q1-nf-2',
-      quizId: quiz1.id,
-      questionText: 'Which OSI layer is responsible for routing packets between networks?',
-      questionType: 'multiple_choice',
-      options: JSON.stringify(['Data Link Layer', 'Network Layer', 'Transport Layer', 'Application Layer']),
-      correctAnswer: 'Network Layer',
-      explanation: 'The Network Layer (Layer 3) handles logical addressing and routing, determining the best path for data to travel across interconnected networks.',
-      points: 1,
-      orderIndex: 1,
-    },
-    {
-      id: 'q1-nf-3',
-      quizId: quiz1.id,
-      questionText: 'What is the maximum length of a standard IPv4 address in dotted-decimal notation?',
-      questionType: 'multiple_choice',
-      options: JSON.stringify(['8 characters', '15 characters', '32 characters', '64 characters']),
-      correctAnswer: '15 characters',
-      explanation: 'An IPv4 address in dotted-decimal notation (e.g., 192.168.1.1) has a maximum length of 15 characters (three groups of 3 digits + 3 dots).',
-      points: 1,
-      orderIndex: 2,
-    },
-    {
-      id: 'q1-nf-4',
-      quizId: quiz1.id,
-      questionText: 'Which protocol operates at the Data Link Layer of the OSI model?',
-      questionType: 'multiple_choice',
-      options: JSON.stringify(['IP', 'TCP', 'ARP', 'HTTP']),
-      correctAnswer: 'ARP',
-      explanation: 'ARP (Address Resolution Protocol) operates at Layer 2 (Data Link Layer) to map IP addresses to MAC addresses on a local network.',
-      points: 1,
-      orderIndex: 3,
-    },
+  const quizQs = [
+    { questionText: 'What layer of the OSI model does a firewall primarily operate at?', options: JSON.stringify(['Layer 2', 'Layer 3 (Network)', 'Layer 4', 'Layer 7']), correctAnswer: '1', explanation: 'Firewalls primarily operate at Layer 3.' },
+    { questionText: 'Which tool is used for network scanning?', options: JSON.stringify(['Wireshark', 'Nmap', 'Metasploit', 'Burp Suite']), correctAnswer: '1', explanation: 'Nmap is the standard network scanning tool.' },
+    { questionText: 'What does IDS stand for?', options: JSON.stringify(['Intrusion Detection System', 'Internal Data Security', 'Integrated Defense Shield', 'Intelligent Scanner']), correctAnswer: '0', explanation: 'IDS = Intrusion Detection System.' },
+    { questionText: 'Which protocol provides reliable connection-oriented communication?', options: JSON.stringify(['UDP', 'ICMP', 'TCP', 'ARP']), correctAnswer: '2', explanation: 'TCP provides reliable, connection-oriented communication.' },
+    { questionText: 'What is a DMZ?', options: JSON.stringify(['Encrypt traffic', 'Wireless access', 'Isolate public services', 'Block all traffic']), correctAnswer: '2', explanation: 'A DMZ isolates public-facing services.' },
   ];
 
-  for (const q of quiz1Questions) {
-    await db.quizQuestion.upsert({
-      where: { id: q.id },
-      update: {},
-      create: q,
+  for (const q of quizQs) {
+    await db.quizQuestion.create({
+      data: { quizId: quiz.id, ...q, orderIndex: quizQs.indexOf(q) },
     });
   }
 
-  // Quiz 2: TCP/IP Deep Dive
-  const quiz2 = await db.quiz.upsert({
-    where: { id: 'quiz-demo-course-1' },
-    update: {},
-    create: {
-      id: 'quiz-demo-course-1',
-      moduleId: 'demo-course-1',
-      title: 'TCP/IP Deep Dive Quiz',
-      timeLimitSec: 300,
-      passingScore: 0.7,
-    },
-  });
-
-  const quiz2Questions = [
-    {
-      id: 'q2-tcp-1',
-      quizId: quiz2.id,
-      questionText: 'What are the three packets exchanged during a TCP three-way handshake?',
-      questionType: 'multiple_choice',
-      options: JSON.stringify(['SYN, ACK, FIN', 'SYN, SYN-ACK, ACK', 'ACK, SYN, SYN-ACK', 'SYN, FIN, RST']),
-      correctAnswer: 'SYN, SYN-ACK, ACK',
-      explanation: 'The TCP three-way handshake consists of: SYN (client initiates), SYN-ACK (server acknowledges and syncs), ACK (client acknowledges the server).',
-      points: 1,
-      orderIndex: 0,
-    },
-    {
-      id: 'q2-tcp-2',
-      quizId: quiz2.id,
-      questionText: 'Which protocol provides reliable, connection-oriented data delivery?',
-      questionType: 'multiple_choice',
-      options: JSON.stringify(['UDP', 'TCP', 'ICMP', 'ARP']),
-      correctAnswer: 'TCP',
-      explanation: 'TCP (Transmission Control Protocol) provides reliable, connection-oriented delivery with features like sequencing, acknowledgments, and retransmission.',
-      points: 1,
-      orderIndex: 1,
-    },
-    {
-      id: 'q2-tcp-3',
-      quizId: quiz2.id,
-      questionText: 'What is the default port number for HTTPS?',
-      questionType: 'multiple_choice',
-      options: JSON.stringify(['80', '443', '8080', '8443']),
-      correctAnswer: '443',
-      explanation: 'HTTPS (HTTP over TLS/SSL) uses port 443 by default. HTTP uses port 80.',
-      points: 1,
-      orderIndex: 2,
-    },
-    {
-      id: 'q2-tcp-4',
-      quizId: quiz2.id,
-      questionText: 'What mechanism does TCP use to control the rate of data transmission?',
-      questionType: 'multiple_choice',
-      options: JSON.stringify(['Routing', 'Windowing', 'Fragmentation', 'NAT']),
-      correctAnswer: 'Windowing',
-      explanation: 'TCP uses a sliding window mechanism to control the flow of data. The window size determines how many bytes can be sent before requiring an acknowledgment.',
-      points: 1,
-      orderIndex: 3,
-    },
-  ];
-
-  for (const q of quiz2Questions) {
-    await db.quizQuestion.upsert({
-      where: { id: q.id },
-      update: {},
-      create: q,
-    });
-  }
-
-  // Quiz 3: Network Scanning
-  const quiz3 = await db.quiz.upsert({
-    where: { id: 'quiz-demo-course-2' },
-    update: {},
-    create: {
-      id: 'quiz-demo-course-2',
-      moduleId: 'demo-course-2',
-      title: 'Network Scanning Quiz',
-      timeLimitSec: 300,
-      passingScore: 0.7,
-    },
-  });
-
-  const quiz3Questions = [
-    {
-      id: 'q3-scan-1',
-      quizId: quiz3.id,
-      questionText: 'Which Nmap flag is used to perform a SYN (stealth) scan?',
-      questionType: 'multiple_choice',
-      options: JSON.stringify(['-sS', '-sT', '-sU', '-sA']),
-      correctAnswer: '-sS',
-      explanation: 'The -sS flag performs a SYN scan (half-open scan), which sends SYN packets and analyzes responses without completing the TCP handshake.',
-      points: 1,
-      orderIndex: 0,
-    },
-    {
-      id: 'q3-scan-2',
-      quizId: quiz3.id,
-      questionText: 'What does an open port indicate during a network scan?',
-      questionType: 'multiple_choice',
-      options: JSON.stringify([
-        'The port is filtered by a firewall',
-        'An application is actively accepting connections on that port',
-        'The host is powered off',
-        'The network interface is down',
-      ]),
-      correctAnswer: 'An application is actively accepting connections on that port',
-      explanation: 'An open port means an application (service) is listening and ready to accept connections on that port. This is critical information for security assessments.',
-      points: 1,
-      orderIndex: 1,
-    },
-    {
-      id: 'q3-scan-3',
-      quizId: quiz3.id,
-      questionText: 'Which scanning technique sends packets with no flags set (NULL scan)?',
-      questionType: 'multiple_choice',
-      options: JSON.stringify(['Xmas scan', 'FIN scan', 'NULL scan', 'ACK scan']),
-      correctAnswer: 'NULL scan',
-      explanation: 'A NULL scan (-sN) sends TCP packets with no flags set. According to RFC 793, closed ports should respond with RST while open ports should not respond.',
-      points: 1,
-      orderIndex: 2,
-    },
-    {
-      id: 'q3-scan-4',
-      quizId: quiz3.id,
-      questionText: 'What is the primary purpose of OS fingerprinting in network scanning?',
-      questionType: 'multiple_choice',
-      options: JSON.stringify([
-        'To install software on the target',
-        'To identify the operating system running on a host',
-        'To encrypt network traffic',
-        'To block incoming connections',
-      ]),
-      correctAnswer: 'To identify the operating system running on a host',
-      explanation: 'OS fingerprinting uses responses to specially crafted packets to determine the operating system of a target host, which helps identify OS-specific vulnerabilities.',
-      points: 1,
-      orderIndex: 3,
-    },
-  ];
-
-  for (const q of quiz3Questions) {
-    await db.quizQuestion.upsert({
-      where: { id: q.id },
-      update: {},
-      create: q,
-    });
-  }
-
-  console.log('Quizzes and questions created');
-
-  // --- Enrollments ---
-  await db.enrollment.upsert({
-    where: { id: `enr-${admin.id}-${course1.id}` },
-    update: {},
-    create: {
-      id: `enr-${admin.id}-${course1.id}`,
-      userId: admin.id,
+  // ── Enrollments ──
+  await db.enrollment.create({
+    data: {
+      userId: alex.id,
       courseId: course1.id,
       status: 'active',
-      currentModuleId: 'demo-course-2',
       overallProgress: 0.5,
+      currentModuleId: modules[4].id,
     },
   });
 
-  // --- Notifications ---
-  const notificationsData = [
-    {
-      userId: admin.id,
-      title: 'Welcome to CyberShield Academy',
-      message: 'Start your cybersecurity journey with our Network Security Fundamentals course.',
-      type: 'info',
+  await db.enrollment.create({
+    data: {
+      userId: alex.id,
+      courseId: course3.id,
+      status: 'active',
+      overallProgress: 0.2,
+      currentModuleId: course3.id,
     },
-    {
-      userId: admin.id,
-      title: 'New Course Available',
-      message: 'Web Application Security and Cloud Security Fundamentals courses are now live!',
-      type: 'info',
-    },
-    {
-      userId: instructor.id,
-      title: 'Instructor Account Activated',
-      message: 'Your instructor account has been set up. You can now manage courses and review student progress.',
-      type: 'success',
-    },
+  });
+
+  // ── Badges ──
+  const badgesData = [
+    { name: 'First Blood', description: 'Complete your first challenge', icon: '🎯', category: 'achievement', rarity: 'common', xpReward: 50 },
+    { name: 'Quiz Master', description: 'Score 100% on a quiz', icon: '🧠', category: 'achievement', rarity: 'rare', xpReward: 100 },
+    { name: 'Lab Explorer', description: 'Complete a lab session', icon: '🔬', category: 'achievement', rarity: 'common', xpReward: 75 },
+    { name: 'Focus Champion', description: 'Maintain 90%+ focus', icon: '👁️', category: 'focus', rarity: 'rare', xpReward: 150 },
+    { name: 'CTF Winner', description: 'Capture 5 flags', icon: '🚩', category: 'ctf', rarity: 'epic', xpReward: 200 },
+    { name: 'Cipher Master', description: 'Solve 10 crypto challenges', icon: '🔐', category: 'ctf', rarity: 'legendary', xpReward: 500 },
+    { name: 'Night Owl', description: 'Study past midnight', icon: '🦉', category: 'streak', rarity: 'common', xpReward: 25 },
+    { name: 'Eagle Eye', description: 'Accumulate 2000+ XP', icon: '🦅', category: 'xp', rarity: 'epic', xpReward: 300 },
   ];
 
-  for (const n of notificationsData) {
-    await db.notification.create({ data: n });
+  for (const b of badgesData) {
+    const badge = await db.badge.create({ data: b });
+    if (['First Blood', 'Quiz Master', 'Lab Explorer'].includes(b.name)) {
+      await db.userBadge.create({ data: { userId: alex.id, badgeId: badge.id } });
+    }
   }
 
-  console.log('Enrollments and notifications created');
-  console.log('Seed complete');
+  // ── CTF Challenges ──
+  const ctfData = [
+    { title: 'Flag Hunter', description: 'Find the hidden flag. Look at the challenge name.', category: 'crypto', difficulty: 'easy', points: 50, flag: 'CYBERSHIELD{h1dd3n_1n_pl41n_s1ght}' },
+    { title: "Caesar's Secret", description: 'Decrypt the ROT13 cipher: PloreNerar{e0g3_f1a3_g0_c3a3e}', category: 'crypto', difficulty: 'easy', points: 75, flag: 'CYBERSHIELD{r0t3_s1mpl3_c3s4r}' },
+    { title: 'SQL Injection 101', description: 'Exploit a vulnerable login form. Flag in flags table.', category: 'web', difficulty: 'medium', points: 150, flag: 'CYBERSHIELD{sqli_m4st3r_2024}' },
+    { title: 'Hash Cracker', description: 'SHA-256: 5e884898da28047... Common password.', category: 'crypto', difficulty: 'medium', points: 200, flag: 'CYBERSHIELD{p4ssw0rd_cr4ck3d}' },
+    { title: 'Buffer Overflow', description: 'Exploit gets() in vulnerable C program to call win().', category: 'pwn', difficulty: 'hard', points: 300, flag: 'CYBERSHIELD{buff3r_0v3rfl0w_m4st3r}' },
+    { title: 'Forensic Artifact', description: 'Recover deleted file from MFT entry.', category: 'forensics', difficulty: 'hard', points: 350, flag: 'CYBERSHIELD{d1g_d33p_1nt0_th3_b1ts}' },
+  ];
+
+  for (const c of ctfData) {
+    await db.ctfChallenge.create({ data: c });
+  }
+
+  // ── XP Log ──
+  await db.xpLog.createMany({
+    data: [
+      { userId: alex.id, amount: 100, source: 'enrollment', description: 'Enrolled in Network Security' },
+      { userId: alex.id, amount: 200, source: 'quiz', description: 'Scored 80% on Cryptography Quiz' },
+      { userId: alex.id, amount: 150, source: 'lab', description: 'Completed Firewall Lab' },
+      { userId: alex.id, amount: 50, source: 'badge', description: 'First Blood badge' },
+      { userId: alex.id, amount: 100, source: 'badge', description: 'Quiz Master badge' },
+      { userId: alex.id, amount: 300, source: 'ctf', description: 'Solved SQL Injection 101' },
+      { userId: alex.id, amount: 550, source: 'streak', description: '7-day streak bonus' },
+    ],
+  });
+
+  // ── Notifications ──
+  await db.notification.createMany({
+    data: [
+      { userId: alex.id, title: 'New CTF Challenge', message: 'Buffer Overflow is now live!', type: 'info' },
+      { userId: alex.id, title: 'Quiz Score', message: 'You scored 90% on Network Fundamentals!', type: 'success' },
+      { userId: alex.id, title: 'Badge Earned', message: 'You earned the Quiz Master badge!', type: 'achievement' },
+      { userId: alex.id, title: 'Streak Bonus', message: '7-day streak! +550 XP bonus earned!', type: 'xp' },
+    ],
+  });
+
+  // ── Performance Metrics ──
+  await db.performanceMetrics.create({
+    data: {
+      userId: alex.id,
+      courseId: course1.id,
+      quizAccuracy: 0.82,
+      comprehensionScore: 0.78,
+      averageFocusScore: 0.87,
+      labCompletionRate: 0.68,
+      interactionCount: 142,
+      timeSpentMinutes: 420,
+      strengths: 'Network scanning, TCP/IP, cryptography basics',
+      weaknesses: 'Cloud security, advanced forensics',
+      recommendations: 'Focus on cloud security modules and complete the advanced forensics lab.',
+    },
+  });
+
+  console.log('✅ Seed complete! Demo credentials: alex@cybershield.academy / demo1234');
+  console.log(`   User ID: ${alex.id}`);
 }
 
-seed().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(e => { console.error(e); process.exit(1); })
+  .finally(() => db.$disconnect());

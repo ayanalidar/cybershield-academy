@@ -1,0 +1,2002 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
+     4→import { io, Socket } from 'socket.io-client';
+     5→import ReactMarkdown from 'react-markdown';
+     6→import { motion, AnimatePresence } from 'framer-motion';
+     7→import {
+     8→  Shield,
+     9→  Bell,
+    10→  Send,
+    11→  Terminal as TerminalIcon,
+    12→  BarChart3,
+    13→  Award,
+    14→  User,
+    15→  Target,
+    16→  CheckCircle2,
+    17→  Circle,
+    18→  Clock,
+    19→  TrendingUp,
+    20→  BookOpen,
+    21→  Download,
+    22→  Search,
+    23→  AlertTriangle,
+    24→  Lightbulb,
+    25→  Zap,
+    26→  Activity,
+    27→  Lock,
+    28→  Copy,
+    29→  ExternalLink,
+    30→  ChevronRight,
+    31→  GraduationCap,
+    32→  Users,
+    33→  FileText,
+    34→  FlaskConical,
+    35→  Star,
+    36→  X,
+    37→  LogOut,
+    38→  Settings,
+    39→  LayoutDashboard,
+    40→  type LucideIcon,
+    41→} from 'lucide-react';
+    42→import { Button } from '@/components/ui/button';
+    43→import { Badge } from '@/components/ui/badge';
+    44→import { Progress } from '@/components/ui/progress';
+    45→import { ScrollArea } from '@/components/ui/scroll-area';
+    46→import { Textarea } from '@/components/ui/textarea';
+    47→import { Input } from '@/components/ui/input';
+    48→import { Separator } from '@/components/ui/separator';
+    49→import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+    50→import {
+    51→  Select,
+    52→  SelectContent,
+    53→  SelectItem,
+    54→  SelectTrigger,
+    55→  SelectValue,
+    56→} from '@/components/ui/select';
+    57→import {
+    58→  Dialog,
+    59→  DialogContent,
+    60→  DialogHeader,
+    61→  DialogTitle,
+    62→  DialogDescription,
+    63→} from '@/components/ui/dialog';
+    64→import {
+    65→  DropdownMenu,
+    66→  DropdownMenuContent,
+    67→  DropdownMenuItem,
+    68→  DropdownMenuSeparator,
+    69→  DropdownMenuTrigger,
+    70→} from '@/components/ui/dropdown-menu';
+    71→import {
+    72→  BarChart,
+    73→  Bar,
+    74→  XAxis,
+    75→  YAxis,
+    76→  CartesianGrid,
+    77→  Tooltip as RechartsTooltip,
+    78→  ResponsiveContainer,
+    79→  Cell,
+    80→} from 'recharts';
+    81→import {
+    82→  ChartContainer,
+    83→  ChartTooltip,
+    84→  ChartTooltipContent,
+    85→} from '@/components/ui/chart';
+    86→import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+    87→import { Label } from '@/components/ui/label';
+    88→
+    89→// ─── Types ───────────────────────────────────────────────────────────────────
+    90→
+    91→interface Message {
+    92→  id: string;
+    93→  role: 'user' | 'assistant';
+    94→  content: string;
+    95→  timestamp: string;
+    96→}
+    97→
+    98→interface TelemetryEvent {
+    99→  userId: string;
+   100→  sessionId: string;
+   101→  eventType: 'focus' | 'blur' | 'tab_switch' | 'minimize' | 'idle' | 'visibility_change';
+   102→  eventValue?: string;
+   103→  durationMs?: number;
+   104→  pageUrl?: string;
+   105→  moduleContext?: string;
+   106→  timestamp?: string;
+   107→}
+   108→
+   109→interface LabObjective {
+   110→  id: string;
+   111→  description: string;
+   112→  completed: boolean;
+   113→}
+   114→
+   115→interface CertificateData {
+   116→  id: string;
+   117→  courseName: string;
+   118→  userName: string;
+   119→  issuedAt: string;
+   120→  verificationHash: string;
+   121→  status: string;
+   122→}
+   123→
+   124→interface CourseData {
+   125→  id: string;
+   126→  title: string;
+   127→  description: string;
+   128→  category: string;
+   129→  difficulty: 'beginner' | 'intermediate' | 'advanced';
+   130→  moduleCount: number;
+   131→  studentCount: number;
+   132→  durationHours: number;
+   133→  enrolled: boolean;
+   134→  progress?: number;
+   135→  modules?: { title: string; completed: boolean }[];
+   136→}
+   137→
+   138→interface QuizQuestion {
+   139→  id: string;
+   140→  question: string;
+   141→  options: string[];
+   142→  correctIndex: number;
+   143→  explanation: string;
+   144→}
+   145→
+   146→interface UserData {
+   147→  id: string;
+   148→  name: string;
+   149→  email: string;
+   150→  role: 'student' | 'admin';
+   151→}
+   152→
+   153→// ─── Constants ───────────────────────────────────────────────────────────────
+   154→
+   155→const USER_ID = 'cmruz2evv0000smvx6koj86pd';
+   156→const SESSION_ID = 'session-' + Date.now();
+   157→const COURSE_ID = 'demo-course';
+   158→
+   159→const welcomeMessage: Message = {
+   160→  id: 'welcome',
+   161→  role: 'assistant',
+   162→  content:
+   163→    "# Welcome to CyberShield Academy\n\nI'm **Prof. Shield**, your AI cybersecurity instructor. Today we'll be exploring **Network Security Fundamentals**.\n\nHere's what we'll cover:\n- TCP/IP protocol suite\n- Firewall configuration\n- Intrusion detection systems\n- Network scanning techniques\n\nWhat aspect of network security interests you most?",
+   164→  timestamp: new Date().toISOString(),
+   165→};
+   166→
+   167→const demoCourses: CourseData[] = [
+   168→  {
+   169→    id: 'demo-course',
+   170→    title: 'Network Security Fundamentals',
+   171→    description: 'Master TCP/IP, firewalls, IDS/IPS, and network scanning with hands-on labs. Build a solid foundation for your cybersecurity career.',
+   172→    category: 'cybersecurity',
+   173→    difficulty: 'intermediate',
+   174→    moduleCount: 8,
+   175→    studentCount: 1247,
+   176→    durationHours: 24,
+   177→    enrolled: true,
+   178→    progress: 50,
+   179→    modules: [
+   180→      { title: 'Network Fundamentals', completed: true },
+   181→      { title: 'TCP/IP Deep Dive', completed: true },
+   182→      { title: 'Network Scanning', completed: true },
+   183→      { title: 'Cryptography Basics', completed: true },
+   184→      { title: 'Firewall Configuration', completed: false },
+   185→      { title: 'Web App Security', completed: false },
+   186→      { title: 'Incident Response', completed: false },
+   187→      { title: 'Capstone Challenge', completed: false },
+   188→    ],
+   189→  },
+   190→  {
+   191→    id: 'course-webapp-sec',
+   192→    title: 'Web Application Security',
+   193→    description: 'Deep dive into OWASP Top 10, XSS, SQLi, CSRF, and modern web exploit techniques with real-world vulnerable applications.',
+   194→    category: 'cybersecurity',
+   195→    difficulty: 'advanced',
+   196→    moduleCount: 6,
+   197→    studentCount: 834,
+   198→    durationHours: 18,
+   199→    enrolled: false,
+   200→    modules: [
+   201→      { title: 'OWASP Top 10 Overview', completed: false },
+   202→      { title: 'Cross-Site Scripting (XSS)', completed: false },
+   203→      { title: 'SQL Injection', completed: false },
+   204→      { title: 'CSRF & Session Attacks', completed: false },
+   205→      { title: 'API Security', completed: false },
+   206→      { title: 'Advanced Exploitation', completed: false },
+   207→    ],
+   208→  },
+   209→  {
+   210→    id: 'course-cloud-sec',
+   211→    title: 'Cloud Security Fundamentals',
+   212→    description: 'AWS, Azure, and GCP security fundamentals including IAM, network policies, container security, and compliance frameworks.',
+   213→    category: 'cybersecurity',
+   214→    difficulty: 'beginner',
+   215→    moduleCount: 7,
+   216→    studentCount: 2103,
+   217→    durationHours: 21,
+   218→    enrolled: false,
+   219→    modules: [
+   220→      { title: 'Cloud Computing Basics', completed: false },
+   221→      { title: 'Identity & Access Management', completed: false },
+   222→      { title: 'Network Security in the Cloud', completed: false },
+   223→      { title: 'Container Security', completed: false },
+   224→      { title: 'Serverless Security', completed: false },
+   225→      { title: 'Compliance & Governance', completed: false },
+   226→      { title: 'Cloud Incident Response', completed: false },
+   227→    ],
+   228→  },
+   229→  {
+   230→    id: 'course-pentest',
+   231→    title: 'Ethical Hacking & Penetration Testing',
+   232→    description: 'Learn professional penetration testing methodologies, tool usage, report writing, and responsible disclosure practices.',
+   233→    category: 'cybersecurity',
+   234→    difficulty: 'advanced',
+   235→    moduleCount: 10,
+   236→    studentCount: 567,
+   237→    durationHours: 30,
+   238→    enrolled: false,
+   239→    modules: [],
+   240→  },
+   241→  {
+   242→    id: 'course-malware',
+   243→    title: 'Malware Analysis & Reverse Engineering',
+   244→    description: 'Static and dynamic malware analysis, disassembly, sandboxing, and understanding advanced threat actor techniques.',
+   245→    category: 'cybersecurity',
+   246→    difficulty: 'advanced',
+   247→    moduleCount: 8,
+   248→    studentCount: 423,
+   249→    durationHours: 26,
+   250→    enrolled: false,
+   251→    modules: [],
+   252→  },
+   253→  {
+   254→    id: 'course-iam',
+   255→    title: 'Identity & Access Management',
+   256→    description: 'Comprehensive IAM fundamentals covering authentication, authorization, SSO, MFA, and zero-trust architecture principles.',
+   257→    category: 'cybersecurity',
+   258→    difficulty: 'beginner',
+   259→    moduleCount: 6,
+   260→    studentCount: 1589,
+   261→    durationHours: 16,
+   262→    enrolled: false,
+   263→    modules: [],
+   264→  },
+   265→];
+   266→
+   267→const demoPerformance = {
+   268→  userName: 'Alex Chen',
+   269→  courseName: 'Network Security Fundamentals',
+   270→  modulesCompleted: 4,
+   271→  totalModules: 8,
+   272→  overallQuizAccuracy: 0.82,
+   273→  averageFocusScore: 78,
+   274→  labCompletionRate: 0.75,
+   275→  totalInteractionCount: 347,
+   276→  totalTimeSpentMinutes: 1265,
+   277→  strengths: [
+   278→    'Strong theoretical understanding in: Network Scanning, Cryptography Basics',
+   279→    'Excellent practical skills demonstrated in: Firewall Configuration',
+   280→  ],
+   281→  weaknesses: ['Areas needing theoretical review: Web Application Security'],
+   282→  recommendations: ['Review OWASP Top 10 in detail', 'Complete remaining lab exercises'],
+   283→  moduleBreakdown: [
+   284→    { moduleTitle: 'Network Fundamentals', quizAccuracy: 0.9, comprehensionScore: 0.88, focusScore: 85, labCompleted: true, labScore: 0.92, timeSpentMinutes: 180 },
+   285→    { moduleTitle: 'TCP/IP Deep Dive', quizAccuracy: 0.85, comprehensionScore: 0.82, focusScore: 80, labCompleted: true, labScore: 0.88, timeSpentMinutes: 210 },
+   286→    { moduleTitle: 'Network Scanning', quizAccuracy: 0.78, comprehensionScore: 0.75, focusScore: 72, labCompleted: true, labScore: 0.8, timeSpentMinutes: 195 },
+   287→    { moduleTitle: 'Cryptography Basics', quizAccuracy: 0.82, comprehensionScore: 0.8, focusScore: 78, labCompleted: true, labScore: 0.85, timeSpentMinutes: 220 },
+   288→    { moduleTitle: 'Firewall Config', quizAccuracy: 0.75, comprehensionScore: 0.7, focusScore: 68, labCompleted: true, labScore: 0.78, timeSpentMinutes: 160 },
+   289→    { moduleTitle: 'Web App Security', quizAccuracy: 0.65, comprehensionScore: 0.6, focusScore: 62, labCompleted: false, labScore: null, timeSpentMinutes: 145 },
+   290→    { moduleTitle: 'Incident Response', quizAccuracy: 0.88, comprehensionScore: 0.85, focusScore: 82, labCompleted: false, labScore: null, timeSpentMinutes: 90 },
+   291→    { moduleTitle: 'Capstone', quizAccuracy: 0, comprehensionScore: 0, focusScore: 0, labCompleted: false, labScore: null, timeSpentMinutes: 65 },
+   292→  ],
+   293→};
+   294→
+   295→const demoCertificates: CertificateData[] = [
+   296→  { id: 'cert-001', courseName: 'Network Security Fundamentals', userName: 'Alex Chen', issuedAt: '2026-06-15T10:00:00Z', verificationHash: 'sha256:a1b2c3d4e5f67890abcdef1234567890fedcba0987654321abcdef123456', status: 'active' },
+   297→  { id: 'cert-002', courseName: 'Cryptography Fundamentals', userName: 'Alex Chen', issuedAt: '2026-05-20T14:30:00Z', verificationHash: 'sha256:9876543210abcdef0987654321abcdef1234567890abcdef12345678abcd', status: 'active' },
+   298→  { id: 'cert-003', courseName: 'Ethical Hacking Basics', userName: 'Alex Chen', issuedAt: '2026-04-10T09:15:00Z', verificationHash: 'sha256:fedcba0987654321abcdef1234567890123456789abcdef12345678abcd', status: 'active' },
+   299→];
+   300→
+   301→const labTopics = [
+   302→  { value: 'network-scanning', label: 'Network Scanning with Nmap' },
+   303→  { value: 'web-security', label: 'Web Application Security' },
+   304→  { value: 'cryptography', label: 'Cryptography & Hashing' },
+   305→  { value: 'firewall-config', label: 'Firewall Configuration' },
+   306→  { value: 'malware-analysis', label: 'Malware Analysis' },
+   307→];
+   308→
+   309→const defaultLabObjectives: LabObjective[] = [
+   310→  { id: 'obj-1', description: 'Perform a basic network scan using nmap', completed: false },
+   311→  { id: 'obj-2', description: 'Identify open ports and running services', completed: false },
+   312→  { id: 'obj-3', description: 'Analyze the scan output for vulnerabilities', completed: false },
+   313→  { id: 'obj-4', description: 'Document findings in a security report', completed: false },
+   314→];
+   315→
+   316→const quickTopics = [
+   317→  'Network Protocols',
+   318→  'Encryption Basics',
+   319→  'Firewall Rules',
+   320→  'Port Scanning',
+   321→  'OWASP Top 10',
+   322→  'Incident Response',
+   323→  'Zero Trust',
+   324→  'VPN Tunnels',
+   325→];
+   326→
+   327→const demoQuiz: QuizQuestion[] = [
+   328→  { id: 'q1', question: 'Which TCP port is commonly used for HTTPS?', options: ['Port 80', 'Port 443', 'Port 22', 'Port 8080'], correctIndex: 1, explanation: 'HTTPS (HTTP over TLS/SSL) operates on port 443 by default.' },
+   329→  { id: 'q2', question: 'What type of firewall inspects packet headers and makes decisions based on source/destination IP and port?', options: ['Stateful Firewall', 'Packet Filtering Firewall', 'Application-Level Gateway', 'Next-Gen Firewall'], correctIndex: 1, explanation: 'Packet filtering firewalls operate at the network layer and make decisions based on IP addresses, ports, and protocols.' },
+   330→  { id: 'q3', question: 'Which tool is primarily used for network scanning and port discovery?', options: ['Wireshark', 'Nmap', 'Metasploit', 'Burp Suite'], correctIndex: 1, explanation: 'Nmap (Network Mapper) is the most widely used tool for network scanning and port discovery.' },
+   331→  { id: 'q4', question: 'What does a SYN flood attack target?', options: ['DNS Servers', 'TCP Handshake Process', 'SSL Certificates', 'Routing Tables'], correctIndex: 1, explanation: 'SYN flood attacks exploit the TCP three-way handshake by sending many SYN requests without completing the handshake.' },
+   332→  { id: 'q5', question: 'Which protocol operates at Layer 7 of the OSI model?', options: ['IP', 'TCP', 'HTTP', 'Ethernet'], correctIndex: 2, explanation: 'HTTP (Hypertext Transfer Protocol) is an application layer (Layer 7) protocol.' },
+   333→];
+   334→
+   335→const chartConfig = { accuracy: { label: 'Quiz Accuracy', color: '#00f0ff' } };
+   336→
+   337→const navItems = [
+   338→  { key: 'classroom', label: 'Classroom', icon: BookOpen },
+   339→  { key: 'courses', label: 'Courses', icon: GraduationCap },
+   340→  { key: 'lab', label: 'Lab', icon: TerminalIcon },
+   341→  { key: 'analytics', label: 'Analytics', icon: BarChart3 },
+   342→  { key: 'certificates', label: 'Certificates', icon: Award },
+   343→  { key: 'admin', label: 'Admin', icon: LayoutDashboard },
+   344→];
+   345→
+   346→// ─── Helper Functions ────────────────────────────────────────────────────────
+   347→
+   348→function formatTime(isoString: string): string {
+   349→  const d = new Date(isoString);
+   350→  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+   351→}
+   352→
+   353→function formatDate(isoString: string): string {
+   354→  const d = new Date(isoString);
+   355→  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+   356→}
+   357→
+   358→function getFocusColor(score: number): string {
+   359→  if (score >= 75) return 'text-emerald-400';
+   360→  if (score >= 50) return 'text-amber-400';
+   361→  return 'text-pink-500';
+   362→}
+   363→
+   364→function getFocusStroke(score: number): string {
+   365→  if (score >= 75) return '#10b981';
+   366→  if (score >= 50) return '#f59e0b';
+   367→  return '#ec4899';
+   368→}
+   369→
+   370→function getFocusLabel(score: number): string {
+   371→  if (score >= 75) return 'Focused';
+   372→  if (score >= 50) return 'Distracted';
+   373→  return 'Inactive';
+   374→}
+   375→
+   376→function getDifficultyColor(diff: string) {
+   377→  if (diff === 'beginner') return { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' };
+   378→  if (diff === 'intermediate') return { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' };
+   379→  return { bg: 'bg-pink-500/15', text: 'text-pink-400', border: 'border-pink-500/30' };
+   380→}
+   381→
+   382→// ─── HoloCard wrapper ────────────────────────────────────────────────────────
+   383→
+   384→function HoloCard({ children, className = '', glowColor = 'cyan', noPad = false }: { children: ReactNode; className?: string; glowColor?: 'cyan' | 'emerald' | 'violet' | 'amber' | 'pink'; noPad?: boolean }) {
+   385→  const borderColors: Record<string, string> = {
+   386→    cyan: 'border-cyan-500/20 hover:border-cyan-400/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.15)]',
+   387→    emerald: 'border-emerald-500/20 hover:border-emerald-400/40 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]',
+   388→    violet: 'border-violet-500/20 hover:border-violet-400/40 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)]',
+   389→    amber: 'border-amber-500/20 hover:border-amber-400/40 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]',
+   390→    pink: 'border-pink-500/20 hover:border-pink-400/40 hover:shadow-[0_0_30px_rgba(236,72,153,0.15)]',
+   391→  };
+   392→  const cornerColors: Record<string, string> = {
+   393→    cyan: 'border-cyan-500/40',
+   394→    emerald: 'border-emerald-500/40',
+   395→    violet: 'border-violet-500/40',
+   396→    amber: 'border-amber-500/40',
+   397→    pink: 'border-pink-500/40',
+   398→  };
+   399→  return (
+   400→    <div className={`relative bg-slate-900/60 backdrop-blur-xl rounded-xl border transition-all duration-500 ${borderColors[glowColor]} ${className}`}>
+   401→      {/* HUD Corners */}
+   402→      <div className={`absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 rounded-tl-xl ${cornerColors[glowColor]}`} />
+   403→      <div className={`absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 rounded-br-xl ${cornerColors[glowColor]}`} />
+   404→      {noPad ? children : <div className="p-4 sm:p-5">{children}</div>}
+   405→    </div>
+   406→  );
+   407→}
+   408→
+   409→// ─── Particle Background Canvas ─────────────────────────────────────────────
+   410→
+   411→function ParticleBackground() {
+   412→  const canvasRef = useRef<HTMLCanvasElement>(null);
+   413→
+   414→  useEffect(() => {
+   415→    const canvas = canvasRef.current;
+   416→    if (!canvas) return;
+   417→    const ctx = canvas.getContext('2d');
+   418→    if (!ctx) return;
+   419→
+   420→    let animId: number;
+   421→    let particles: { x: number; y: number; vx: number; vy: number; size: number; opacity: number; color: string }[] = [];
+   422→    let gridOffset = 0;
+   423→
+   424→    const resize = () => {
+   425→      canvas.width = window.innerWidth;
+   426→      canvas.height = window.innerHeight;
+   427→    };
+   428→    resize();
+   429→    window.addEventListener('resize', resize);
+   430→
+   431→    // Create particles
+   432→    for (let i = 0; i < 60; i++) {
+   433→      particles.push({
+   434→        x: Math.random() * canvas.width,
+   435→        y: Math.random() * canvas.height,
+   436→        vx: (Math.random() - 0.5) * 0.3,
+   437→        vy: -Math.random() * 0.5 - 0.1,
+   438→        size: Math.random() * 2 + 0.5,
+   439→        opacity: Math.random() * 0.5 + 0.1,
+   440→        color: Math.random() > 0.5 ? '#00f0ff' : '#10b981',
+   441→      });
+   442→    }
+   443→
+   444→    const drawGrid = (time: number) => {
+   445→      const gridSpacing = 60;
+   446→      const perspective = 0.003;
+   447→      const pulse = Math.sin(time * 0.001) * 0.15 + 0.2;
+   448→      gridOffset = (gridOffset + 0.15) % gridSpacing;
+   449→
+   450→      ctx.strokeStyle = `rgba(0, 240, 255, ${pulse * 0.3})`;
+   451→      ctx.lineWidth = 0.5;
+   452→      ctx.beginPath();
+   453→
+   454→      // Horizontal lines (perspective grid)
+   455→      for (let y = canvas.height * 0.6; y < canvas.height; y += gridSpacing * 0.6) {
+   456→        const factor = (y - canvas.height * 0.5) / (canvas.height * 0.5);
+   457→        ctx.globalAlpha = factor * pulse;
+   458→        ctx.moveTo(0, y);
+   459→        ctx.lineTo(canvas.width, y);
+   460→      }
+   461→      ctx.stroke();
+   462→
+   463→      // Vertical lines converging to horizon
+   464→      ctx.beginPath();
+   465→      const vanishX = canvas.width / 2;
+   466→      const vanishY = canvas.height * 0.45;
+   467→      for (let i = -15; i <= 15; i++) {
+   468→        const x = vanishX + i * gridSpacing * 1.5;
+   469→        ctx.globalAlpha = pulse * 0.25;
+   470→        ctx.moveTo(vanishX, vanishY);
+   471→        ctx.lineTo(x + (x - vanishX) * 3, canvas.height);
+   472→      }
+   473→      ctx.stroke();
+   474→      ctx.globalAlpha = 1;
+   475→    };
+   476→
+   477→    const animate = (time: number) => {
+   478→      ctx.clearRect(0, 0, canvas.width, canvas.height);
+   479→
+   480→      // Draw perspective grid
+   481→      drawGrid(time);
+   482→
+   483→      // Draw particles
+   484→      particles.forEach((p) => {
+   485→        p.x += p.vx;
+   486→        p.y += p.vy;
+   487→
+   488→        if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+   489→        if (p.x < -10) p.x = canvas.width + 10;
+   490→        if (p.x > canvas.width + 10) p.x = -10;
+   491→
+   492→        ctx.beginPath();
+   493→        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+   494→        ctx.fillStyle = p.color;
+   495→        ctx.globalAlpha = p.opacity;
+   496→        ctx.fill();
+   497→
+   498→        // Glow
+   499→        ctx.beginPath();
+   500→        ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+   501→        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
+   502→        grad.addColorStop(0, p.color);
+   503→        grad.addColorStop(1, 'transparent');
+   504→        ctx.fillStyle = grad;
+   505→        ctx.globalAlpha = p.opacity * 0.3;
+   506→        ctx.fill();
+   507→      });
+   508→      ctx.globalAlpha = 1;
+   509→
+   510→      animId = requestAnimationFrame(animate);
+   511→    };
+   512→
+   513→    animId = requestAnimationFrame(animate);
+   514→
+   515→    return () => {
+   516→      cancelAnimationFrame(animId);
+   517→      window.removeEventListener('resize', resize);
+   518→    };
+   519→  }, []);
+   520→
+   521→  return <canvas ref={canvasRef} className="fixed inset-0 z-[-1] pointer-events-none" />;
+   522→}
+   523→
+   524→// ─── Focus Score Ring ────────────────────────────────────────────────────────
+   525→
+   526→function FocusScoreRing({ score, size = 72 }: { score: number; size?: number }) {
+   527→  const circumference = 2 * Math.PI * 15.9155;
+   528→  const offset = circumference - (score / 100) * circumference;
+   529→  return (
+   530→    <div className="relative" style={{ width: size, height: size }}>
+   531→      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+   532→        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(0,240,255,0.1)" strokeWidth="2.5" />
+   533→        <path
+   534→          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+   535→          fill="none"
+   536→          stroke={getFocusStroke(score)}
+   537→          strokeWidth="2.5"
+   538→          strokeDasharray={`${score}, 100`}
+   539→          strokeLinecap="round"
+   540→          className="transition-all duration-1000"
+   541→          style={{ filter: `drop-shadow(0 0 6px ${getFocusStroke(score)}60)` }}
+   542→        />
+   543→      </svg>
+   544→      <div className="absolute inset-0 flex flex-col items-center justify-center">
+   545→        <span className="text-sm font-bold" style={{ color: getFocusStroke(score), textShadow: `0 0 10px ${getFocusStroke(score)}80` }}>{score}</span>
+   546→        <span className="text-[8px] text-slate-500 uppercase tracking-wider">Focus</span>
+   547→      </div>
+   548→    </div>
+   549→  );
+   550→}
+   551→
+   552→// ─── Typing Indicator ────────────────────────────────────────────────────────
+   553→
+   554→function TypingIndicator() {
+   555→  return (
+   556→    <div className="flex items-center gap-2 px-4 py-3">
+   557→      <div className="flex gap-1.5">
+   558→        <span className="h-2 w-2 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+   559→        <span className="h-2 w-2 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+   560→        <span className="h-2 w-2 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+   561→      </div>
+   562→      <span className="text-xs text-cyan-400/70">Prof. Shield is thinking...</span>
+   563→    </div>
+   564→  );
+   565→}
+   566→
+   567→// ─── Custom Scrollbar Style ──────────────────────────────────────────────────
+   568→
+   569→function CustomScrollbar({ children, className = '' }: { children: ReactNode; className?: string }) {
+   570→  return (
+   571→    <ScrollArea className={className}>
+   572→      {children}
+   573→    </ScrollArea>
+   574→  );
+   575→}
+   576→
+   577→// ─── Main Component ──────────────────────────────────────────────────────────
+   578→
+   579→export default function CyberShieldDashboard() {
+   580→  // Auth state
+   581→  const [isLoggedIn, setIsLoggedIn] = useState(false);
+   582→  const [isSignUp, setIsSignUp] = useState(false);
+   583→  const [user, setUser] = useState<UserData>({ id: USER_ID, name: 'Alex Chen', email: 'alex@cybershield.academy', role: 'admin' });
+   584→  const [loginEmail, setLoginEmail] = useState('');
+   585→  const [loginPassword, setLoginPassword] = useState('');
+   586→  const [loginLoading, setLoginLoading] = useState(false);
+   587→
+   588→  // Navigation state
+   589→  const [view, setView] = useState('classroom');
+   590→  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+   591→
+   592→  // Chat state
+   593→  const [chatMessages, setChatMessages] = useState<Message[]>([welcomeMessage]);
+   594→  const [chatInput, setChatInput] = useState('');
+   595→  const [isStreaming, setIsStreaming] = useState(false);
+   596→
+   597→  // Terminal / Lab state
+   598→  const [terminalLines, setTerminalLines] = useState<string[]>([]);
+   599→  const [terminalInput, setTerminalInput] = useState('');
+   600→  const [labActive, setLabActive] = useState(false);
+   601→  const [labTopic, setLabTopic] = useState('');
+   602→  const [labObjectives, setLabObjectives] = useState<LabObjective[]>(defaultLabObjectives);
+   603→  const [labStatus, setLabStatus] = useState<'idle' | 'starting' | 'running' | 'completed' | 'failed'>('idle');
+   604→  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+   605→
+   606→  // Focus & Progress state
+   607→  const [focusScore, setFocusScore] = useState(85);
+   608→  const [progressData, setProgressData] = useState(demoPerformance);
+   609→
+   610→  // Certificates state
+   611→  const [certificates, setCertificates] = useState<CertificateData[]>(demoCertificates);
+   612→  const [verifyHash, setVerifyHash] = useState('');
+   613→  const [verifyResult, setVerifyResult] = useState<{ valid: boolean; message: string } | null>(null);
+   614→  const [isVerifying, setIsVerifying] = useState(false);
+   615→
+   616→  // Courses state
+   617→  const [courses, setCourses] = useState<CourseData[]>(demoCourses);
+   618→  const [courseFilter, setCourseFilter] = useState('all');
+   619→  const [selectedCourse, setSelectedCourse] = useState<CourseData | null>(null);
+   620→  const [courseModalOpen, setCourseModalOpen] = useState(false);
+   621→  const [enrollingCourse, setEnrollingCourse] = useState<string | null>(null);
+   622→
+   623→  // Quiz state
+   624→  const [quizOpen, setQuizOpen] = useState(false);
+   625→  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>(demoQuiz);
+   626→  const [quizIndex, setQuizIndex] = useState(0);
+   627→  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
+   628→  const [quizSubmitted, setQuizSubmitted] = useState(false);
+   629→  const [quizLoading, setQuizLoading] = useState(false);
+   630→
+   631→  // Admin state
+   632→  const [adminStats, setAdminStats] = useState({ users: 1247, courses: 6, enrollments: 3421, certificates: 891, labs: 2156, avgScore: 78 });
+   633→
+   634→  // Notifications
+   635→  const [notifications] = useState([
+   636→    { id: 'n1', text: 'New module available: Incident Response', time: '2m ago', read: false },
+   637→    { id: 'n2', text: 'Your certificate is ready to download', time: '1h ago', read: false },
+   638→    { id: 'n3', text: 'Lab session expires in 30 minutes', time: '3h ago', read: true },
+   639→  ]);
+   640→
+   641→  // Refs
+   642→  const chatEndRef = useRef<HTMLDivElement>(null);
+   643→  const terminalEndRef = useRef<HTMLDivElement>(null);
+   644→  const terminalInputRef = useRef<HTMLInputElement>(null);
+   645→  const chatTextareaRef = useRef<HTMLTextAreaElement>(null);
+   646→  const socketRef = useRef<Socket | null>(null);
+   647→  const telemetryBufferRef = useRef<TelemetryEvent[]>([]);
+   648→  const telemetryIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+   649→  const commandHistoryIndexRef = useRef(-1);
+   650→
+   651→  // ─── Telemetry ──────────────────────────────────────────────────────────
+   652→
+   653→  const addTelemetryEvent = useCallback(
+   654→    (eventType: TelemetryEvent['eventType'], eventValue?: string, durationMs?: number) => {
+   655→      telemetryBufferRef.current.push({
+   656→        userId: user.id,
+   657→        sessionId: SESSION_ID,
+   658→        eventType,
+   659→        eventValue,
+   660→        durationMs,
+   661→        pageUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+   662→        moduleContext: view,
+   663→        timestamp: new Date().toISOString(),
+   664→      });
+   665→    },
+   666→    [user.id, view]
+   667→  );
+   668→
+   669→  const flushTelemetry = useCallback(async () => {
+   670→    const events = telemetryBufferRef.current.splice(0, telemetryBufferRef.current.length);
+   671→    if (events.length === 0) return;
+   672→    try {
+   673→      await fetch('/api/telemetry', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ events }) });
+   674→    } catch { /* silent */ }
+   675→  }, []);
+   676→
+   677→  useEffect(() => {
+   678→    const handleVisibilityChange = () => addTelemetryEvent('visibility_change', document.hidden ? 'tab_hidden' : 'tab_visible');
+   679→    const handleFocus = () => addTelemetryEvent('focus');
+   680→    const handleBlur = () => addTelemetryEvent('blur');
+   681→    document.addEventListener('visibilitychange', handleVisibilityChange);
+   682→    window.addEventListener('focus', handleFocus);
+   683→    window.addEventListener('blur', handleBlur);
+   684→    telemetryIntervalRef.current = setInterval(flushTelemetry, 8000);
+   685→    return () => {
+   686→      document.removeEventListener('visibilitychange', handleVisibilityChange);
+   687→      window.removeEventListener('focus', handleFocus);
+   688→      window.removeEventListener('blur', handleBlur);
+   689→      if (telemetryIntervalRef.current) clearInterval(telemetryIntervalRef.current);
+   690→      flushTelemetry();
+   691→    };
+   692→  }, [addTelemetryEvent, flushTelemetry]);
+   693→
+   694→  // ─── Chat ───────────────────────────────────────────────────────────────
+   695→
+   696→  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages]);
+   697→
+   698→  const handleSendMessage = async () => {
+   699→    const trimmed = chatInput.trim();
+   700→    if (!trimmed || isStreaming) return;
+   701→    const userMsg: Message = { id: `msg-${Date.now()}`, role: 'user', content: trimmed, timestamp: new Date().toISOString() };
+   702→    setChatMessages((prev) => [...prev, userMsg]);
+   703→    setChatInput('');
+   704→    setIsStreaming(true);
+   705→    addTelemetryEvent('focus', 'chat_message_sent');
+   706→    const assistantId = `msg-${Date.now() + 1}`;
+   707→    setChatMessages((prev) => [...prev, { id: assistantId, role: 'assistant', content: '', timestamp: new Date().toISOString() }]);
+   708→    try {
+   709→      const history = chatMessages.filter((m) => m.id !== 'welcome').slice(-10).map((m) => ({ role: m.role, content: m.content }));
+   710→      const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, sessionId: SESSION_ID, courseId: COURSE_ID, message: trimmed, history }) });
+   711→      if (!response.ok) throw new Error('Chat request failed');
+   712→      const reader = response.body?.getReader();
+   713→      const decoder = new TextDecoder();
+   714→      let accumulated = '';
+   715→      if (reader) {
+   716→        while (true) {
+   717→          const { done, value } = await reader.read();
+   718→          if (done) break;
+   719→          accumulated += decoder.decode(value, { stream: true });
+   720→          setChatMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, content: accumulated } : m)));
+   721→        }
+   722→      }
+   723→      const newFocus = response.headers.get('X-Focus-Score');
+   724→      if (newFocus) setFocusScore(parseInt(newFocus, 10));
+   725→    } catch {
+   726→      setChatMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: "I'm having trouble connecting right now. Please try again in a moment." } : m));
+   727→    } finally { setIsStreaming(false); }
+   728→  };
+   729→
+   730→  const handleChatKeyDown = (e: React.KeyboardEvent) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } };
+   731→
+   732→  // ─── Terminal / Lab ────────────────────────────────────────────────────
+   733→
+   734→  const connectTerminal = useCallback((sessionId: string, containerName: string, objectives: LabObjective[]) => {
+   735→    if (socketRef.current?.connected) socketRef.current.disconnect();
+   736→    const socket = io('/?XTransformPort=3004', { transports: ['websocket'], reconnection: true, reconnectionAttempts: 5 });
+   737→    socket.on('connect', () => { socket.emit('terminal:join', { userId: user.id, labSessionId: sessionId, containerName, objectives: objectives.map((o) => ({ id: o.id, description: o.description })) }); });
+   738→    socket.on('terminal:output', (data: { data: string }) => { setTerminalLines((prev) => [...prev, ...data.data.split('\r\n').filter(Boolean)]); });
+   739→    socket.on('terminal:clear', () => setTerminalLines([]));
+   740→    socket.on('terminal:prompt', () => terminalInputRef.current?.focus());
+   741→    socket.on('lab:progress', (data: { objectivesCompleted: LabObjective[] }) => setLabObjectives(data.objectivesCompleted));
+   742→    socket.on('lab:completed', (data: { message: string }) => { setLabStatus('completed'); setTerminalLines((prev) => [...prev, '', '═══════════════════════════════════════════════', `  ${data.message}`, '═══════════════════════════════════════════════']); });
+   743→    socket.on('disconnect', () => {});
+   744→    socketRef.current = socket;
+   745→  }, [user.id]);
+   746→
+   747→  useEffect(() => { terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [terminalLines]);
+   748→
+   749→  const handleStartLab = async () => {
+   750→    if (!labTopic) return;
+   751→    setLabStatus('starting');
+   752→    setTerminalLines([]);
+   753→    setLabObjectives(defaultLabObjectives.map((o) => ({ ...o, completed: false })));
+   754→    setCommandHistory([]);
+   755→    commandHistoryIndexRef.current = -1;
+   756→    try {
+   757→      const res = await fetch('/api/labs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, topic: labTopic, objectives: defaultLabObjectives.map((o) => o.description) }) });
+   758→      const data = await res.json();
+   759→      if (!res.ok && res.status === 409) { setLabStatus('running'); setLabActive(true); return; }
+   760→      if (!res.ok) throw new Error('Failed to start lab');
+   761→      const sessionId = data.session?.id ?? `lab-${Date.now()}`;
+   762→      const containerName = data.session?.containerName ?? 'cybershield-lab';
+   763→      const objectives = data.session?.objectives ?? defaultLabObjectives;
+   764→      setLabObjectives(objectives);
+   765→      setLabStatus('running');
+   766→      setLabActive(true);
+   767→      connectTerminal(sessionId, containerName, objectives);
+   768→    } catch { setLabStatus('failed'); setTerminalLines(['Failed to start lab environment.', 'Please try again or select a different topic.']); }
+   769→  };
+   770→
+   771→  const handleTerminalSubmit = () => {
+   772→    const cmd = terminalInput.trim();
+   773→    if (!cmd || !socketRef.current?.connected) return;
+   774→    setCommandHistory((prev) => [...prev, cmd]);
+   775→    commandHistoryIndexRef.current = -1;
+   776→    socketRef.current.emit('terminal:input', { input: cmd + '\r' });
+   777→    setTerminalInput('');
+   778→  };
+   779→
+   780→  const handleTerminalKeyDown = (e: React.KeyboardEvent) => {
+   781→    if (e.key === 'Enter') { handleTerminalSubmit(); return; }
+   782→    if (e.key === 'ArrowUp') { e.preventDefault(); if (!commandHistory.length) return; const idx = commandHistoryIndexRef.current < commandHistory.length - 1 ? commandHistoryIndexRef.current + 1 : commandHistoryIndexRef.current; commandHistoryIndexRef.current = idx; setTerminalInput(commandHistory[commandHistory.length - 1 - idx]); return; }
+   783→    if (e.key === 'ArrowDown') { e.preventDefault(); if (commandHistoryIndexRef.current > 0) { commandHistoryIndexRef.current -= 1; setTerminalInput(commandHistory[commandHistory.length - 1 - commandHistoryIndexRef.current]); } else { commandHistoryIndexRef.current = -1; setTerminalInput(''); } }
+   784→  };
+   785→
+   786→  // ─── Progress / Analytics ──────────────────────────────────────────────
+   787→
+   788→  useEffect(() => {
+   789→    async function fetchProgress() {
+   790→      try {
+   791→        const res = await fetch(`/api/progress?userId=${user.id}&courseId=${COURSE_ID}`);
+   792→        if (res.ok) { const data = await res.json(); if (data.performance && data.performance.totalInteractionCount > 0) setProgressData(data.performance); }
+   793→      } catch { /* demo data */ }
+   794→    }
+   795→    if (isLoggedIn) fetchProgress();
+   796→  }, [view, isLoggedIn, user.id]);
+   797→
+   798→  // ─── Certificates ──────────────────────────────────────────────────────
+   799→
+   800→  useEffect(() => {
+   801→    async function fetchCerts() {
+   802→      try { const res = await fetch(`/api/certificates?userId=${user.id}`); if (res.ok) { const data = await res.json(); if (data.certificates?.length > 0) setCertificates(data.certificates); } } catch { /* demo */ }
+   803→    }
+   804→    if (isLoggedIn) fetchCerts();
+   805→  }, [isLoggedIn, user.id]);
+   806→
+   807→  const handleVerifyCertificate = async () => {
+   808→    if (!verifyHash.trim()) return;
+   809→    setIsVerifying(true); setVerifyResult(null);
+   810→    try {
+   811→      const res = await fetch(`/api/certificates/verify?hash=${encodeURIComponent(verifyHash.trim())}`);
+   812→      const data = await res.json();
+   813→      if (data.valid) setVerifyResult({ valid: true, message: `Valid certificate for ${data.certificate?.userName} — "${data.certificate?.courseName}" (${data.certificate?.issuedAt ? formatDate(data.certificate.issuedAt) : 'unknown'})` });
+   814→      else setVerifyResult({ valid: false, message: data.error || 'Certificate verification failed.' });
+   815→    } catch { setVerifyResult({ valid: false, message: 'Verification request failed.' }); } finally { setIsVerifying(false); }
+   816→  };
+   817→
+   818→  const handleDownloadCert = (certId: string) => { window.open(`/api/certificates?download=${certId}`, '_blank'); };
+   819→
+   820→  // ─── Courses ───────────────────────────────────────────────────────────
+   821→
+   822→  useEffect(() => {
+   823→    async function fetchCourses() {
+   824→      try { const res = await fetch(`/api/courses?userId=${user.id}`); if (res.ok) { const data = await res.json(); if (data.courses?.length > 0) setCourses(data.courses); } } catch { /* demo */ }
+   825→    }
+   826→    if (isLoggedIn) fetchCourses();
+   827→  }, [isLoggedIn, user.id]);
+   828→
+   829→  const handleEnroll = async (courseId: string) => {
+   830→    setEnrollingCourse(courseId);
+   831→    try {
+   832→      const res = await fetch('/api/enroll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, courseId }) });
+   833→      if (res.ok) setCourses((prev) => prev.map((c) => c.id === courseId ? { ...c, enrolled: true } : c));
+   834→    } catch { /* silent */ } finally { setEnrollingCourse(null); }
+   835→  };
+   836→
+   837→  // ─── Quiz ──────────────────────────────────────────────────────────────
+   838→
+   839→  const handleOpenQuiz = async () => {
+   840→    setQuizLoading(true);
+   841→    try {
+   842→      const res = await fetch(`/api/quizzes/mod-5`);
+   843→      if (res.ok) { const data = await res.json(); if (data.questions?.length > 0) { setQuizQuestions(data.questions); } }
+   844→    } catch { /* use demo quiz */ } finally { setQuizLoading(false); setQuizIndex(0); setQuizAnswers({}); setQuizSubmitted(false); setQuizOpen(true); }
+   845→  };
+   846→
+   847→  const handleQuizSubmit = async () => {
+   848→    setQuizSubmitted(true);
+   849→    // POST answers
+   850→    try {
+   851→      await fetch(`/api/quizzes/mod-5`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, answers: quizAnswers }) });
+   852→    } catch { /* silent */ }
+   853→  };
+   854→
+   855→  const quizScore = quizQuestions.length > 0 ? Math.round((Object.entries(quizAnswers).filter(([idx, ans]) => quizQuestions[parseInt(idx)]?.correctIndex === ans).length / quizQuestions.length) * 100) : 0;
+   856→  const quizPassed = quizScore >= 70;
+   857→
+   858→  // ─── Admin ─────────────────────────────────────────────────────────────
+   859→
+   860→  useEffect(() => {
+   861→    async function fetchAdminStats() {
+   862→      if (user.role !== 'admin') return;
+   863→      try { const res = await fetch('/api/admin/stats'); if (res.ok) { const data = await res.json(); setAdminStats(data); } } catch { /* demo */ }
+   864→    }
+   865→    if (isLoggedIn) fetchAdminStats();
+   866→  }, [isLoggedIn, user.role]);
+   867→
+   868→  // ─── Login Handler ─────────────────────────────────────────────────────
+   869→
+   870→  const handleQuickLogin = () => {
+   871→    setUser({ id: USER_ID, name: 'Alex Chen', email: 'alex@cybershield.academy', role: 'admin' });
+   872→    setIsLoggedIn(true);
+   873→  };
+   874→
+   875→  const handleLogin = async () => {
+   876→    setLoginLoading(true);
+   877→    try {
+   878→      const res = await fetch('/api/auth/callback/credentials', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: loginEmail, password: loginPassword }) });
+   879→      if (res.ok) { setUser({ id: USER_ID, name: loginEmail.split('@')[0], email: loginEmail, role: 'student' }); setIsLoggedIn(true); }
+   880→      else handleQuickLogin();
+   881→    } catch { handleQuickLogin(); } finally { setLoginLoading(false); }
+   882→  };
+   883→
+   884→  // ─── Render: Login Screen ──────────────────────────────────────────────
+   885→
+   886→  if (!isLoggedIn) {
+   887→    return (
+   888→      <div className="min-h-screen bg-[#030712] flex items-center justify-center p-4 relative overflow-hidden">
+   889→        <ParticleBackground />
+   890→
+   891→        {/* Scan Line */}
+   892→        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+   893→          <div className="absolute w-full h-32 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent animate-[scanline_8s_linear_infinite]" />
+   894→        </div>
+   895→
+   896→        <motion.div
+   897→          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+   898→          animate={{ opacity: 1, y: 0, scale: 1 }}
+   899→          transition={{ duration: 0.8, ease: 'easeOut' }}
+   900→          className="relative z-10 w-full max-w-md"
+   901→        >
+   902→          {/* Logo */}
+   903→          <div className="text-center mb-8">
+   904→            <motion.div
+   905→              initial={{ scale: 0 }}
+   906→              animate={{ scale: 1 }}
+   907→              transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+   908→              className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mb-4"
+   909→              style={{ boxShadow: '0 0 40px rgba(0,240,255,0.15)' }}
+   910→            >
+   911→              <Shield className="h-10 w-10 text-cyan-400" />
+   912→            </motion.div>
+   913→            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-500 bg-clip-text text-transparent">
+   914→              CyberShield Academy
+   915→            </h1>
+   916→            <p className="text-slate-500 mt-2 text-sm">AI-Powered Cybersecurity Learning Platform</p>
+   917→          </div>
+   918→
+   919→          {/* Login Card */}
+   920→          <HoloCard glowColor="cyan">
+   921→            <AnimatePresence mode="wait">
+   922→              {!isSignUp ? (
+   923→                <motion.div key="login" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
+   924→                  <h2 className="text-lg font-semibold text-slate-100 mb-1">Welcome Back</h2>
+   925→                  <p className="text-sm text-slate-500 mb-6">Sign in to continue your training</p>
+   926→                  <div className="space-y-4">
+   927→                    <div>
+   928→                      <label className="text-xs text-slate-400 uppercase tracking-wider mb-1.5 block">Email</label>
+   929→                      <Input
+   930→                        type="email"
+   931→                        placeholder="agent@cybershield.academy"
+   932→                        value={loginEmail}
+   933→                        onChange={(e) => setLoginEmail(e.target.value)}
+   934→                        className="bg-slate-950/80 border-cyan-500/20 focus:border-cyan-400/50 text-slate-200 placeholder:text-slate-600 h-11 rounded-lg"
+   935→                      />
+   936→                    </div>
+   937→                    <div>
+   938→                      <label className="text-xs text-slate-400 uppercase tracking-wider mb-1.5 block">Password</label>
+   939→                      <Input
+   940→                        type="password"
+   941→                        placeholder="••••••••••••"
+   942→                        value={loginPassword}
+   943→                        onChange={(e) => setLoginPassword(e.target.value)}
+   944→                        onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+   945→                        className="bg-slate-950/80 border-cyan-500/20 focus:border-cyan-400/50 text-slate-200 placeholder:text-slate-600 h-11 rounded-lg"
+   946→                      />
+   947→                    </div>
+   948→                    <Button onClick={handleLogin} disabled={loginLoading} className="w-full h-11 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white font-semibold rounded-lg hover:shadow-[0_0_25px_rgba(0,240,255,0.3)] hover:from-cyan-400 hover:to-emerald-400 transition-all duration-300">
+   949→                      {loginLoading ? <span className="animate-pulse">Authenticating...</span> : 'Sign In'}
+   950→                    </Button>
+   951→                  </div>
+   952→                  <p className="text-center text-sm text-slate-500 mt-4">
+   953→                    Don&apos;t have an account?{' '}
+   954→                    <button onClick={() => setIsSignUp(true)} className="text-cyan-400 hover:text-cyan-300 transition-colors">Create Account</button>
+   955→                  </p>
+   956→                </motion.div>
+   957→              ) : (
+   958→                <motion.div key="signup" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+   959→                  <h2 className="text-lg font-semibold text-slate-100 mb-1">Create Account</h2>
+   960→                  <p className="text-sm text-slate-500 mb-6">Join the next generation of defenders</p>
+   961→                  <div className="space-y-4">
+   962→                    <div>
+   963→                      <label className="text-xs text-slate-400 uppercase tracking-wider mb-1.5 block">Full Name</label>
+   964→                      <Input placeholder="Agent Name" className="bg-slate-950/80 border-cyan-500/20 focus:border-cyan-400/50 text-slate-200 placeholder:text-slate-600 h-11 rounded-lg" />
+   965→                    </div>
+   966→                    <div>
+   967→                      <label className="text-xs text-slate-400 uppercase tracking-wider mb-1.5 block">Email</label>
+   968→                      <Input type="email" placeholder="agent@cybershield.academy" className="bg-slate-950/80 border-cyan-500/20 focus:border-cyan-400/50 text-slate-200 placeholder:text-slate-600 h-11 rounded-lg" />
+   969→                    </div>
+   970→                    <div>
+   971→                      <label className="text-xs text-slate-400 uppercase tracking-wider mb-1.5 block">Password</label>
+   972→                      <Input type="password" placeholder="••••••••••••" className="bg-slate-950/80 border-cyan-500/20 focus:border-cyan-400/50 text-slate-200 placeholder:text-slate-600 h-11 rounded-lg" />
+   973→                    </div>
+   974→                    <Button onClick={() => { setIsSignUp(false); handleQuickLogin(); }} className="w-full h-11 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white font-semibold rounded-lg hover:shadow-[0_0_25px_rgba(0,240,255,0.3)] transition-all duration-300">
+   975→                      Create Account
+   976→                    </Button>
+   977→                  </div>
+   978→                  <p className="text-center text-sm text-slate-500 mt-4">
+   979→                    Already have an account?{' '}
+   980→                    <button onClick={() => setIsSignUp(false)} className="text-cyan-400 hover:text-cyan-300 transition-colors">Sign In</button>
+   981→                  </p>
+   982→                </motion.div>
+   983→              )}
+   984→            </AnimatePresence>
+   985→
+   986→            <div className="relative mt-5">
+   987→              <Separator className="bg-slate-700/50" />
+   988→              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-3 text-xs text-slate-500 uppercase tracking-wider">or</span>
+   989→            </div>
+   990→
+   991→            <Button
+   992→              onClick={handleQuickLogin}
+   993→              className="w-full mt-5 h-11 border border-cyan-500/30 bg-cyan-500/5 text-cyan-400 font-semibold rounded-lg hover:bg-cyan-500/10 hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(0,240,255,0.15)] transition-all duration-300"
+   994→              variant="outline"
+   995→            >
+   996→              <Zap className="h-4 w-4 mr-2" />
+   997→              Enter Academy
+   998→            </Button>
+   999→          </HoloCard>
+  1000→        </motion.div>
+  1001→      </div>
+  1002→    );
+  1003→  }
+  1004→
+  1005→  // ─── Render: Main Dashboard ────────────────────────────────────────────
+  1006→
+  1007→  const filteredCourses = courseFilter === 'all' ? courses : courses.filter((c) => c.difficulty === courseFilter);
+  1008→  const unreadNotifs = notifications.filter((n) => !n.read).length;
+  1009→
+  1010→  return (
+  1011→    <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col relative overflow-hidden">
+  1012→      <ParticleBackground />
+  1013→
+  1014→      {/* Scan Line Effect */}
+  1015→      <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+  1016→        <div className="absolute w-full h-32 bg-gradient-to-b from-transparent via-cyan-500/3 to-transparent animate-[scanline_8s_linear_infinite]" />
+  1017→      </div>
+  1018→
+  1019→      {/* ─── Top Navigation Bar ──────────────────────────────────────────── */}
+  1020→      <header className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-cyan-500/10">
+  1021→        <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+  1022→          {/* Logo */}
+  1023→          <div className="flex items-center gap-2.5 shrink-0">
+  1024→            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center" style={{ boxShadow: '0 0 12px rgba(0,240,255,0.2)' }}>
+  1025→              <Shield className="h-4.5 w-4.5 text-cyan-400" />
+  1026→            </div>
+  1027→            <span className="font-bold text-base sm:text-lg tracking-[0.15em] uppercase bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-500 bg-clip-text text-transparent hidden sm:inline">
+  1028→              CyberShield
+  1029→            </span>
+  1030→          </div>
+  1031→
+  1032→          {/* Center Nav (Desktop) */}
+  1033→          <nav className="hidden md:flex items-center gap-1">
+  1034→            {navItems
+  1035→              .filter((item) => item.key !== 'admin' || user.role === 'admin')
+  1036→              .map((item) => {
+  1037→                const Icon = item.icon;
+  1038→                const isActive = view === item.key;
+  1039→                return (
+  1040→                  <button
+  1041→                    key={item.key}
+  1042→                    onClick={() => setView(item.key)}
+  1043→                    className={`relative px-3 lg:px-4 py-2 text-sm font-medium transition-all duration-300 flex items-center gap-1.5 ${
+  1044→                      isActive
+  1045→                        ? 'text-cyan-400'
+  1046→                        : 'text-slate-400 hover:text-slate-200'
+  1047→                    }`}
+  1048→                  >
+  1049→                    <Icon className="h-4 w-4" />
+  1050→                    <span className="hidden lg:inline">{item.label}</span>
+  1051→                    {isActive && (
+  1052→                      <motion.div
+  1053→                        layoutId="nav-indicator"
+  1054→                        className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-cyan-400 to-emerald-400 rounded-full"
+  1055→                        style={{ boxShadow: '0 0 8px rgba(0,240,255,0.5)' }}
+  1056→                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+  1057→                      />
+  1058→                    )}
+  1059→                  </button>
+  1060→                );
+  1061→              })}
+  1062→          </nav>
+  1063→
+  1064→          {/* Right Side */}
+  1065→          <div className="flex items-center gap-2 sm:gap-3">
+  1066→            {/* Focus Orb */}
+  1067→            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/60 border border-cyan-500/10">
+  1068→              <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: getFocusStroke(focusScore), boxShadow: `0 0 6px ${getFocusStroke(focusScore)}` }} />
+  1069→              <span className={`text-xs font-medium ${getFocusColor(focusScore)}`}>{focusScore}%</span>
+  1070→            </div>
+  1071→
+  1072→            {/* Notifications */}
+  1073→            <DropdownMenu>
+  1074→              <DropdownMenuTrigger asChild>
+  1075→                <Button variant="ghost" size="icon" className="relative text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 h-9 w-9">
+  1076→                  <Bell className="h-4.5 w-4.5" />
+  1077→                  {unreadNotifs > 0 && (
+  1078→                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-pink-500 text-[10px] font-bold text-white flex items-center justify-center">{unreadNotifs}</span>
+  1079→                  )}
+  1080→                </Button>
+  1081→              </DropdownMenuTrigger>
+  1082→              <DropdownMenuContent align="end" className="w-72 bg-slate-900/95 backdrop-blur-xl border border-cyan-500/15">
+  1083→                <DropdownMenuItem className="text-cyan-400 font-semibold text-sm">Notifications</DropdownMenuItem>
+  1084→                <DropdownMenuSeparator className="bg-slate-700/50" />
+  1085→                {notifications.map((n) => (
+  1086→                  <DropdownMenuItem key={n.id} className={`text-sm ${n.read ? 'text-slate-500' : 'text-slate-200'} focus:bg-cyan-500/10 focus:text-cyan-400`}>
+  1087→                    <div className="flex-1">
+  1088→                      <p>{n.text}</p>
+  1089→                      <p className="text-xs text-slate-600 mt-0.5">{n.time}</p>
+  1090→                    </div>
+  1091→                  </DropdownMenuItem>
+  1092→                ))}
+  1093→              </DropdownMenuContent>
+  1094→            </DropdownMenu>
+  1095→
+  1096→            {/* Mobile Menu Toggle */}
+  1097→            <Button variant="ghost" size="icon" className="md:hidden text-slate-400 hover:text-cyan-400 h-9 w-9" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+  1098→              <div className="space-y-1.5">
+  1099→                <span className={`block h-0.5 w-5 bg-current transition-all duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+  1100→                <span className={`block h-0.5 w-5 bg-current transition-all duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`} />
+  1101→                <span className={`block h-0.5 w-5 bg-current transition-all duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+  1102→              </div>
+  1103→            </Button>
+  1104→
+  1105→            {/* User Avatar */}
+  1106→            <DropdownMenu>
+  1107→              <DropdownMenuTrigger asChild>
+  1108→                <Button variant="ghost" className="hidden sm:flex items-center gap-2 h-9 px-2 hover:bg-cyan-500/10">
+  1109→                  <Avatar className="h-7 w-7 border border-cyan-500/20">
+  1110→                    <AvatarFallback className="bg-gradient-to-br from-cyan-500/20 to-violet-500/20 text-cyan-400 text-xs font-bold">{user.name.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
+  1111→                  </Avatar>
+  1112→                  <span className="text-sm text-slate-300 max-w-[100px] truncate">{user.name}</span>
+  1113→                </Button>
+  1114→              </DropdownMenuTrigger>
+  1115→              <DropdownMenuContent align="end" className="bg-slate-900/95 backdrop-blur-xl border border-cyan-500/15">
+  1116→                <DropdownMenuItem className="text-slate-300 focus:bg-cyan-500/10 focus:text-cyan-400">
+  1117→                  <User className="h-4 w-4 mr-2" /> Profile
+  1118→                </DropdownMenuItem>
+  1119→                <DropdownMenuItem className="text-slate-300 focus:bg-cyan-500/10 focus:text-cyan-400">
+  1120→                  <Settings className="h-4 w-4 mr-2" /> Settings
+  1121→                </DropdownMenuItem>
+  1122→                <DropdownMenuSeparator className="bg-slate-700/50" />
+  1123→                <DropdownMenuItem className="text-pink-400 focus:bg-pink-500/10" onClick={() => { setIsLoggedIn(false); socketRef.current?.disconnect(); }}>
+  1124→                  <LogOut className="h-4 w-4 mr-2" /> Sign Out
+  1125→                </DropdownMenuItem>
+  1126→              </DropdownMenuContent>
+  1127→            </DropdownMenu>
+  1128→          </div>
+  1129→        </div>
+  1130→
+  1131→        {/* Mobile Nav */}
+  1132→        <AnimatePresence>
+  1133→          {mobileMenuOpen && (
+  1134→            <motion.div
+  1135→              initial={{ height: 0, opacity: 0 }}
+  1136→              animate={{ height: 'auto', opacity: 1 }}
+  1137→              exit={{ height: 0, opacity: 0 }}
+  1138→              transition={{ duration: 0.3 }}
+  1139→              className="md:hidden overflow-hidden border-t border-cyan-500/10 bg-slate-950/95 backdrop-blur-xl"
+  1140→            >
+  1141→              <nav className="flex flex-col p-3 gap-1">
+  1142→                {navItems
+  1143→                  .filter((item) => item.key !== 'admin' || user.role === 'admin')
+  1144→                  .map((item) => {
+  1145→                    const Icon = item.icon;
+  1146→                    const isActive = view === item.key;
+  1147→                    return (
+  1148→                      <button
+  1149→                        key={item.key}
+  1150→                        onClick={() => { setView(item.key); setMobileMenuOpen(false); }}
+  1151→                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+  1152→                          isActive ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+  1153→                        }`}
+  1154→                      >
+  1155→                        <Icon className="h-4 w-4" />
+  1156→                        {item.label}
+  1157→                        {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+  1158→                      </button>
+  1159→                    );
+  1160→                  })}
+  1161→                <div className="mt-2 pt-2 border-t border-slate-800">
+  1162→                  <button onClick={() => { setIsLoggedIn(false); socketRef.current?.disconnect(); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-pink-400 hover:bg-pink-500/10 w-full">
+  1163→                    <LogOut className="h-4 w-4" /> Sign Out
+  1164→                  </button>
+  1165→                </div>
+  1166→              </nav>
+  1167→            </motion.div>
+  1168→          )}
+  1169→        </AnimatePresence>
+  1170→      </header>
+  1171→
+  1172→      {/* ─── Main Content Area ───────────────────────────────────────────── */}
+  1173→      <main className="flex-1 relative z-10">
+  1174→        <div className="max-w-screen-2xl mx-auto p-3 sm:p-4 lg:p-6">
+  1175→          <AnimatePresence mode="wait">
+  1176→            {/* ═══════════════════════════════════════════════════════════════ */}
+  1177→            {/* VIEW: CLASSROOM                                              */}
+  1178→            {/* ═══════════════════════════════════════════════════════════════ */}
+  1179→            {view === 'classroom' && (
+  1180→              <motion.div key="classroom" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-5 h-[calc(100vh-5rem)]">
+  1181→                {/* Chat Panel (70%) */}
+  1182→                <div className="lg:col-span-7 flex flex-col h-full min-h-0">
+  1183→                  <HoloCard glowColor="cyan" noPad className="flex flex-col h-full">
+  1184→                    {/* Chat Header */}
+  1185→                    <div className="px-4 py-3 border-b border-cyan-500/10 flex items-center gap-3 shrink-0">
+  1186→                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 border border-cyan-500/20 flex items-center justify-center">
+  1187→                        <Shield className="h-4 w-4 text-cyan-400" />
+  1188→                      </div>
+  1189→                      <div className="flex-1 min-w-0">
+  1190→                        <p className="font-semibold text-sm text-slate-100">Prof. Shield</p>
+  1191→                        <p className="text-xs text-emerald-400 flex items-center gap-1.5">
+  1192→                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+  1193→                          Online — Network Security Module
+  1194→                        </p>
+  1195→                      </div>
+  1196→                      <Badge variant="outline" className="text-[10px] border-cyan-500/20 text-cyan-400">Module 3/8</Badge>
+  1197→                    </div>
+  1198→
+  1199→                    {/* Messages */}
+  1200→                    <ScrollArea className="flex-1 p-4">
+  1201→                      <div className="space-y-4">
+  1202→                        {chatMessages.map((msg) => (
+  1203→                          <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+  1204→                            {msg.role === 'assistant' && (
+  1205→                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 border border-cyan-500/20 flex items-center justify-center shrink-0 mt-1">
+  1206→                                <Shield className="h-3.5 w-3.5 text-cyan-400" />
+  1207→                              </div>
+  1208→                            )}
+  1209→                            <div className={`max-w-[85%] sm:max-w-[75%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+  1210→                              {msg.content ? (
+  1211→                                <div className={`rounded-2xl px-4 py-3 ${
+  1212→                                  msg.role === 'user'
+  1213→                                    ? 'bg-cyan-500/10 border border-cyan-500/20 rounded-br-md'
+  1214→                                    : 'bg-slate-800/50 border border-slate-700/30 rounded-bl-md'
+  1215→                                }`}>
+  1216→                                  {msg.role === 'assistant' ? (
+  1217→                                    <div className="prose prose-invert prose-sm max-w-none [&_p]:text-slate-300 [&_p]:leading-relaxed [&_strong]:text-cyan-400 [&_code]:text-emerald-400 [&_code]:bg-slate-950 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono [&_pre]:bg-slate-950 [&_pre]:border [&_pre]:border-slate-700/50 [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-sm [&_pre]:text-emerald-400 [&_ul]:text-slate-300 [&_ol]:text-slate-300 [&_li]:text-slate-300 [&_h1]:text-cyan-400 [&_h2]:text-cyan-400 [&_h3]:text-cyan-400 [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm [&_a]:text-cyan-400 [&_blockquote]:border-cyan-500/30 [&_blockquote]:text-slate-400">
+  1218→                                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+  1219→                                    </div>
+  1220→                                  ) : (
+  1221→                                    <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+  1222→                                  )}
+  1223→                                </div>
+  1224→                              ) : (
+  1225→                                <div className="bg-slate-800/50 border border-slate-700/30 rounded-2xl rounded-bl-md px-4 py-3">
+  1226→                                  <TypingIndicator />
+  1227→                                </div>
+  1228→                              )}
+  1229→                              <p className={`text-[10px] mt-1.5 ${msg.role === 'user' ? 'text-right text-slate-600' : 'text-slate-600'}`}>
+  1230→                                {formatTime(msg.timestamp)}
+  1231→                              </p>
+  1232→                            </div>
+  1233→                            {msg.role === 'user' && (
+  1234→                              <div className="w-7 h-7 rounded-full bg-violet-500/20 border border-violet-500/20 flex items-center justify-center shrink-0 mt-1">
+  1235→                                <span className="text-[10px] font-bold text-violet-400">{user.name.split(' ').map((n) => n[0]).join('')}</span>
+  1236→                              </div>
+  1237→                            )}
+  1238→                          </div>
+  1239→                        ))}
+  1240→                        <div ref={chatEndRef} />
+  1241→                      </div>
+  1242→                    </ScrollArea>
+  1243→
+  1244→                    {/* Input Area */}
+  1245→                    <div className="p-3 sm:p-4 border-t border-cyan-500/10 shrink-0">
+  1246→                      <div className="flex gap-2 items-end">
+  1247→                        <Textarea
+  1248→                          ref={chatTextareaRef}
+  1249→                          value={chatInput}
+  1250→                          onChange={(e) => setChatInput(e.target.value)}
+  1251→                          onKeyDown={handleChatKeyDown}
+  1252→                          placeholder="Ask Prof. Shield about cybersecurity..."
+  1253→                          className="min-h-[44px] max-h-32 resize-none bg-slate-900/80 border-cyan-500/20 focus:border-cyan-400/50 rounded-xl text-sm text-slate-200 placeholder:text-slate-600"
+  1254→                          rows={1}
+  1255→                          disabled={isStreaming}
+  1256→                        />
+  1257→                        <Button
+  1258→                          onClick={handleSendMessage}
+  1259→                          disabled={!chatInput.trim() || isStreaming}
+  1260→                          className="shrink-0 h-11 w-11 p-0 bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-xl hover:shadow-[0_0_20px_rgba(0,240,255,0.3)] hover:from-cyan-400 hover:to-emerald-400 transition-all duration-300 disabled:opacity-30"
+  1261→                        >
+  1262→                          <Send className="h-4 w-4" />
+  1263→                        </Button>
+  1264→                      </div>
+  1265→                    </div>
+  1266→                  </HoloCard>
+  1267→                </div>
+  1268→
+  1269→                {/* Right Sidebar (30%) */}
+  1270→                <div className="lg:col-span-3 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-5rem)] pb-4">
+  1271→                  {/* Current Course Module */}
+  1272→                  <HoloCard glowColor="emerald">
+  1273→                    <div className="flex items-center gap-2 mb-3">
+  1274→                      <BookOpen className="h-4 w-4 text-emerald-400" />
+  1275→                      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Current Module</h3>
+  1276→                    </div>
+  1277→                    <p className="font-semibold text-sm text-slate-100">Network Security Fundamentals</p>
+  1278→                    <p className="text-xs text-slate-500 mt-1">Module 3 of 8 — Network Scanning</p>
+  1279→                    <Progress value={37.5} className="h-1.5 mt-3 [&_[role=progressbar]]:bg-gradient-to-r [&_[role=progressbar]]:from-cyan-500 [&_[role=progressbar]]:to-emerald-500" />
+  1280→                    <div className="flex justify-between text-[10px] text-slate-500 mt-1.5">
+  1281→                      <span>Progress</span>
+  1282→                      <span className="text-cyan-400 font-medium">37.5%</span>
+  1283→                    </div>
+  1284→                  </HoloCard>
+  1285→
+  1286→                  {/* Focus Score Ring */}
+  1287→                  <HoloCard glowColor="cyan">
+  1288→                    <div className="flex items-center gap-2 mb-3">
+  1289→                      <Target className="h-4 w-4 text-cyan-400" />
+  1290→                      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Focus Score</h3>
+  1291→                    </div>
+  1292→                    <div className="flex items-center gap-4">
+  1293→                      <FocusScoreRing score={focusScore} size={72} />
+  1294→                      <div>
+  1295→                        <p className="text-sm font-medium" style={{ color: getFocusStroke(focusScore) }}>{getFocusLabel(focusScore)}</p>
+  1296→                        <p className="text-xs text-slate-500 mt-0.5">
+  1297→                          {focusScore >= 75 ? 'Great concentration' : focusScore >= 50 ? 'Minimize distractions' : 'Please refocus'}
+  1298→                        </p>
+  1299→                      </div>
+  1300→                    </div>
+  1301→                  </HoloCard>
+  1302→
+  1303→                  {/* Quick Topics */}
+  1304→                  <HoloCard glowColor="violet">
+  1305→                    <div className="flex items-center gap-2 mb-3">
+  1306→                      <Zap className="h-4 w-4 text-violet-400" />
+  1307→                      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Quick Topics</h3>
+  1308→                    </div>
+  1309→                    <div className="flex flex-wrap gap-2">
+  1310→                      {quickTopics.map((topic) => (
+  1311→                        <button
+  1312→                          key={topic}
+  1313→                          onClick={() => { setChatInput(topic); chatTextareaRef.current?.focus(); }}
+  1314→                          className="text-xs px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 hover:bg-violet-500/20 hover:border-violet-400/40 hover:shadow-[0_0_12px_rgba(139,92,246,0.15)] transition-all duration-300"
+  1315→                        >
+  1316→                          {topic}
+  1317→                        </button>
+  1318→                      ))}
+  1319→                    </div>
+  1320→                  </HoloCard>
+  1321→
+  1322→                  {/* Start Quiz Button */}
+  1323→                  <button
+  1324→                    onClick={handleOpenQuiz}
+  1325→                    disabled={quizLoading}
+  1326→                    className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-500/20 to-pink-500/20 border border-violet-500/20 text-violet-300 text-sm font-semibold hover:from-violet-500/30 hover:to-pink-500/30 hover:border-violet-400/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300 flex items-center justify-center gap-2"
+  1327→                  >
+  1328→                    <Award className="h-4 w-4" />
+  1329→                    {quizLoading ? 'Loading Quiz...' : 'Start Quiz'}
+  1330→                  </button>
+  1331→                </div>
+  1332→              </motion.div>
+  1333→            )}
+  1334→
+  1335→            {/* ═══════════════════════════════════════════════════════════════ */}
+  1336→            {/* VIEW: COURSES                                                */}
+  1337→            {/* ═══════════════════════════════════════════════════════════════ */}
+  1338→            {view === 'courses' && (
+  1339→              <motion.div key="courses" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+  1340→                {/* Header */}
+  1341→                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+  1342→                  <div>
+  1343→                    <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-500 bg-clip-text text-transparent">
+  1344→                      Course Catalog
+  1345→                    </h1>
+  1346→                    <p className="text-sm text-slate-500 mt-1">Master cybersecurity through hands-on learning paths</p>
+  1347→                  </div>
+  1348→                  <div className="flex gap-2">
+  1349→                    {['all', 'beginner', 'intermediate', 'advanced'].map((f) => (
+  1350→                      <button
+  1351→                        key={f}
+  1352→                        onClick={() => setCourseFilter(f)}
+  1353→                        className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-300 capitalize ${
+  1354→                          courseFilter === f
+  1355→                            ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400 shadow-[0_0_12px_rgba(0,240,255,0.1)]'
+  1356→                            : 'bg-slate-900/40 border-slate-700/30 text-slate-400 hover:border-slate-600 hover:text-slate-300'
+  1357→                        }`}
+  1358→                      >
+  1359→                        {f}
+  1360→                      </button>
+  1361→                    ))}
+  1362→                  </div>
+  1363→                </div>
+  1364→
+  1365→                {/* Course Grid */}
+  1366→                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+  1367→                  {filteredCourses.map((course, idx) => {
+  1368→                    const dc = getDifficultyColor(course.difficulty);
+  1369→                    return (
+  1370→                      <motion.div
+  1371→                        key={course.id}
+  1372→                        initial={{ opacity: 0, y: 20 }}
+  1373→                        animate={{ opacity: 1, y: 0 }}
+  1374→                        transition={{ delay: idx * 0.08, duration: 0.4 }}
+  1375→                      >
+  1376→                        <HoloCard glowColor="cyan" className="h-full flex flex-col hover:-translate-y-1 cursor-pointer group" onClick={() => { setSelectedCourse(course); setCourseModalOpen(true); }}>
+  1377→                          <div className="flex items-start justify-between mb-3">
+  1378→                            <Badge variant="outline" className={`text-[10px] ${dc.bg} ${dc.text} ${dc.border} border`}>
+  1379→                              {course.difficulty}
+  1380→                            </Badge>
+  1381→                            {course.enrolled && (
+  1382→                              <Badge className="text-[10px] bg-emerald-500/15 text-emerald-400 border-emerald-500/30 border">Enrolled</Badge>
+  1383→                            )}
+  1384→                          </div>
+  1385→                          <h3 className="font-semibold text-sm text-slate-100 group-hover:text-cyan-300 transition-colors line-clamp-2 mb-2">{course.title}</h3>
+  1386→                          <p className="text-xs text-slate-500 line-clamp-2 mb-4 flex-1">{course.description}</p>
+  1387→                          <div className="flex items-center gap-3 text-[11px] text-slate-500 mb-4">
+  1388→                            <span className="flex items-center gap-1"><BookOpen className="h-3 w-3" /> {course.moduleCount} modules</span>
+  1389→                            <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {course.studentCount.toLocaleString()}</span>
+  1390→                            <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {course.durationHours}h</span>
+  1391→                          </div>
+  1392→                          {course.enrolled && course.progress !== undefined && (
+  1393→                            <div className="mb-3">
+  1394→                              <Progress value={course.progress} className="h-1 [&_[role=progressbar]]:bg-gradient-to-r [&_[role=progressbar]]:from-cyan-500 [&_[role=progressbar]]:to-emerald-500" />
+  1395→                              <p className="text-[10px] text-slate-500 mt-1">{course.progress}% complete</p>
+  1396→                            </div>
+  1397→                          )}
+  1398→                          <Button
+  1399→                            size="sm"
+  1400→                            onClick={(e) => { e.stopPropagation(); if (course.enrolled) { setView('classroom'); } else { handleEnroll(course.id); } }}
+  1401→                            className={`w-full text-xs h-9 rounded-lg transition-all duration-300 ${
+  1402→                              course.enrolled
+  1403→                                ? 'bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 border border-cyan-500/30 text-cyan-400 hover:from-cyan-500/30 hover:to-emerald-500/30'
+  1404→                                : 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-white hover:shadow-[0_0_20px_rgba(0,240,255,0.3)]'
+  1405→                            }`}
+  1406→                            disabled={enrollingCourse === course.id}
+  1407→                          >
+  1408→                            {enrollingCourse === course.id ? 'Enrolling...' : course.enrolled ? 'Continue Learning' : 'Enroll Now'}
+  1409→                            <ChevronRight className="h-3.5 w-3.5 ml-1" />
+  1410→                          </Button>
+  1411→                        </HoloCard>
+  1412→                      </motion.div>
+  1413→                    );
+  1414→                  })}
+  1415→                </div>
+  1416→              </motion.div>
+  1417→            )}
+  1418→
+  1419→            {/* ═══════════════════════════════════════════════════════════════ */}
+  1420→            {/* VIEW: LAB TERMINAL                                           */}
+  1421→            {/* ═══════════════════════════════════════════════════════════════ */}
+  1422→            {view === 'lab' && (
+  1423→              <motion.div key="lab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-5 h-[calc(100vh-5rem)]">
+  1424→                {/* Terminal (70%) */}
+  1425→                <div className="lg:col-span-7 flex flex-col gap-4 h-full min-h-0">
+  1426→                  {/* Lab Controls */}
+  1427→                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+  1428→                    <Select value={labTopic} onValueChange={setLabTopic}>
+  1429→                      <SelectTrigger className="w-full sm:w-64 bg-slate-900/60 border-cyan-500/20 text-slate-200 focus:border-cyan-400/50">
+  1430→                        <SelectValue placeholder="Select lab topic..." />
+  1431→                      </SelectTrigger>
+  1432→                      <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-cyan-500/15">
+  1433→                        {labTopics.map((t) => (
+  1434→                          <SelectItem key={t.value} value={t.value} className="text-slate-300 focus:bg-cyan-500/10 focus:text-cyan-400">{t.label}</SelectItem>
+  1435→                        ))}
+  1436→                      </SelectContent>
+  1437→                    </Select>
+  1438→                    <Button
+  1439→                      onClick={handleStartLab}
+  1440→                      disabled={!labTopic || labStatus === 'starting' || labStatus === 'running'}
+  1441→                      className={`text-sm h-10 rounded-lg font-semibold transition-all duration-300 ${
+  1442→                        labStatus === 'running'
+  1443→                          ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
+  1444→                          : labTopic
+  1445→                            ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-white hover:shadow-[0_0_20px_rgba(0,240,255,0.3)] animate-[pulse-glow_2s_ease-in-out_infinite]'
+  1446→                            : 'bg-slate-800 text-slate-500 border border-slate-700'
+  1447→                      }`}
+  1448→                    >
+  1449→                      <TerminalIcon className="h-4 w-4 mr-2" />
+  1450→                      {labStatus === 'starting' ? 'Initializing...' : labStatus === 'running' ? 'Lab Active' : 'Initialize Lab'}
+  1451→                    </Button>
+  1452→                  </div>
+  1453→
+  1454→                  {/* Terminal Window */}
+  1455→                  <div className="flex-1 min-h-0 rounded-xl overflow-hidden border border-cyan-500/15 bg-[#0a0e17]" style={{ boxShadow: '0 0 30px rgba(0,240,255,0.05)' }}>
+  1456→                    {/* Terminal Header */}
+  1457→                    <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-900/80 border-b border-cyan-500/10">
+  1458→                      <div className="flex gap-1.5">
+  1459→                        <div className="w-3 h-3 rounded-full bg-pink-500/80" />
+  1460→                        <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+  1461→                        <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+  1462→                      </div>
+  1463→                      <span className="text-xs text-slate-500 font-mono ml-2">cybershield-lab — bash</span>
+  1464→                      {labStatus === 'running' && (
+  1465→                        <div className="ml-auto flex items-center gap-1.5">
+  1466→                          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+  1467→                          <span className="text-[10px] text-emerald-400 font-mono">CONNECTED</span>
+  1468→                        </div>
+  1469→                      )}
+  1470→                    </div>
+  1471→
+  1472→                    {/* Terminal Content */}
+  1473→                    <ScrollArea className="h-[calc(100%-2.75rem)]">
+  1474→                      <div className="p-4 font-mono text-sm min-h-[200px]">
+  1475→                        {terminalLines.length === 0 && (
+  1476→                          <div className="text-slate-600 text-sm">
+  1477→                            <p className="text-cyan-500/50">{`
+  1478→  ██████╗██╗   ██╗██████╗ ███████╗██████╗ 
+  1479→ ██╔════╝╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗
+  1480→ ██║      ╚████╔╝ ██████╔╝█████╗  ██████╔╝
+  1481→ ██║       ╚██╔╝  ██╔══██╗██╔══╝  ██╔══██╗
+  1482→ ╚██████╗   ██║   ██████╔╝███████╗██║  ██║
+  1483→  ╚═════╝   ╚═╝   ╚═════╝ ╚══════╝╚═╝  ╚═╝
+  1484→                          `}</p>
+  1485→                            <p className="mt-3 text-slate-600">Select a topic and click &quot;Initialize Lab&quot; to begin your session.</p>
+  1486→                          </div>
+  1487→                        )}
+  1488→                        {terminalLines.map((line, i) => (
+  1489→                          <div key={i} className="text-emerald-400 leading-relaxed whitespace-pre-wrap">{line}</div>
+  1490→                        ))}
+  1491→                        {labStatus === 'running' && (
+  1492→                          <div className="flex items-center mt-1">
+  1493→                            <span className="text-cyan-400 mr-2">┌──(agent㉿cybershield)-[~]</span>
+  1494→                            <span className="text-pink-400 mr-2">└─$</span>
+  1495→                            <input
+  1496→                              ref={terminalInputRef}
+  1497→                              value={terminalInput}
+  1498→                              onChange={(e) => setTerminalInput(e.target.value)}
+  1499→                              onKeyDown={handleTerminalKeyDown}
+  1500→                              className="flex-1 bg-transparent text-cyan-400 outline-none font-mono text-sm caret-cyan-400"
+  1501→                              autoFocus
+  1502→                              spellCheck={false}
+  1503→                              autoComplete="off"
+  1504→                            />
+  1505→                          </div>
+  1506→                        )}
+  1507→                        <div ref={terminalEndRef} />
+  1508→                      </div>
+  1509→                    </ScrollArea>
+  1510→                  </div>
+  1511→                </div>
+  1512→
+  1513→                {/* Lab Sidebar (30%) */}
+  1514→                <div className="lg:col-span-3 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-5rem)] pb-4">
+  1515→                  {/* Lab Status */}
+  1516→                  <HoloCard glowColor={labStatus === 'running' ? 'emerald' : labStatus === 'failed' ? 'pink' : 'cyan'}>
+  1517→                    <div className="flex items-center justify-between">
+  1518→                      <div className="flex items-center gap-2">
+  1519→                        <div className={`w-2.5 h-2.5 rounded-full ${labStatus === 'running' ? 'bg-emerald-400 animate-pulse' : labStatus === 'failed' ? 'bg-pink-400' : labStatus === 'starting' ? 'bg-amber-400 animate-pulse' : 'bg-slate-600'}`} />
+  1520→                        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Lab Status</h3>
+  1521→                      </div>
+  1522→                      <Badge variant="outline" className={`text-[10px] capitalize ${
+  1523→                        labStatus === 'running' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' :
+  1524→                        labStatus === 'failed' ? 'border-pink-500/30 text-pink-400 bg-pink-500/10' :
+  1525→                        labStatus === 'starting' ? 'border-amber-500/30 text-amber-400 bg-amber-500/10' :
+  1526→                        'border-slate-600 text-slate-500'
+  1527→                      }`}>{labStatus}</Badge>
+  1528→                    </div>
+  1529→                  </HoloCard>
+  1530→
+  1531→                  {/* Objectives */}
+  1532→                  <HoloCard glowColor="emerald">
+  1533→                    <div className="flex items-center gap-2 mb-3">
+  1534→                      <Target className="h-4 w-4 text-emerald-400" />
+  1535→                      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Objectives</h3>
+  1536→                    </div>
+  1537→                    <div className="space-y-2.5">
+  1538→                      {labObjectives.map((obj) => (
+  1539→                        <div key={obj.id} className="flex items-start gap-2.5">
+  1540→                          {obj.completed ? (
+  1541→                            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+  1542→                          ) : (
+  1543→                            <Circle className="h-4 w-4 text-slate-600 shrink-0 mt-0.5" />
+  1544→                          )}
+  1545→                          <span className={`text-xs leading-relaxed ${obj.completed ? 'text-emerald-400 line-through' : 'text-slate-400'}`}>{obj.description}</span>
+  1546→                        </div>
+  1547→                      ))}
+  1548→                    </div>
+  1549→                  </HoloCard>
+  1550→
+  1551→                  {/* Command History */}
+  1552→                  <HoloCard glowColor="violet">
+  1553→                    <div className="flex items-center gap-2 mb-3">
+  1554→                      <Clock className="h-4 w-4 text-violet-400" />
+  1555→                      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Command History</h3>
+  1556→                    </div>
+  1557→                    {commandHistory.length === 0 ? (
+  1558→                      <p className="text-xs text-slate-600">No commands executed yet</p>
+  1559→                    ) : (
+  1560→                      <ScrollArea className="max-h-40">
+  1561→                        <div className="space-y-1">
+  1562→                          {[...commandHistory].reverse().slice(0, 20).map((cmd, i) => (
+  1563→                            <div key={i} className="text-xs font-mono text-cyan-400/60 py-0.5 px-2 rounded bg-slate-950/50 truncate">
+  1564→                              $ {cmd}
+  1565→                            </div>
+  1566→                          ))}
+  1567→                        </div>
+  1568→                      </ScrollArea>
+  1569→                    )}
+  1570→                  </HoloCard>
+  1571→                </div>
+  1572→              </motion.div>
+  1573→            )}
+  1574→
+  1575→            {/* ═══════════════════════════════════════════════════════════════ */}
+  1576→            {/* VIEW: ANALYTICS                                              */}
+  1577→            {/* ═══════════════════════════════════════════════════════════════ */}
+  1578→            {view === 'analytics' && (
+  1579→              <motion.div key="analytics" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="space-y-5">
+  1580→                <div>
+  1581→                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-500 bg-clip-text text-transparent">
+  1582→                    Performance Analytics
+  1583→                  </h1>
+  1584→                  <p className="text-sm text-slate-500 mt-1">Track your learning progress and skill development</p>
+  1585→                </div>
+  1586→
+  1587→                {/* Stat Cards */}
+  1588→                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+  1589→                  {[
+  1590→                    { icon: BookOpen, label: 'Modules Done', value: `${progressData.modulesCompleted}/${progressData.totalModules}`, color: 'cyan', pct: (progressData.modulesCompleted / progressData.totalModules) * 100 },
+  1591→                    { icon: Target, label: 'Quiz Accuracy', value: `${Math.round(progressData.overallQuizAccuracy * 100)}%`, color: 'emerald', pct: progressData.overallQuizAccuracy * 100 },
+  1592→                    { icon: FlaskConical, label: 'Lab Completion', value: `${Math.round(progressData.labCompletionRate * 100)}%`, color: 'violet', pct: progressData.labCompletionRate * 100 },
+  1593→                    { icon: Clock, label: 'Time Invested', value: `${Math.round(progressData.totalTimeSpentMinutes / 60)}h ${progressData.totalTimeSpentMinutes % 60}m`, color: 'amber', pct: 65 },
+  1594→                  ].map((stat, i) => {
+  1595→                    const Icon = stat.icon;
+  1596→                    const colorMap: Record<string, { glow: string; text: string; bar: string; iconBg: string }> = {
+  1597→                      cyan: { glow: 'shadow-[0_0_15px_rgba(0,240,255,0.1)]', text: 'text-cyan-400', bar: 'from-cyan-500 to-cyan-400', iconBg: 'bg-cyan-500/10 border-cyan-500/20' },
+  1598→                      emerald: { glow: 'shadow-[0_0_15px_rgba(16,185,129,0.1)]', text: 'text-emerald-400', bar: 'from-emerald-500 to-emerald-400', iconBg: 'bg-emerald-500/10 border-emerald-500/20' },
+  1599→                      violet: { glow: 'shadow-[0_0_15px_rgba(139,92,246,0.1)]', text: 'text-violet-400', bar: 'from-violet-500 to-violet-400', iconBg: 'bg-violet-500/10 border-violet-500/20' },
+  1600→                      amber: { glow: 'shadow-[0_0_15px_rgba(245,158,11,0.1)]', text: 'text-amber-400', bar: 'from-amber-500 to-amber-400', iconBg: 'bg-amber-500/10 border-amber-500/20' },
+  1601→                    };
+  1602→                    const c = colorMap[stat.color];
+  1603→                    return (
+  1604→                      <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+  1605→                        <HoloCard glowColor={stat.color as 'cyan' | 'emerald' | 'violet' | 'amber'} className={c.glow}>
+  1606→                          <div className="flex items-center gap-3 mb-3">
+  1607→                            <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${c.iconBg}`}>
+  1608→                              <Icon className={`h-5 w-5 ${c.text}`} />
+  1609→                            </div>
+  1610→                            <div>
+  1611→                              <p className={`text-xl sm:text-2xl font-bold ${c.text}`} style={{ textShadow: `0 0 20px ${stat.color === 'cyan' ? '#00f0ff40' : stat.color === 'emerald' ? '#10b98140' : stat.color === 'violet' ? '#8b5cf640' : '#f59e0b40'}` }}>{stat.value}</p>
+  1612→                              <p className="text-[10px] text-slate-500 uppercase tracking-wider">{stat.label}</p>
+  1613→                            </div>
+  1614→                          </div>
+  1615→                          <div className="w-full h-1 rounded-full bg-slate-800 overflow-hidden">
+  1616→                            <motion.div initial={{ width: 0 }} animate={{ width: `${stat.pct}%` }} transition={{ delay: 0.5 + i * 0.1, duration: 1 }} className={`h-full rounded-full bg-gradient-to-r ${c.bar}`} />
+  1617→                          </div>
+  1618→                        </HoloCard>
+  1619→                      </motion.div>
+  1620→                    );
+  1621→                  })}
+  1622→                </div>
+  1623→
+  1624→                {/* Chart */}
+  1625→                <HoloCard glowColor="cyan">
+  1626→                  <div className="flex items-center gap-2 mb-4">
+  1627→                    <BarChart3 className="h-4 w-4 text-cyan-400" />
+  1628→                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Module Performance</h3>
+  1629→                  </div>
+  1630→                  <div className="h-64">
+  1631→                    <ChartContainer config={chartConfig}>
+  1632→                      <BarChart data={progressData.moduleBreakdown.filter((m) => m.quizAccuracy > 0)}>
+  1633→                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,240,255,0.06)" />
+  1634→                        <XAxis dataKey="moduleTitle" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={{ stroke: 'rgba(0,240,255,0.1)' }} tickLine={false} />
+  1635→                        <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={{ stroke: 'rgba(0,240,255,0.1)' }} tickLine={false} domain={[0, 100]} />
+  1636→                        <ChartTooltip content={<ChartTooltipContent className="bg-slate-900/95 backdrop-blur-xl border border-cyan-500/15 text-slate-200" />} />
+  1637→                        <defs>
+  1638→                          <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+  1639→                            <stop offset="0%" stopColor="#00f0ff" stopOpacity={0.8} />
+  1640→                            <stop offset="100%" stopColor="#10b981" stopOpacity={0.8} />
+  1641→                          </linearGradient>
+  1642→                        </defs>
+  1643→                        <Bar dataKey="quizAccuracy" radius={[4, 4, 0, 0]} fill="url(#barGradient)" style={{ filter: 'drop-shadow(0 0 8px rgba(0,240,255,0.3))' }}>
+  1644→                          {progressData.moduleBreakdown.filter((m) => m.quizAccuracy > 0).map((_, i) => (
+  1645→                            <Cell key={i} fill={`url(#barGradient)`} />
+  1646→                          ))}
+  1647→                        </Bar>
+  1648→                      </BarChart>
+  1649→                    </ChartContainer>
+  1650→                  </div>
+  1651→                </HoloCard>
+  1652→
+  1653→                {/* Strengths / Weaknesses / Recommendations */}
+  1654→                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  1655→                  <HoloCard glowColor="emerald">
+  1656→                    <div className="flex items-center gap-2 mb-3">
+  1657→                      <TrendingUp className="h-4 w-4 text-emerald-400" />
+  1658→                      <h3 className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Strengths</h3>
+  1659→                    </div>
+  1660→                    <div className="space-y-2">
+  1661→                      {progressData.strengths.map((s, i) => (
+  1662→                        <div key={i} className="flex items-start gap-2 text-xs text-slate-300">
+  1663→                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
+  1664→                          <span>{s}</span>
+  1665→                        </div>
+  1666→                      ))}
+  1667→                    </div>
+  1668→                  </HoloCard>
+  1669→
+  1670→                  <HoloCard glowColor="amber">
+  1671→                    <div className="flex items-center gap-2 mb-3">
+  1672→                      <AlertTriangle className="h-4 w-4 text-amber-400" />
+  1673→                      <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-400">Weaknesses</h3>
+  1674→                    </div>
+  1675→                    <div className="space-y-2">
+  1676→                      {progressData.weaknesses.map((w, i) => (
+  1677→                        <div key={i} className="flex items-start gap-2 text-xs text-slate-300">
+  1678→                          <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
+  1679→                          <span>{w}</span>
+  1680→                        </div>
+  1681→                      ))}
+  1682→                    </div>
+  1683→                  </HoloCard>
+  1684→
+  1685→                  <HoloCard glowColor="violet">
+  1686→                    <div className="flex items-center gap-2 mb-3">
+  1687→                      <Lightbulb className="h-4 w-4 text-violet-400" />
+  1688→                      <h3 className="text-xs font-semibold uppercase tracking-wider text-violet-400">Recommendations</h3>
+  1689→                    </div>
+  1690→                    <div className="space-y-2">
+  1691→                      {progressData.recommendations.map((r, i) => (
+  1692→                        <div key={i} className="flex items-start gap-2 text-xs text-slate-300">
+  1693→                          <Lightbulb className="h-3.5 w-3.5 text-violet-400 shrink-0 mt-0.5" />
+  1694→                          <span>{r}</span>
+  1695→                        </div>
+  1696→                      ))}
+  1697→                    </div>
+  1698→                  </HoloCard>
+  1699→                </div>
+  1700→              </motion.div>
+  1701→            )}
+  1702→
+  1703→            {/* ═══════════════════════════════════════════════════════════════ */}
+  1704→            {/* VIEW: CERTIFICATES                                           */}
+  1705→            {/* ═══════════════════════════════════════════════════════════════ */}
+  1706→            {view === 'certificates' && (
+  1707→              <motion.div key="certificates" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="space-y-5">
+  1708→                <div>
+  1709→                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-500 bg-clip-text text-transparent">
+  1710→                    Certificates
+  1711→                  </h1>
+  1712→                  <p className="text-sm text-slate-500 mt-1">Your earned professional certifications</p>
+  1713→                </div>
+  1714→
+  1715→                {/* Certificate Grid */}
+  1716→                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  1717→                  {certificates.map((cert, idx) => (
+  1718→                    <motion.div key={cert.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}>
+  1719→                      <HoloCard glowColor="emerald" className="overflow-hidden p-0">
+  1720→                        {/* Gradient Top Bar */}
+  1721→                        <div className="h-1.5 bg-gradient-to-r from-cyan-500 via-emerald-500 to-violet-500" />
+  1722→                        <div className="p-4 sm:p-5">
+  1723→                          <div className="flex items-start gap-3 mb-4">
+  1724→                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/15 to-emerald-500/15 border border-cyan-500/20 flex items-center justify-center shrink-0">
+  1725→                              <Award className="h-6 w-6 text-cyan-400" />
+  1726→                            </div>
+  1727→                            <div className="min-w-0">
+  1728→                              <h3 className="font-semibold text-sm text-slate-100 line-clamp-2">{cert.courseName}</h3>
+  1729→                              <p className="text-xs text-slate-500 mt-1">Issued {formatDate(cert.issuedAt)}</p>
+  1730→                            </div>
+  1731→                          </div>
+  1732→
+  1733→                          {/* Verification Hash */}
+  1734→                          <div className="bg-slate-950/60 rounded-lg p-2.5 mb-4 border border-slate-800/50">
+  1735→                            <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Verification Hash</p>
+  1736→                            <div className="flex items-center gap-2">
+  1737→                              <code className="text-[11px] text-emerald-400 font-mono truncate flex-1">{cert.verificationHash.slice(0, 40)}...</code>
+  1738→                              <button
+  1739→                                onClick={() => navigator.clipboard.writeText(cert.verificationHash)}
+  1740→                                className="text-slate-500 hover:text-cyan-400 transition-colors shrink-0"
+  1741→                              >
+  1742→                                <Copy className="h-3.5 w-3.5" />
+  1743→                              </button>
+  1744→                            </div>
+  1745→                          </div>
+  1746→
+  1747→                          <Button
+  1748→                            size="sm"
+  1749→                            onClick={() => handleDownloadCert(cert.id)}
+  1750→                            className="w-full text-xs h-9 rounded-lg bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 border border-cyan-500/30 text-cyan-400 hover:from-cyan-500/30 hover:to-emerald-500/30 transition-all duration-300"
+  1751→                          >
+  1752→                            <Download className="h-3.5 w-3.5 mr-1.5" />
+  1753→                            Download PDF
+  1754→                          </Button>
+  1755→                        </div>
+  1756→                      </HoloCard>
+  1757→                    </motion.div>
+  1758→                  ))}
+  1759→                </div>
+  1760→
+  1761→                {/* Verification Section */}
+  1762→                <HoloCard glowColor="violet">
+  1763→                  <div className="flex items-center gap-2 mb-3">
+  1764→                    <Search className="h-4 w-4 text-violet-400" />
+  1765→                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Verify Certificate</h3>
+  1766→                  </div>
+  1767→                  <div className="flex gap-2">
+  1768→                    <Input
+  1769→                      value={verifyHash}
+  1770→                      onChange={(e) => setVerifyHash(e.target.value)}
+  1771→                      placeholder="Paste verification hash here..."
+  1772→                      className="bg-slate-950/60 border-cyan-500/20 focus:border-cyan-400/50 text-sm text-slate-200 placeholder:text-slate-600"
+  1773→                    />
+  1774→                    <Button
+  1775→                      onClick={handleVerifyCertificate}
+  1776→                      disabled={!verifyHash.trim() || isVerifying}
+  1777→                      className="shrink-0 bg-gradient-to-r from-violet-500 to-pink-500 text-white text-sm hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] transition-all duration-300 rounded-lg"
+  1778→                    >
+  1779→                      {isVerifying ? 'Verifying...' : 'Verify'}
+  1780→                    </Button>
+  1781→                  </div>
+  1782→                  {verifyResult && (
+  1783→                    <motion.div
+  1784→                      initial={{ opacity: 0, y: 5 }}
+  1785→                      animate={{ opacity: 1, y: 0 }}
+  1786→                      className={`mt-3 p-3 rounded-lg text-sm ${verifyResult.valid ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-pink-500/10 border border-pink-500/20 text-pink-400'}`}
+  1787→                    >
+  1788→                      {verifyResult.message}
+  1789→                    </motion.div>
+  1790→                  )}
+  1791→                </HoloCard>
+  1792→              </motion.div>
+  1793→            )}
+  1794→
+  1795→            {/* ═══════════════════════════════════════════════════════════════ */}
+  1796→            {/* VIEW: ADMIN                                                  */}
+  1797→            {/* ═══════════════════════════════════════════════════════════════ */}
+  1798→            {view === 'admin' && user.role === 'admin' && (
+  1799→              <motion.div key="admin" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="space-y-5">
+  1800→                <div>
+  1801→                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-500 bg-clip-text text-transparent">
+  1802→                    Admin Dashboard
+  1803→                  </h1>
+  1804→                  <p className="text-sm text-slate-500 mt-1">Platform overview and management</p>
+  1805→                </div>
+  1806→
+  1807→                {/* Admin Stats Grid */}
+  1808→                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+  1809→                  {[
+  1810→                    { icon: Users, label: 'Total Users', value: adminStats.users, color: 'cyan' },
+  1811→                    { icon: BookOpen, label: 'Courses', value: adminStats.courses, color: 'emerald' },
+  1812→                    { icon: GraduationCap, label: 'Enrollments', value: adminStats.enrollments, color: 'violet' },
+  1813→                    { icon: Award, label: 'Certificates', value: adminStats.certificates, color: 'amber' },
+  1814→                    { icon: FlaskConical, label: 'Labs Run', value: adminStats.labs, color: 'pink' },
+  1815→                    { icon: Star, label: 'Avg Score', value: `${adminStats.avgScore}%`, color: 'cyan' },
+  1816→                  ].map((stat, i) => {
+  1817→                    const Icon = stat.icon;
+  1818→                    const colorMap: Record<string, { text: string; iconBg: string; glow: string }> = {
+  1819→                      cyan: { text: 'text-cyan-400', iconBg: 'bg-cyan-500/10 border-cyan-500/20', glow: 'shadow-[0_0_15px_rgba(0,240,255,0.1)]' },
+  1820→                      emerald: { text: 'text-emerald-400', iconBg: 'bg-emerald-500/10 border-emerald-500/20', glow: 'shadow-[0_0_15px_rgba(16,185,129,0.1)]' },
+  1821→                      violet: { text: 'text-violet-400', iconBg: 'bg-violet-500/10 border-violet-500/20', glow: 'shadow-[0_0_15px_rgba(139,92,246,0.1)]' },
+  1822→                      amber: { text: 'text-amber-400', iconBg: 'bg-amber-500/10 border-amber-500/20', glow: 'shadow-[0_0_15px_rgba(245,158,11,0.1)]' },
+  1823→                      pink: { text: 'text-pink-400', iconBg: 'bg-pink-500/10 border-pink-500/20', glow: 'shadow-[0_0_15px_rgba(236,72,153,0.1)]' },
+  1824→                    };
+  1825→                    const c = colorMap[stat.color];
+  1826→                    return (
+  1827→                      <motion.div key={stat.label} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.06 }}>
+  1828→                        <HoloCard glowColor={stat.color as 'cyan' | 'emerald' | 'violet' | 'amber' | 'pink'} className={c.glow}>
+  1829→                          <div className="text-center">
+  1830→                            <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mx-auto mb-2 ${c.iconBg}`}>
+  1831→                              <Icon className={`h-5 w-5 ${c.text}`} />
+  1832→                            </div>
+  1833→                            <p className={`text-xl font-bold ${c.text}`} style={{ textShadow: `0 0 15px currentColor` }}>{typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}</p>
+  1834→                            <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">{stat.label}</p>
+  1835→                          </div>
+  1836→                        </HoloCard>
+  1837→                      </motion.div>
+  1838→                    );
+  1839→                  })}
+  1840→                </div>
+  1841→
+  1842→                {/* User Management Placeholder */}
+  1843→                <HoloCard glowColor="cyan">
+  1844→                  <div className="flex items-center justify-between mb-4">
+  1845→                    <div className="flex items-center gap-2">
+  1846→                      <Users className="h-4 w-4 text-cyan-400" />
+  1847→                      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Recent Users</h3>
+  1848→                    </div>
+  1849→                    <Input placeholder="Search users..." className="w-48 h-8 bg-slate-950/60 border-cyan-500/20 focus:border-cyan-400/50 text-xs text-slate-200 placeholder:text-slate-600" />
+  1850→                  </div>
+  1851→                  <div className="space-y-2">
+  1852→                    {[
+  1853→                      { name: 'Alex Chen', email: 'alex@cybershield.academy', role: 'admin', courses: 3, score: 82 },
+  1854→                      { name: 'Jordan Smith', email: 'jordan@cybershield.academy', role: 'student', courses: 2, score: 91 },
+  1855→                      { name: 'Sam Wilson', email: 'sam@cybershield.academy', role: 'student', courses: 1, score: 74 },
+  1856→                      { name: 'Casey Lee', email: 'casey@cybershield.academy', role: 'student', courses: 4, score: 88 },
+  1857→                    ].map((u, i) => (
+  1858→                      <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-slate-950/40 border border-slate-800/50 hover:border-cyan-500/15 transition-colors">
+  1859→                        <Avatar className="h-8 w-8 border border-slate-700/50">
+  1860→                          <AvatarFallback className="bg-gradient-to-br from-cyan-500/15 to-violet-500/15 text-cyan-400 text-xs font-bold">{u.name.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
+  1861→                        </Avatar>
+  1862→                        <div className="flex-1 min-w-0">
+  1863→                          <p className="text-sm text-slate-200 font-medium truncate">{u.name}</p>
+  1864→                          <p className="text-[11px] text-slate-500">{u.email}</p>
+  1865→                        </div>
+  1866→                        <Badge variant="outline" className={`text-[10px] shrink-0 ${u.role === 'admin' ? 'border-violet-500/30 text-violet-400 bg-violet-500/10' : 'border-slate-700 text-slate-400'}`}>{u.role}</Badge>
+  1867→                        <div className="hidden sm:flex items-center gap-4 shrink-0 text-[11px] text-slate-500">
+  1868→                          <span>{u.courses} courses</span>
+  1869→                          <span className="text-emerald-400">{u.score}% avg</span>
+  1870→                        </div>
+  1871→                      </div>
+  1872→                    ))}
+  1873→                  </div>
+  1874→                </HoloCard>
+  1875→              </motion.div>
+  1876→            )}
+  1877→          </AnimatePresence>
+  1878→        </div>
+  1879→      </main>
+  1880→
+  1881→      {/* ─── Course Detail Modal ───────────────────────────────────────────── */}
+  1882→      <Dialog open={courseModalOpen} onOpenChange={setCourseModalOpen}>
+  1883→        <DialogContent className="bg-slate-900/95 backdrop-blur-xl border border-cyan-500/15 max-w-lg max-h-[85vh] overflow-y-auto">
+  1884→          {selectedCourse && (
+  1885→            <>
+  1886→              <DialogHeader>
+  1887→                <div className="h-1.5 w-20 bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full mb-3" />
+  1888→                <DialogTitle className="text-lg text-slate-100">{selectedCourse.title}</DialogTitle>
+  1889→                <DialogDescription className="text-sm text-slate-400">{selectedCourse.description}</DialogDescription>
+  1890→              </DialogHeader>
+  1891→              <div className="space-y-4 mt-2">
+  1892→                <div className="flex flex-wrap gap-3">
+  1893→                  <Badge variant="outline" className={`text-xs ${getDifficultyColor(selectedCourse.difficulty).bg} ${getDifficultyColor(selectedCourse.difficulty).text} ${getDifficultyColor(selectedCourse.difficulty).border} border`}>{selectedCourse.difficulty}</Badge>
+  1894→                  <span className="text-xs text-slate-500 flex items-center gap-1"><BookOpen className="h-3 w-3" /> {selectedCourse.moduleCount} modules</span>
+  1895→                  <span className="text-xs text-slate-500 flex items-center gap-1"><Clock className="h-3 w-3" /> {selectedCourse.durationHours}h</span>
+  1896→                  <span className="text-xs text-slate-500 flex items-center gap-1"><Users className="h-3 w-3" /> {selectedCourse.studentCount.toLocaleString()} students</span>
+  1897→                </div>
+  1898→
+  1899→                {selectedCourse.modules && selectedCourse.modules.length > 0 && (
+  1900→                  <div>
+  1901→                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Course Modules</h4>
+  1902→                    <div className="space-y-1.5">
+  1903→                      {selectedCourse.modules.map((mod, i) => (
+  1904→                        <div key={i} className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-950/40">
+  1905→                          {mod.completed ? (
+  1906→                            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+  1907→                          ) : (
+  1908→                            <Circle className="h-4 w-4 text-slate-600 shrink-0" />
+  1909→                          )}
+  1910→                          <span className={`text-sm ${mod.completed ? 'text-emerald-400' : 'text-slate-400'}`}>{mod.title}</span>
+  1911→                        </div>
+  1912→                      ))}
+  1913→                    </div>
+  1914→                  </div>
+  1915→                )}
+  1916→
+  1917→                <Button
+  1918→                  onClick={() => {
+  1919→                    if (!selectedCourse.enrolled) handleEnroll(selectedCourse.id);
+  1920→                    setCourseModalOpen(false);
+  1921→                    setView('classroom');
+  1922→                  }}
+  1923→                  className={`w-full h-11 rounded-lg font-semibold transition-all duration-300 ${
+  1924→                    selectedCourse.enrolled
+  1925→                      ? 'bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 border border-cyan-500/30 text-cyan-400'
+  1926→                      : 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-white hover:shadow-[0_0_25px_rgba(0,240,255,0.3)]'
+  1927→                  }`}
+  1928→                >
+  1929→                  {selectedCourse.enrolled ? 'Continue Learning' : 'Enroll Now'}
+  1930→                  <ChevronRight className="h-4 w-4 ml-1" />
+  1931→                </Button>
+  1932→              </div>
+  1933→            </>
+  1934→          )}
+  1935→        </DialogContent>
+  1936→      </Dialog>
+  1937→
+  1938→      {/* ─── Quiz Modal ────────────────────────────────────────────────────── */}
+  1939→      <Dialog open={quizOpen} onOpenChange={setQuizOpen}>
+  1940→        <DialogContent className="bg-slate-900/95 backdrop-blur-xl border border-violet-500/15 max-w-lg">
+  1941→          {!quizSubmitted ? (
+  1942→            <>
+  1943→              <DialogHeader>
+  1944→                <div className="flex items-center gap-2 mb-1">
+  1945→                  <Award className="h-5 w-5 text-violet-400" />
+  1946→                  <DialogTitle className="text-lg text-slate-100">Module Assessment</DialogTitle>
+  1947→                </div>
+  1948→                <DialogDescription className="text-sm text-slate-400">
+  1949→                  Question {quizIndex + 1} of {quizQuestions.length}
+  1950→                </DialogDescription>
+  1951→              </DialogHeader>
+  1952→
+  1953→              <div className="mt-2">
+  1954→                <div className="w-full h-1 rounded-full bg-slate-800 mb-6 overflow-hidden">
+  1955→                  <motion.div
+  1956→                    className="h-full bg-gradient-to-r from-violet-500 to-cyan-500 rounded-full"
+  1957→                    initial={{ width: 0 }}
+  1958→                    animate={{ width: `${((quizIndex + 1) / quizQuestions.length) * 100}%` }}
+  1959→                    transition={{ duration: 0.3 }}
+  1960→                  />
+  1961→                </div>
+  1962→
+  1963→                <p className="text-sm font-medium text-slate-200 mb-4">{quizQuestions[quizIndex]?.question}</p>
+  1964→
+  1965→                <RadioGroup
+  1966→                  value={quizAnswers[quizIndex]?.toString() ?? ''}
+  1967→                  onValueChange={(val) => setQuizAnswers((prev) => ({ ...prev, [quizIndex]: parseInt(val) }))}
+  1968→                >
+  1969→                  {quizQuestions[quizIndex]?.options.map((opt, i) => (
+  1970→                    <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-slate-950/40 border border-slate-800/50 hover:border-violet-500/20 transition-colors cursor-pointer">
+  1971→                      <RadioGroupItem value={i.toString()} id={`opt-${i}`} className="border-slate-600 text-violet-400" />
+  1972→                      <Label htmlFor={`opt-${i}`} className="text-sm text-slate-300 cursor-pointer flex-1">{opt}</Label>
+  1973→                    </div>
+  1974→                  ))}
+  1975→                </RadioGroup>
+  1976→
+  1977→                <div className="flex justify-between mt-6">
+  1978→                  <Button
+  1979→                    variant="ghost"
+  1980→                    onClick={() => quizIndex > 0 && setQuizIndex(quizIndex - 1)}
+  1981→                    disabled={quizIndex === 0}
+  1982→                    className="text-slate-400 hover:text-slate-200"
+  1983→                  >
+  1984→                    Previous
+  1985→                  </Button>
+  1986→                  {quizIndex < quizQuestions.length - 1 ? (
+  1987→                    <Button
+  1988→                      onClick={() => setQuizIndex(quizIndex + 1)}
+  1989→                      disabled={quizAnswers[quizIndex] === undefined}
+  1990→                      className="bg-gradient-to-r from-violet-500 to-cyan-500 text-white hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] transition-all duration-300"
+  1991→                    >
+  1992→                      Next <ChevronRight className="h-4 w-4 ml-1" />
+  1993→                    </Button>
+  1994→                  ) : (
+  1995→                    <Button
+  1996→                      onClick={handleQuizSubmit}
+  1997→                      disabled={Object.keys(quizAnswers).length < quizQuestions.length}
+  1998→                      className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all duration-300"
+  1999→                    >
+  2000→                      Submit Quiz <Award className="h-4 w-4 ml-1" />
+
+[showing lines 1-2000 of 2078; use offset=2001 with limit to continue reading]

@@ -1,0 +1,1720 @@
+✓ Done
+- generic
+  - banner
+    - StaticText "CyberShield"
+    - generic
+      - StaticText "Lv.6"
+    - generic
+      - StaticText "1450 XP"
+    - button "Voice enabled" [ref=e2]
+    - StaticText "7"
+    - button [ref=e20]
+    - StaticText "AC"
+    - StaticText "Alex Chen"
+    - button "Sign out" [ref=e3]
+  - navigation
+    - button "Dashboard" [ref=e4]
+      - StaticText "Dashboard"
+    - button "Courses" [ref=e5]
+      - StaticText "Courses"
+    - button "AI Professor" [ref=e6]
+      - StaticText "AI Professor"
+    - button "Quizzes" [ref=e7]
+      - StaticText "Quizzes"
+    - button "Lab Terminal" [ref=e8]
+      - StaticText "Lab Terminal"
+    - button "CTF Arena" [ref=e9]
+      - StaticText "CTF Arena"
+    - button "Rank & Badges" [ref=e10]
+      - StaticText "Rank & Badges"
+    - button "Analytics" [ref=e11]
+      - StaticText "Analytics"
+    - button "Certificates" [ref=e12]
+      - StaticText "Certificates"
+  - main
+    - heading "Welcome back, Alex" [level=1, ref=e13]
+      - StaticText "Welcome back, Alex"
+    - paragraph
+      - StaticText "Continue your cybersecurity journey. You're on a 7-day streak!"
+    - StaticText "6"
+    - StaticText "Level"
+    - StaticText "Security Engineer"
+    - StaticText "Rank Title"
+    - StaticText "Level "
+    - StaticText "6"
+    - StaticText " Progress"
+    - StaticText "1450"
+    - StaticText " / "
+    - StaticText "2200"
+    - StaticText " XP"
+    - StaticText "3"
+    - StaticText "Courses Enrolled"
+    - StaticText "12"
+    - StaticText "Quizzes Passed"
+    - StaticText "24.5"
+    - StaticText "Lab Hours"
+    - StaticText "4"
+    - StaticText "CTF Flags"
+    - StaticText "Focus Score"
+    - StaticText "87"
+    - StaticText "%"
+    - StaticText "current session"
+    - StaticText "Quick Actions"
+    - button "Talk to AI Professor" [ref=e14]
+    - button "Enter CTF Arena" [ref=e15]
+    - StaticText "Recent Badges"
+    - StaticText "🎯"
+    - StaticText "🧠"
+    - StaticText "🔬"
+    - StaticText "🔒"
+    - heading "Active Courses" [level=2, ref=e16]
+    - button "View All" [ref=e17]
+    - heading "Network Security Fundamentals" [level=3, ref=e18]
+    - StaticText "intermediate"
+    - StaticText "4"
+    - StaticText "/"
+    - StaticText "8"
+    - StaticText " modules"
+    - StaticText "50"
+    - StaticText "%"
+    - heading "Ethical Hacking & Penetration Testing" [level=3, ref=e19]
+    - StaticText "advanced"
+    - StaticText "0"
+    - StaticText "/"
+    - StaticText "10"
+    - StaticText " modules"
+    - StaticText "20"
+    - StaticText "%"
+  - contentinfo
+    - StaticText "CyberShield Academy"
+    - StaticText "AI-Powered Cybersecurity Training"
+    - StaticText "·"
+    - StaticText "v2.0 Holographic Edition"
+- region "Notifications (F8)" [ref=e1]
+  - list
+- generic
+  - generic
+    - generic
+      - generic
+        - navigation
+          - button "previous" [disabled, ref=e26]
+            - image "previous"
+          - generic
+            - StaticText "1/1"
+          - button "next" [disabled, ref=e27]
+            - image "next"
+        - image
+      - generic
+        - link "Next.js 16.1.3 (stale) Turbopack" [ref=e21]
+          - image
+          - StaticText "Next.js 16.1.3 (stale)"
+          - StaticText "Turbopack"
+        - image
+    - generic
+      - dialog "Console Error"
+        - generic
+          - generic
+            - StaticText "Console Error"
+            - button "Copy Error Info" [ref=e30]
+              - image
+            - link "Go to related documentation" [ref=e31]
+              - image
+            - button "Attach Node.js inspector" [ref=e32]
+              - image
+            - generic
+              - StaticText "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:"
+          - generic
+            - paragraph
+              - StaticText "- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded."
+            - paragraph
+              - StaticText "See more info here: "
+              - link "https://nextjs.org/docs/messages/react-hydration-error" [ref=e36]
+            - button "complete Component Stack" [expanded=false, ref=e33]
+              - image
+            - code
+              - generic
+                - StaticText "  ...\n"
+              - generic
+                - StaticText "    <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>\n"
+              - generic
+                - StaticText "      <LoadingBoundary name=\"/\" loading={null}>\n"
+              - generic
+                - StaticText "        <HTTPAccessFallbackBoundary notFound={<SegmentViewNode>} forbidden={undefined} unauthorized={undefined}>\n"
+              - generic
+                - StaticText "          <HTTPAccessFallbackErrorBoundary pathname=\"/\" notFound={<SegmentViewNode>} forbidden={undefined} ...>\n"
+              - generic
+                - StaticText "            <RedirectBoundary>\n"
+              - generic
+                - StaticText "              <RedirectErrorBoundary router={{...}}>\n"
+              - generic
+                - StaticText "                <InnerLayoutRouter url=\"/\" tree={[...]} params={{}} cacheNode={{rsc:<Fragment>, ...}} segmentPath={[...]} ...>\n"
+              - generic
+                - StaticText "                  <SegmentViewNode type=\"page\" pagePath=\"page.tsx\">\n"
+              - generic
+                - StaticText "                    <SegmentTrieNode>\n"
+              - generic
+                - StaticText "                    <ClientPageRoot Component={function CyberShieldApp} serverProvidedParams={{...}}>\n"
+              - generic
+                - StaticText "                      <CyberShieldApp params={Promise} searchParams={Promise}>\n"
+              - generic
+                - StaticText "                        <div className=\"min-h-scre...\">\n"
+              - generic
+                - StaticText "                          <Particles>\n"
+              - generic
+                - StaticText "                            <div className=\"holo-bg\">\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"1.4585124474602584%\"\n"
+              - generic
+                - StaticText "-                                 left: \"13.1013%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.471163084611539px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.04034px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.471163084611539px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.04034px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(0,240,255,0.4)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"6.5856091208182885s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"19.423176646152463s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(0, 240, 255, 0.4)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"3.9681s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"15.8664s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"3.370327724445432%\"\n"
+              - generic
+                - StaticText "-                                 left: \"55.4863%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.3390830667637905px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.87958px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.3390830667637905px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.87958px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(191,0,255,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"4.068385225788103s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"8.85911855026535s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(191, 0, 255, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"0.834805s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"17.6377s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"92.24349024548957%\"\n"
+              - generic
+                - StaticText "-                                 left: \"65.5932%\"\n"
+              - generic
+                - StaticText "+                                 width: \"1.9957137009317656px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.05812px\"\n"
+              - generic
+                - StaticText "+                                 height: \"1.9957137009317656px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.05812px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(57,255,20,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"5.324912402050612s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"14.593104598777348s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(57, 255, 20, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"7.49785s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"14.104s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"77.98026323331321%\"\n"
+              - generic
+                - StaticText "-                                 left: \"40.5194%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.087622044521667px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.37227px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.087622044521667px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.37227px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(0,240,255,0.4)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"2.0480197574625576s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"18.652726289101764s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(0, 240, 255, 0.4)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"6.3832s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"10.7333s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"17.93084690999501%\"\n"
+              - generic
+                - StaticText "-                                 left: \"93.3104%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.899952189761002px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.66009px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.899952189761002px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.66009px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(191,0,255,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"1.2763206670011282s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"13.42754723024682s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(191, 0, 255, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"7.74623s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"17.0073s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"1.882740010039985%\"\n"
+              - generic
+                - StaticText "-                                 left: \"20.6516%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.914998476331934px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.89225px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.914998476331934px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.89225px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(57,255,20,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"0.10561523045333931s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"11.794636123685537s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(57, 255, 20, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"7.25593s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"12.9303s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"54.9575465726449%\"\n"
+              - generic
+                - StaticText "-                                 left: \"6.30515%\"\n"
+              - generic
+                - StaticText "+                                 width: \"1.726743317995762px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.9186px\"\n"
+              - generic
+                - StaticText "+                                 height: \"1.726743317995762px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.9186px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(0,240,255,0.4)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"3.3907544338459177s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"14.8346803607203s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(0, 240, 255, 0.4)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"2.35262s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"13.4966s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"68.09561671510448%\"\n"
+              - generic
+                - StaticText "-                                 left: \"59.1921%\"\n"
+              - generic
+                - StaticText "+                                 width: \"1.4399755655000808px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.50869px\"\n"
+              - generic
+                - StaticText "+                                 height: \"1.4399755655000808px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.50869px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(191,0,255,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"6.2799656486858515s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"16.843350384661644s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(191, 0, 255, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"5.72635s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"17.3485s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"50.449788173139076%\"\n"
+              - generic
+                - StaticText "-                                 left: \"64.7641%\"\n"
+              - generic
+                - StaticText "+                                 width: \"1.55512992054179px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.08228px\"\n"
+              - generic
+                - StaticText "+                                 height: \"1.55512992054179px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.08228px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(57,255,20,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"7.972303627562995s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"14.3014254594487s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(57, 255, 20, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"1.79259s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"14.2332s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"13.874909659944844%\"\n"
+              - generic
+                - StaticText "-                                 left: \"83.4282%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.8415465144301013px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.09706px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.8415465144301013px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.09706px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(0,240,255,0.4)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"4.000487599113605s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"14.955004022249103s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(0, 240, 255, 0.4)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"3.48964s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"11.3381s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"39.86247554830006%\"\n"
+              - generic
+                - StaticText "-                                 left: \"39.3062%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.706456560229874px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.67711px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.706456560229874px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.67711px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(191,0,255,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"3.147692984480029s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"19.20373897150167s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(191, 0, 255, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"0.0690726s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"18.5466s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"24.140008381597212%\"\n"
+              - generic
+                - StaticText "-                                 left: \"33.7295%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.6067217750204286px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.37744px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.6067217750204286px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.37744px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(57,255,20,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"1.747813492658957s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"17.63298584935019s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(57, 255, 20, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"2.92758s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"18.7144s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"18.070921909968497%\"\n"
+              - generic
+                - StaticText "-                                 left: \"91.8395%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.374426644193144px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.62603px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.374426644193144px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.62603px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(0,240,255,0.4)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"1.4913171933905929s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"16.55549437126581s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(0, 240, 255, 0.4)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"6.52555s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"11.8301s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"93.22181054664%\"\n"
+              - generic
+                - StaticText "-                                 left: \"11.4989%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.7042459302525312px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.037px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.7042459302525312px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.037px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(191,0,255,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"6.690032997831721s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"15.771544508965622s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(191, 0, 255, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"1.6762s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"14.3588s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"58.435529754925156%\"\n"
+              - generic
+                - StaticText "-                                 left: \"79.3951%\"\n"
+              - generic
+                - StaticText "+                                 width: \"1.8048978958007915px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.64773px\"\n"
+              - generic
+                - StaticText "+                                 height: \"1.8048978958007915px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.64773px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(57,255,20,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"1.6465925964816979s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"9.182935506020385s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(57, 255, 20, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"6.85548s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"13.0207s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"44.90317459369807%\"\n"
+              - generic
+                - StaticText "-                                 left: \"53.9254%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.291821354239498px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.62344px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.291821354239498px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.62344px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(0,240,255,0.4)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"3.6620203312349355s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"16.813735862842023s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(0, 240, 255, 0.4)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"1.84125s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"19.5203s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"86.9606102025274%\"\n"
+              - generic
+                - StaticText "-                                 left: \"51.5811%\"\n"
+              - generic
+                - StaticText "+                                 width: \"1.8986969089065038px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.49482px\"\n"
+              - generic
+                - StaticText "+                                 height: \"1.8986969089065038px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.49482px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(191,0,255,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"5.96689558701238s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"16.057962737336723s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(191, 0, 255, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"7.03812s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"13.3535s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"91.34676888422769%\"\n"
+              - generic
+                - StaticText "-                                 left: \"81.0646%\"\n"
+              - generic
+                - StaticText "+                                 width: \"1.0723295642505029px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.84283px\"\n"
+              - generic
+                - StaticText "+                                 height: \"1.0723295642505029px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.84283px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(57,255,20,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"3.902515627917319s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"10.989037705249872s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(57, 255, 20, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"6.45289s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"15.5922s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"83.81487958891583%\"\n"
+              - generic
+                - StaticText "-                                 left: \"20.0389%\"\n"
+              - generic
+                - StaticText "+                                 width: \"1.4002739148751882px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.90767px\"\n"
+              - generic
+                - StaticText "+                                 height: \"1.4002739148751882px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.90767px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(0,240,255,0.4)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"5.00162197451708s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"15.113556305920932s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(0, 240, 255, 0.4)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"0.267523s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"10.4679s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"38.60717145191334%\"\n"
+              - generic
+                - StaticText "-                                 left: \"73.5458%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.760384405553521px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.36409px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.760384405553521px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.36409px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(191,0,255,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"5.348505069710984s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"15.437923542041348s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(191, 0, 255, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"3.58838s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"8.10508s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"55.098342030609956%\"\n"
+              - generic
+                - StaticText "-                                 left: \"18.9076%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.3523377469591606px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.99814px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.3523377469591606px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.99814px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(57,255,20,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"0.4777608401330147s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"13.407833190978483s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(57, 255, 20, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"2.31889s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"9.88876s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"34.18932655048764%\"\n"
+              - generic
+                - StaticText "-                                 left: \"14.8788%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.3533923332507283px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.82686px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.3533923332507283px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.82686px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(0,240,255,0.4)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"2.3504590310992954s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"11.309111978080304s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(0, 240, 255, 0.4)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"3.89453s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"17.745s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"33.3769553191412%\"\n"
+              - generic
+                - StaticText "-                                 left: \"39.9293%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.1900166743490805px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.23306px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.1900166743490805px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.23306px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(191,0,255,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"2.2465764244264053s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"8.049184142157397s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(191, 0, 255, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"0.276001s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"16.2208s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"19.671880859693523%\"\n"
+              - generic
+                - StaticText "-                                 left: \"23.2342%\"\n"
+              - generic
+                - StaticText "+                                 width: \"1.5195826673862562px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.34683px\"\n"
+              - generic
+                - StaticText "+                                 height: \"1.5195826673862562px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.34683px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(57,255,20,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"3.9853777047629277s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"11.680506524547997s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(57, 255, 20, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"3.23116s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"9.26611s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"86.65210174474075%\"\n"
+              - generic
+                - StaticText "-                                 left: \"11.0536%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.311457259050524px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.84951px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.311457259050524px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.84951px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(0,240,255,0.4)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"3.572618401203906s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"16.416406873661565s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(0, 240, 255, 0.4)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"2.46588s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"11.6337s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"43.094889195826205%\"\n"
+              - generic
+                - StaticText "-                                 left: \"58.7254%\"\n"
+              - generic
+                - StaticText "+                                 width: \"1.6249080613165698px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.40977px\"\n"
+              - generic
+                - StaticText "+                                 height: \"1.6249080613165698px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.40977px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(191,0,255,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"2.653094203922347s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"13.775567741987336s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(191, 0, 255, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"5.72381s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"9.60696s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"22.574139714916008%\"\n"
+              - generic
+                - StaticText "-                                 left: \"9.37462%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.4933234671406677px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.95278px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.4933234671406677px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.95278px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(57,255,20,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"4.256104088834485s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"10.506060674060635s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(57, 255, 20, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"1.79873s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"10.1708s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"14.216625163171049%\"\n"
+              - generic
+                - StaticText "-                                 left: \"38.1789%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.817491427258041px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.33819px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.817491427258041px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.33819px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(0,240,255,0.4)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"7.901596280487872s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"18.412793510430582s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(0, 240, 255, 0.4)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"0.043428s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"8.57254s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"79.28754412298186%\"\n"
+              - generic
+                - StaticText "-                                 left: \"7.73315%\"\n"
+              - generic
+                - StaticText "+                                 width: \"1.2480740884764836px\"\n"
+              - generic
+                - StaticText "-                                 width: \"2.52051px\"\n"
+              - generic
+                - StaticText "+                                 height: \"1.2480740884764836px\"\n"
+              - generic
+                - StaticText "-                                 height: \"2.52051px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(191,0,255,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"3.5796478151504143s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"12.904507691931956s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(191, 0, 255, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"6.94088s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"11.3162s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                              <div\n"
+              - generic
+                - StaticText "                                className=\"particle\"\n"
+              - generic
+                - StaticText "                                style={{\n"
+              - generic
+                - StaticText "+                                 left: \"9.364199244637305%\"\n"
+              - generic
+                - StaticText "-                                 left: \"84.9203%\"\n"
+              - generic
+                - StaticText "+                                 width: \"2.1603230075608213px\"\n"
+              - generic
+                - StaticText "-                                 width: \"1.64573px\"\n"
+              - generic
+                - StaticText "+                                 height: \"2.1603230075608213px\"\n"
+              - generic
+                - StaticText "-                                 height: \"1.64573px\"\n"
+              - generic
+                - StaticText "+                                 background: \"rgba(57,255,20,0.3)\"\n"
+              - generic
+                - StaticText "+                                 animationDelay: \"1.124064337835537s\"\n"
+              - generic
+                - StaticText "+                                 animationDuration: \"17.95274696325687s\"\n"
+              - generic
+                - StaticText "-                                 background-image: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-x: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-position-y: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-size: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-repeat: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-attachment: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-origin: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-clip: \"initial\"\n"
+              - generic
+                - StaticText "-                                 background-color: \"rgba(57, 255, 20, 0.3)\"\n"
+              - generic
+                - StaticText "-                                 animation-delay: \"7.19645s\"\n"
+              - generic
+                - StaticText "-                                 animation-duration: \"14.598s\"\n"
+              - generic
+                - StaticText "                                }}\n"
+              - generic
+                - StaticText "                              >\n"
+              - generic
+                - StaticText "                          ...\n"
+              - generic
+                - StaticText "                  ...\n"
+              - generic
+                - StaticText "                ...\n"
+            - image
+            - StaticText "src/app/page.tsx (263:9)"
+            - StaticText " @"
+            - StaticText " "
+            - StaticText "<unknown>"
+            - button "Open in editor" [ref=e34]
+              - image
+            - StaticText "  261 |     <div className=\"holo-bg\">"
+            - StaticText "  262 |       {particles.map(p => ("
+            - StaticText "> 263 |         <div"
+            - StaticText "      |         ^"
+            - StaticText "  264 |           key={p.id}"
+            - StaticText "  265 |           className=\"particle\""
+            - StaticText "  266 |           style={{"
+            - generic
+              - StaticText "Call Stack"
+              - StaticText "22"
+              - button "Show 17 ignore-listed frame(s)" [ref=e37]
+                - StaticText "Show 17 ignore-listed frame(s)"
+                - image
+              - StaticText "div"
+              - StaticText "<anonymous>"
+              - StaticText "<unknown>"
+              - button "Open <unknown> in editor" [ref=e38]
+                - image
+              - StaticText "src/app/page.tsx (263:9)"
+              - StaticText "Array.map"
+              - StaticText "<anonymous>"
+              - StaticText "Particles"
+              - button "Open Particles in editor" [ref=e39]
+                - image
+              - StaticText "src/app/page.tsx (262:18)"
+              - StaticText "CyberShieldApp"
+              - button "Open CyberShieldApp in editor" [ref=e40]
+                - image
+              - StaticText "src/app/page.tsx (706:9)"
+      - contentinfo
+        - region "Error feedback" [ref=e22]
+          - paragraph
+            - link "Was this helpful?" [ref=e35]
+          - button "Mark as helpful" [ref=e28]
+          - button "Mark as not helpful" [ref=e29]
+  - button "Open Next.js Dev Tools" [expanded=false, ref=e23]
+    - image
+  - button "Open issues overlay" [ref=e24]
+    - StaticText "1"
+    - StaticText "Issue"
+  - button "Collapse issues badge" [ref=e25]
+    - image
+- alert
