@@ -1,0 +1,1915 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useRef, useCallback } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import {
+     6→  Shield, Mic, MicOff, Volume2, VolumeX, Send, Terminal as TerminalIcon,
+     7→  BarChart3, Award, User, Target, CheckCircle2, Clock, TrendingUp,
+     8→  BookOpen, Download, Search, AlertTriangle, Lightbulb, Zap, Activity,
+     9→  Lock, Copy, ChevronRight, GraduationCap, Users, Trophy, Flame,
+    10→  X, LogOut, Settings, LayoutDashboard, Flag, Crown, Star, Eye,
+    11→  EyeOff, Play, Pause, SkipForward, Keyboard, MessageSquare, Hexagon,
+    12→  Swords, GitBranch, Fingerprint, Globe, Wifi, Database, Bug,
+    13→  ChevronDown, ChevronUp, RefreshCw, Sparkles, CircleDot, Brain,
+    14→  type LucideIcon,
+    15→} from 'lucide-react';
+    16→import { Button } from '@/components/ui/button';
+    17→import { Badge } from '@/components/ui/badge';
+    18→import { Progress } from '@/components/ui/progress';
+    19→import { ScrollArea } from '@/components/ui/scroll-area';
+    20→import { Textarea } from '@/components/ui/textarea';
+    21→import { Input } from '@/components/ui/input';
+    22→import { Separator } from '@/components/ui/separator';
+    23→import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+    24→import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+    25→import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+    26→import { Label } from '@/components/ui/label';
+    27→import { Switch } from '@/components/ui/switch';
+    28→
+    29→// ─── Types ───────────────────────────────────────────────────────────────────
+    30→
+    31→interface Message {
+    32→  id: string;
+    33→  role: 'user' | 'assistant';
+    34→  content: string;
+    35→  timestamp: string;
+    36→}
+    37→
+    38→interface UserData {
+    39→  id: string;
+    40→  name: string;
+    41→  email: string;
+    42→  role: string;
+    43→  xp: number;
+    44→  level: number;
+    45→  streakDays: number;
+    46→}
+    47→
+    48→interface CourseData {
+    49→  id: string;
+    50→  title: string;
+    51→  description: string;
+    52→  category: string;
+    53→  difficulty: string;
+    54→  moduleCount: number;
+    55→  studentCount: number;
+    56→  durationHours: number;
+    57→  enrolled: boolean;
+    58→  progress?: number;
+    59→  modules?: { title: string; completed: boolean }[];
+    60→}
+    61→
+    62→interface QuizQ {
+    63→  id: string;
+    64→  question: string;
+    65→  options: string[];
+    66→  correctIndex: number;
+    67→  explanation: string;
+    68→}
+    69→
+    70→interface CtfChallenge {
+    71→  id: string;
+    72→  title: string;
+    73→  description: string;
+    74→  category: string;
+    75→  difficulty: string;
+    76→  points: number;
+    77→  solveCount: number;
+    78→  solved: boolean;
+    79→}
+    80→
+    81→interface LeaderboardEntry {
+    82→  rank: number;
+    83→  id: string;
+    84→  name: string;
+    85→  xp: number;
+    86→  level: number;
+    87→  title: string;
+    88→  badges: number;
+    89→  ctfSolves: number;
+    90→  streak: number;
+    91→}
+    92→
+    93→// ─── Constants ───────────────────────────────────────────────────────────────
+    94→
+    95→const LEVEL_TITLES = [
+    96→  'Script Kiddie','Junior Analyst','Security Intern','Threat Scout',
+    97→  'Network Guardian','Security Engineer','Cyber Defender','Pen Tester',
+    98→  'Security Architect','Incident Commander','Threat Hunter','Red Team Lead',
+    99→  'Shield Master','Cyber Sentinel','Grandmaster',
+   100→];
+   101→
+   102→const LEVEL_XP = [0,100,300,600,1000,1500,2200,3000,4000,5500,7500,10000,13000,17000,22000];
+   103→
+   104→const DEMO_USER: UserData = {
+   105→  id: 'demo-user-001',
+   106→  name: 'Alex Chen',
+   107→  email: 'alex@cybershield.academy',
+   108→  role: 'student',
+   109→  xp: 1450,
+   110→  level: 6,
+   111→  streakDays: 7,
+   112→};
+   113→
+   114→const SESSION_ID = 'session-' + Date.now();
+   115→
+   116→const WELCOME_MSG: Message = {
+   117→  id: 'welcome',
+   118→  role: 'assistant',
+   119→  content: `# Welcome to CyberShield Academy\n\nI'm **Prof. Shield**, your AI cybersecurity instructor. Today we'll explore **Network Security Fundamentals**.\n\nHere's what we'll cover:\n- TCP/IP protocol suite\n- Firewall configuration\n- Intrusion detection systems\n- Network scanning techniques\n\nWhat aspect of network security interests you most?`,
+   120→  timestamp: new Date().toISOString(),
+   121→};
+   122→
+   123→const DEMO_COURSES: CourseData[] = [
+   124→  {
+   125→    id: 'c1', title: 'Network Security Fundamentals',
+   126→    description: 'Master TCP/IP, firewalls, IDS/IPS, and network scanning with hands-on labs.',
+   127→    category: 'networking', difficulty: 'intermediate', moduleCount: 8, studentCount: 1247, durationHours: 24,
+   128→    enrolled: true, progress: 50,
+   129→    modules: [
+   130→      { title: 'Network Fundamentals', completed: true },
+   131→      { title: 'TCP/IP Deep Dive', completed: true },
+   132→      { title: 'Network Scanning', completed: true },
+   133→      { title: 'Cryptography Basics', completed: true },
+   134→      { title: 'Firewall Configuration', completed: false },
+   135→      { title: 'Web App Security', completed: false },
+   136→      { title: 'Incident Response', completed: false },
+   137→      { title: 'Capstone Challenge', completed: false },
+   138→    ],
+   139→  },
+   140→  {
+   141→    id: 'c2', title: 'Web Application Security',
+   142→    description: 'Deep dive into OWASP Top 10, XSS, SQLi, CSRF, and modern web exploits.',
+   143→    category: 'web', difficulty: 'advanced', moduleCount: 6, studentCount: 834, durationHours: 18,
+   144→    enrolled: false,
+   145→  },
+   146→  {
+   147→    id: 'c3', title: 'Ethical Hacking & Penetration Testing',
+   148→    description: 'Learn reconnaissance, exploitation, post-exploitation, and report writing.',
+   149→    category: 'pentesting', difficulty: 'advanced', moduleCount: 10, studentCount: 2103, durationHours: 40,
+   150→    enrolled: true, progress: 20,
+   151→  },
+   152→  {
+   153→    id: 'c4', title: 'Digital Forensics & Incident Response',
+   154→    description: 'Master disk forensics, memory analysis, network forensics, and IR procedures.',
+   155→    category: 'forensics', difficulty: 'intermediate', moduleCount: 7, studentCount: 567, durationHours: 28,
+   156→    enrolled: false,
+   157→  },
+   158→  {
+   159→    id: 'c5', title: 'Cloud Security Architecture',
+   160→    description: 'Secure AWS, Azure, GCP environments. IAM, encryption, network security in the cloud.',
+   161→    category: 'cloud', difficulty: 'advanced', moduleCount: 8, studentCount: 423, durationHours: 32,
+   162→    enrolled: false,
+   163→  },
+   164→  {
+   165→    id: 'c6', title: 'Malware Analysis & Reverse Engineering',
+   166→    description: 'Static & dynamic analysis, disassembly, debugging, and malware classification.',
+   167→    category: 'malware', difficulty: 'advanced', moduleCount: 9, studentCount: 312, durationHours: 36,
+   168→    enrolled: false,
+   169→  },
+   170→];
+   171→
+   172→const DEMO_QUIZZES: Record<string, QuizQ[]> = {
+   173→  c1: [
+   174→    { id: 'q1', question: 'What layer of the OSI model does a firewall primarily operate at?', options: ['Layer 2 (Data Link)', 'Layer 3 (Network)', 'Layer 4 (Transport)', 'Layer 7 (Application)'], correctIndex: 1, explanation: 'Firewalls primarily operate at Layer 3 (Network layer), filtering packets based on IP addresses, ports, and protocols.' },
+   175→    { id: 'q2', question: 'Which tool is used for network scanning and service detection?', options: ['Wireshark', 'Nmap', 'Metasploit', 'Burp Suite'], correctIndex: 1, explanation: 'Nmap (Network Mapper) is the standard tool for network scanning and service/version detection.' },
+   176→    { id: 'q3', question: 'What does IDS stand for in cybersecurity?', options: ['Intrusion Detection System', 'Internal Data Security', 'Integrated Defense Shield', 'Intelligent Data Scanner'], correctIndex: 0, explanation: 'IDS stands for Intrusion Detection System, which monitors network traffic for suspicious activity and known threats.' },
+   177→    { id: 'q4', question: 'Which protocol operates at the Transport layer and provides reliable, connection-oriented communication?', options: ['UDP', 'ICMP', 'TCP', 'ARP'], correctIndex: 2, explanation: 'TCP (Transmission Control Protocol) provides reliable, connection-oriented communication at the Transport layer using a three-way handshake.' },
+   178→    { id: 'q5', question: 'What is the purpose of a DMZ in network security?', options: ['Encrypt all traffic', 'Provide wireless access', 'Isolate public-facing services from internal network', 'Block all inbound traffic'], correctIndex: 2, explanation: 'A DMZ (Demilitarized Zone) isolates public-facing services (web servers, mail servers) from the internal trusted network.' },
+   179→  ],
+   180→};
+   181→
+   182→const DEMO_CTF: CtfChallenge[] = [
+   183→  { id: 'ctf1', title: 'Flag Hunter', description: 'The flag is hidden in plain sight. Sometimes the simplest answer is the right one.\n\nHint: Look at the challenge name carefully.', category: 'crypto', difficulty: 'easy', points: 50, solveCount: 342, solved: false },
+   184→  { id: 'ctf2', title: 'Caesar\'s Secret', description: 'A Roman general left this encrypted message behind:\n\n`PloreNerar{e0g3_f1a3_g0_c3a3e}`\n\nDecrypt it to find the flag. The shift value is 13.', category: 'crypto', difficulty: 'easy', points: 75, solveCount: 256, solved: false },
+   185→  { id: 'ctf3', title: 'SQL Injection 101', description: 'A vulnerable login form is running at `/api/login`. The flag is in the `flags` table.\n\nTry: `admin\' OR \'1\'=\'1\' --`\n\nFlag format: CYBERSHIELD{...}', category: 'web', difficulty: 'medium', points: 150, solveCount: 128, solved: false },
+   186→  { id: 'ctf4', title: 'Hash Cracker', description: 'Crack this SHA-256 hash to reveal the flag:\n\n`5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8`\n\nThe answer is a common password.', category: 'crypto', difficulty: 'medium', points: 200, solveCount: 89, solved: false },
+   187→  { id: 'ctf5', title: 'Buffer Overflow', description: 'Analyze this vulnerable C program:\n\n```c\nvoid vuln() {\n  char buf[64];\n  gets(buf);\n}\n```\n\nExploit it to call `win()` and get the flag.\n\nFlag: CYBERSHIELD{buff3r_0v3rfl0w_m4st3r}', category: 'pwn', difficulty: 'hard', points: 300, solveCount: 34, solved: false },
+   188→  { id: 'ctf6', title: 'Forensic Artifact', description: 'A disk image has been recovered from a suspect\'s machine. Find the deleted file containing the flag.\n\nThe flag is hidden in the MFT entry of a deleted file named `secret.txt`.\n\nFlag: CYBERSHIELD{d1g_d33p_1nt0_th3_b1ts}', category: 'forensics', difficulty: 'hard', points: 350, solveCount: 22, solved: false },
+   189→];
+   190→
+   191→const DEMO_BADGES = [
+   192→  { name: 'First Blood', icon: '🎯', description: 'Complete your first challenge', rarity: 'common', earned: true, xpReward: 50 },
+   193→  { name: 'Quiz Master', icon: '🧠', description: 'Score 100% on a quiz', rarity: 'rare', earned: true, xpReward: 100 },
+   194→  { name: 'Lab Explorer', icon: '🔬', description: 'Complete a lab session', rarity: 'common', earned: true, xpReward: 75 },
+   195→  { name: 'Focus Champion', icon: '👁️', description: 'Maintain 90%+ focus for 5 sessions', rarity: 'rare', earned: false, xpReward: 150 },
+   196→  { name: 'CTF Winner', icon: '🚩', description: 'Capture 5 flags', rarity: 'epic', earned: false, xpReward: 200 },
+   197→  { name: 'Cipher Master', icon: '🔐', description: 'Solve 10 crypto challenges', rarity: 'legendary', earned: false, xpReward: 500 },
+   198→  { name: 'Night Owl', icon: '🦉', description: 'Study past midnight', rarity: 'common', earned: false, xpReward: 25 },
+   199→  { name: 'Eagle Eye', icon: '🦅', description: 'Accumulate 2000+ XP', rarity: 'epic', earned: false, xpReward: 300 },
+   200→  { name: 'Unbreakable', icon: '🛡️', description: 'Pass 3 quizzes on first attempt', rarity: 'rare', earned: false, xpReward: 200 },
+   201→  { name: 'Speed Demon', icon: '⚡', description: 'Complete a quiz in under 60 seconds', rarity: 'epic', earned: false, xpReward: 250 },
+   202→];
+   203→
+   204→const DEMO_LEADERBOARD: LeaderboardEntry[] = [
+   205→  { rank: 1, id: 'l1', name: 'Sarah K.', xp: 8750, level: 11, title: 'Threat Hunter', badges: 9, ctfSolves: 23, streak: 15 },
+   206→  { rank: 2, id: 'l2', name: 'James R.', xp: 7200, level: 10, title: 'Incident Commander', badges: 8, ctfSolves: 19, streak: 12 },
+   207→  { rank: 3, id: 'l3', name: 'Priya M.', xp: 5800, level: 9, title: 'Security Architect', badges: 7, ctfSolves: 15, streak: 8 },
+   208→  { rank: 4, id: 'l4', name: 'Alex C.', xp: 1450, level: 6, title: 'Security Engineer', badges: 3, ctfSolves: 4, streak: 7 },
+   209→  { rank: 5, id: 'l5', name: 'Lin W.', xp: 1200, level: 5, title: 'Network Guardian', badges: 3, ctfSolves: 3, streak: 5 },
+   210→  { rank: 6, id: 'l6', name: 'Omar H.', xp: 950, level: 5, title: 'Network Guardian', badges: 2, ctfSolves: 2, streak: 4 },
+   211→  { rank: 7, id: 'l7', name: 'Emma T.', xp: 800, level: 4, title: 'Threat Scout', badges: 2, ctfSolves: 2, streak: 3 },
+   212→  { rank: 8, id: 'l8', name: 'Raj P.', xp: 600, level: 4, title: 'Threat Scout', badges: 1, ctfSolves: 1, streak: 2 },
+   213→];
+   214→
+   215→const TABS = [
+   216→  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+   217→  { id: 'courses', label: 'Courses', icon: BookOpen },
+   218→  { id: 'classroom', label: 'AI Professor', icon: Brain },
+   219→  { id: 'quizzes', label: 'Quizzes', icon: Target },
+   220→  { id: 'labs', label: 'Lab Terminal', icon: TerminalIcon },
+   221→  { id: 'ctf', label: 'CTF Arena', icon: Flag },
+   222→  { id: 'gamification', label: 'Rank & Badges', icon: Trophy },
+   223→  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+   224→  { id: 'certificates', label: 'Certificates', icon: Award },
+   225→];
+   226→
+   227→const NAV_CATEGORIES = [
+   228→  { id: 'all', label: 'All Courses' },
+   229→  { id: 'networking', label: 'Networking' },
+   230→  { id: 'web', label: 'Web Security' },
+   231→  { id: 'pentesting', label: 'Pentesting' },
+   232→  { id: 'forensics', label: 'Forensics' },
+   233→  { id: 'cloud', label: 'Cloud' },
+   234→  { id: 'malware', label: 'Malware' },
+   235→];
+   236→
+   237→const CTF_CATEGORIES = [
+   238→  { id: 'all', label: 'All' },
+   239→  { id: 'crypto', label: 'Crypto' },
+   240→  { id: 'web', label: 'Web' },
+   241→  { id: 'pwn', label: 'Pwn' },
+   242→  { id: 'forensics', label: 'Forensics' },
+   243→  { id: 'osint', label: 'OSINT' },
+   244→];
+   245→
+   246→// ─── Particles Component ─────────────────────────────────────────────────────
+   247→
+   248→function Particles() {
+   249→  const [particles, setParticles] = useState<Array<{id:number;left:string;delay:string;duration:string;size:string;color:string}>>([]);
+   250→
+   251→  useEffect(() => {
+   252→    setParticles(
+   253→      Array.from({ length: 30 }, (_, i) => ({
+   254→        id: i,
+   255→        left: `${Math.random() * 100}%`,
+   256→        delay: `${Math.random() * 8}s`,
+   257→        duration: `${8 + Math.random() * 12}s`,
+   258→        size: `${1 + Math.random() * 2}px`,
+   259→        color: i % 3 === 0 ? 'rgba(0,240,255,0.4)' : i % 3 === 1 ? 'rgba(191,0,255,0.3)' : 'rgba(57,255,20,0.3)',
+   260→      }))
+   261→    );
+   262→  }, []);
+   263→
+   264→  return (
+   265→    <div className="holo-bg">
+   266→      {particles.map(p => (
+   267→        <div
+   268→          key={p.id}
+   269→          className="particle"
+   270→          style={{
+   271→            left: p.left,
+   272→            width: p.size,
+   273→            height: p.size,
+   274→            background: p.color,
+   275→            animationDelay: p.delay,
+   276→            animationDuration: p.duration,
+   277→          }}
+   278→        />
+   279→      ))}
+   280→    </div>
+   281→  );
+   282→}
+   283→
+   284→// ─── Main App ────────────────────────────────────────────────────────────────
+   285→
+   286→export default function CyberShieldApp() {
+   287→  // ── State ──
+   288→  const [activeTab, setActiveTab] = useState('dashboard');
+   289→  const [isAuthenticated, setIsAuthenticated] = useState(false);
+   290→  const [showLogin, setShowLogin] = useState(true);
+   291→  const [loginMode, setLoginMode] = useState<'login' | 'signup'>('login');
+   292→  const [loginEmail, setLoginEmail] = useState('');
+   293→  const [loginPassword, setLoginPassword] = useState('');
+   294→  const [loginName, setLoginName] = useState('');
+   295→  const [showPassword, setShowPassword] = useState(false);
+   296→  const [loginError, setLoginError] = useState('');
+   297→  const [user, setUser] = useState<UserData>(DEMO_USER);
+   298→
+   299→  // Chat
+   300→  const [messages, setMessages] = useState<Message[]>([WELCOME_MSG]);
+   301→  const [inputMsg, setInputMsg] = useState('');
+   302→  const [isTyping, setIsTyping] = useState(false);
+   303→  const chatEndRef = useRef<HTMLDivElement>(null);
+   304→
+   305→  // Voice
+   306→  const [isRecording, setIsRecording] = useState(false);
+   307→  const [isSpeaking, setIsSpeaking] = useState(false);
+   308→  const [voiceEnabled, setVoiceEnabled] = useState(true);
+   309→  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+   310→  const audioChunksRef = useRef<Blob[]>([]);
+   311→  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+   312→
+   313→  // Quiz
+   314→  const [quizCourse, setQuizCourse] = useState<string | null>(null);
+   315→  const [quizQuestions, setQuizQuestions] = useState<QuizQ[]>([]);
+   316→  const [quizIndex, setQuizIndex] = useState(0);
+   317→  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
+   318→  const [quizSubmitted, setQuizSubmitted] = useState(false);
+   319→  const [quizScore, setQuizScore] = useState(0);
+   320→  const [quizTimeLeft, setQuizTimeLeft] = useState(300);
+   321→  const quizTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+   322→
+   323→  // Lab
+   324→  const [labOutput, setLabOutput] = useState<string[]>([
+   325→    '\x1b[32m╔══════════════════════════════════════════════════════╗\x1b[0m',
+   326→    '\x1b[32m║        CyberShield Academy - Secure Lab Shell        ║\x1b[0m',
+   327→    '\x1b[32m║   Type "help" for available commands                ║\x1b[0m',
+   328→    '\x1b[32m╚══════════════════════════════════════════════════════╝\x1b[0m',
+   329→    '',
+   330→  ]);
+   331→  const [labInput, setLabInput] = useState('');
+   332→  const [labActive, setLabActive] = useState(false);
+   333→  const labEndRef = useRef<HTMLDivElement>(null);
+   334→
+   335→  // Courses
+   336→  const [courseFilter, setCourseFilter] = useState('all');
+   337→  const [selectedCourse, setSelectedCourse] = useState<CourseData | null>(null);
+   338→
+   339→  // CTF
+   340→  const [ctfFilter, setCtfFilter] = useState('all');
+   341→  const [ctfFlag, setCtfFlag] = useState('');
+   342→  const [ctfResult, setCtfResult] = useState<{ correct: boolean; message: string; points: number } | null>(null);
+   343→  const [ctfChallenges, setCtfChallenges] = useState(DEMO_CTF);
+   344→
+   345→  // Analytics
+   346→  const [focusScore, setFocusScore] = useState(87);
+   347→
+   348→  // Notifications
+   349→  const [notifOpen, setNotifOpen] = useState(false);
+   350→  const notifications = [
+   351→    { id: 'n1', title: 'New CTF Challenge', message: 'Buffer Overflow is now live!', time: '2m ago', read: false },
+   352→    { id: 'n2', title: 'Quiz Score', message: 'You scored 90% on Network Fundamentals!', time: '1h ago', read: false },
+   353→    { id: 'n3', title: 'Badge Earned', message: 'You earned the Quiz Master badge!', time: '3h ago', read: true },
+   354→  ];
+   355→
+   356→  // ── Computed ──
+   357→  const currentLevel = user.level;
+   358→  const currentXp = user.xp;
+   359→  const xpForNext = LEVEL_XP[Math.min(currentLevel, LEVEL_XP.length - 1)] || LEVEL_XP[LEVEL_XP.length - 1];
+   360→  const xpForPrev = LEVEL_XP[Math.min(currentLevel - 1, LEVEL_XP.length - 1)] || 0;
+   361→  const xpProgress = ((currentXp - xpForPrev) / (xpForNext - xpForPrev)) * 100;
+   362→
+   363→  // ── Effects ──
+   364→  useEffect(() => {
+   365→    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+   366→  }, [messages, isTyping]);
+   367→
+   368→  useEffect(() => {
+   369→    labEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+   370→  }, [labOutput]);
+   371→
+   372→  useEffect(() => {
+   373→    if (!quizCourse || quizSubmitted) return;
+   374→    quizTimerRef.current = setInterval(() => {
+   375→      setQuizTimeLeft(p => {
+   376→        if (p <= 1) { clearInterval(quizTimerRef.current!); return 0; }
+   377→        return p - 1;
+   378→      });
+   379→    }, 1000);
+   380→    return () => { if (quizTimerRef.current) clearInterval(quizTimerRef.current); };
+   381→  }, [quizCourse, quizSubmitted]);
+   382→
+   383→  // Focus tracking
+   384→  useEffect(() => {
+   385→    if (!isAuthenticated) return;
+   386→    let focusStart = Date.now();
+   387→    const onFocus = () => {
+   388→      focusStart = Date.now();
+   389→      setFocusScore(s => Math.min(100, s + 2));
+   390→    };
+   391→    const onBlur = () => {
+   392→      const elapsed = Date.now() - focusStart;
+   393→      if (elapsed > 5000) setFocusScore(s => Math.max(0, s - 5));
+   394→    };
+   395→    window.addEventListener('focus', onFocus);
+   396→    window.addEventListener('blur', onBlur);
+   397→    return () => {
+   398→      window.removeEventListener('focus', onFocus);
+   399→      window.removeEventListener('blur', onBlur);
+   400→    };
+   401→  }, [isAuthenticated]);
+   402→
+   403→  // ── Handlers ──
+   404→
+   405→  const handleLogin = () => {
+   406→    if (!loginEmail || !loginPassword) {
+   407→      setLoginError('Please fill in all fields');
+   408→      return;
+   409→    }
+   410→    if (loginMode === 'signup' && !loginName) {
+   411→      setLoginError('Please enter your name');
+   412→      return;
+   413→    }
+   414→    setLoginError('');
+   415→    setIsAuthenticated(true);
+   416→    setShowLogin(false);
+   417→    const u = loginMode === 'signup'
+   418→      ? { ...DEMO_USER, name: loginName, email: loginEmail }
+   419→      : DEMO_USER;
+   420→    setUser(u);
+   421→  };
+   422→
+   423→  const handleLogout = () => {
+   424→    setIsAuthenticated(false);
+   425→    setShowLogin(true);
+   426→    setActiveTab('dashboard');
+   427→    setMessages([WELCOME_MSG]);
+   428→  };
+   429→
+   430→  const sendMessage = async (text?: string) => {
+   431→    const msg = text || inputMsg;
+   432→    if (!msg.trim()) return;
+   433→
+   434→    const userMsg: Message = {
+   435→      id: `u-${Date.now()}`,
+   436→      role: 'user',
+   437→      content: msg,
+   438→      timestamp: new Date().toISOString(),
+   439→    };
+   440→    setMessages(p => [...p, userMsg]);
+   441→    setInputMsg('');
+   442→    setIsTyping(true);
+   443→
+   444→    try {
+   445→      const res = await fetch('/api/chat', {
+   446→        method: 'POST',
+   447→        headers: { 'Content-Type': 'application/json' },
+   448→        body: JSON.stringify({
+   449→          userId: user.id,
+   450→          sessionId: SESSION_ID,
+   451→          message: msg,
+   452→          history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
+   453→        }),
+   454→      });
+   455→
+   456→      if (!res.ok) throw new Error('Failed to get response');
+   457→
+   458→      const reader = res.body?.getReader();
+   459→      const decoder = new TextDecoder();
+   460→      let fullText = '';
+   461→
+   462→      if (reader) {
+   463→        const aiMsg: Message = { id: `a-${Date.now()}`, role: 'assistant', content: '', timestamp: new Date().toISOString() };
+   464→        setMessages(p => [...p, aiMsg]);
+   465→
+   466→        while (true) {
+   467→          const { done, value } = await reader.read();
+   468→          if (done) break;
+   469→          const chunk = decoder.decode(value, { stream: true });
+   470→          fullText += chunk;
+   471→          setMessages(p => p.map(m => m.id === aiMsg.id ? { ...m, content: fullText } : m));
+   472→        }
+   473→      }
+   474→
+   475→      // TTS
+   476→      if (voiceEnabled && fullText) {
+   477→        speakText(fullText);
+   478→      }
+   479→    } catch {
+   480→      setMessages(p => [...p, {
+   481→        id: `e-${Date.now()}`,
+   482→        role: 'assistant',
+   483→        content: "I'm having connectivity issues. Please try again. In the meantime, I can still help with any cybersecurity questions you have!",
+   484→        timestamp: new Date().toISOString(),
+   485→      }]);
+   486→    }
+   487→    setIsTyping(false);
+   488→  };
+   489→
+   490→  const speakText = async (text: string) => {
+   491→    try {
+   492→      const clean = text.replace(/[#*`~>\[\]()]/g, '').slice(0, 1000);
+   493→      const res = await fetch('/api/voice/tts', {
+   494→        method: 'POST',
+   495→        headers: { 'Content-Type': 'application/json' },
+   496→        body: JSON.stringify({ text: clean, voice: 'jam', speed: 1.0 }),
+   497→      });
+   498→      if (!res.ok) return;
+   499→      const blob = await res.blob();
+   500→      const url = URL.createObjectURL(blob);
+   501→      const audio = new Audio(url);
+   502→      currentAudioRef.current = audio;
+   503→      setIsSpeaking(true);
+   504→      audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(url); };
+   505→      audio.play();
+   506→    } catch { /* silent fail */ }
+   507→  };
+   508→
+   509→  const stopSpeaking = () => {
+   510→    currentAudioRef.current?.pause();
+   511→    currentAudioRef.current = null;
+   512→    setIsSpeaking(false);
+   513→  };
+   514→
+   515→  const toggleRecording = async () => {
+   516→    if (isRecording) {
+   517→      mediaRecorderRef.current?.stop();
+   518→      setIsRecording(false);
+   519→      return;
+   520→    }
+   521→    try {
+   522→      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+   523→      const mr = new MediaRecorder(stream);
+   524→      audioChunksRef.current = [];
+   525→      mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+   526→      mr.onstop = async () => {
+   527→        stream.getTracks().forEach(t => t.stop());
+   528→        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+   529→        const fd = new FormData();
+   530→        fd.append('audio', blob, 'recording.webm');
+   531→        try {
+   532→          const res = await fetch('/api/voice/asr', { method: 'POST', body: fd });
+   533→          const data = await res.json();
+   534→          if (data.success && data.text) {
+   535→            sendMessage(data.text);
+   536→          }
+   537→        } catch { /* silent */ }
+   538→      };
+   539→      mediaRecorderRef.current = mr;
+   540→      mr.start();
+   541→      setIsRecording(true);
+   542→    } catch {
+   543→      console.error('Microphone access denied');
+   544→    }
+   545→  };
+   546→
+   547→  const handleLabCommand = (cmd: string) => {
+   548→    const newOutput = [...labOutput, `\x1b[32mcybershield@lab\x1b[0m:\x1b[34m~\x1b[0m$ ${cmd}`];
+   549→    let response: string[] = [];
+   550→
+   551→    const c = cmd.trim().toLowerCase();
+   552→    if (c === 'help') {
+   553→      response = [
+   554→        'Available commands:',
+   555→        '  nmap <target>     - Scan target for open ports',
+   556→        '  ifconfig          - Show network interfaces',
+   557→        '  iptables -L       - List firewall rules',
+   558→        '  openssl enc       - Encrypt/decrypt data',
+   559→        '  hashcat <hash>    - Crack password hashes',
+   560→        '  whoami            - Show current user',
+   561→        '  ls                - List files',
+   562→        '  cat <file>        - Read file contents',
+   563→        '  pwd               - Print working directory',
+   564→        '  clear             - Clear terminal',
+   565→        '  help              - Show this help message',
+   566→      ];
+   567→    } else if (c === 'clear') {
+   568→      setLabOutput([]);
+   569→      setLabInput('');
+   570→      return;
+   571→    } else if (c === 'whoami') {
+   572→      response = ['root'];
+   573→    } else if (c === 'pwd') {
+   574→      response = ['/home/cybershield/lab'];
+   575→    } else if (c === 'ls') {
+   576→      response = ['drwxr-xr-x  targets/  vulnerable_webapp/', '-rw-r--r--  password_hashes.txt', '-rw-r--r--  network_diagram.png', '-rwx------  exploit.py'];
+   577→    } else if (c === 'ifconfig') {
+   578→      response = [
+   579→        'eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500',
+   580→        '        inet 192.168.1.100  netmask 255.255.255.0  broadcast 192.168.1.255',
+   581→        '        inet6 fe80::1  prefixlen 64  scopeid 0x20<link>',
+   582→        '        ether 02:42:ac:11:00:02  txqueuelen 0',
+   583→        '        RX packets 158432  bytes 142890234 (136.2 MiB)',
+   584→        '        TX packets 98321  bytes 82341209 (78.5 MiB)',
+   585→      ];
+   586→    } else if (c.startsWith('nmap')) {
+   587→      const target = c.split(' ')[1] || '192.168.1.1';
+   588→      response = [
+   589→        `Starting Nmap 7.94 ( https://nmap.org ) at ${new Date().toISOString()}`,
+   590→        `Nmap scan report for ${target}`,
+   591→        'Host is up (0.0034s latency).',
+   592→        'Not shown: 993 closed tcp ports',
+   593→        'PORT     STATE SERVICE       VERSION',
+   594→        '22/tcp   open  ssh           OpenSSH 8.9p1',
+   595→        '80/tcp   open  http          Apache/2.4.54',
+   596→        '443/tcp  open  ssl/https     Apache/2.4.54',
+   597→        '3306/tcp open  mysql         MySQL 8.0.32',
+   598→        '8080/tcp open  http-proxy    Squid 5.7',
+   599→        '',
+   600→        `Nmap done: 1 IP address (1 host up) scanned in 4.23 seconds`,
+   601→      ];
+   602→    } else if (c === 'iptables -l' || c === 'iptables -L') {
+   603→      response = [
+   604→        'Chain INPUT (policy DROP)',
+   605→        'target     prot opt source               destination',
+   606→        'ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:22',
+   607→        'ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:80',
+   608→        'ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:443',
+   609→        'DROP       all  --  0.0.0.0/0            0.0.0.0/0            ctstate INVALID',
+   610→        '',
+   611→        'Chain FORWARD (policy DROP)',
+   612→        'Chain OUTPUT (policy ACCEPT)',
+   613→      ];
+   614→    } else if (c.startsWith('cat')) {
+   615→      const file = c.split(' ')[1] || '';
+   616→      if (file.includes('password')) {
+   617→        response = ['admin:$2b$12$LJ3m4ys3Lk0WQ0Y1R1b2XeiWZ3mLk3gH5pKx8MnTz1La0PkR4NJGm', 'user1:$2b$12$9Xj3K2LmN0oP1Q2R3S4T5U6V7W8X9Y0Z1a2B3c4D5e6F7g8H9', 'user2:$2b$12$a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6q7R8s9T0u1V2w3X4y5Z6'];
+   618→      } else {
+   619→        response = [`cat: ${file || '??'}: No such file or directory`];
+   620→      }
+   621→    } else if (c.startsWith('hashcat')) {
+   622→      response = [
+   623→        'hashcat (v6.2.6) starting...',
+   624→        '',
+   625→        'Dictionary cache hit:',
+   626→        '...admin................... cracked',
+   627→        '...password123............. cracked',
+   628→        '',
+   629→        'Session..........: hashcat',
+   630→        'Status...........: Cracked',
+   631→        'Hash.Mode........: 1800 (sha512crypt $6$, SHA512 (Unix))',
+   632→        'Hash.Target......: password_hashes.txt',
+   633→        'Time.Estimated...: 0 secs',
+   634→        '',
+   635→        'admin:admin123',
+   636→        'user1:letmein',
+   637→      ];
+   638→    } else if (c.startsWith('openssl')) {
+   639→      response = [
+   640→        'enter AES-256-CBC encryption password: ********',
+   641→        'Verifying - enter AES-256-CBC encryption password: ********',
+   642→        '',
+   643→        'Data encrypted successfully.',
+   644→        'Output: encrypted_data.enc',
+   645→      ];
+   646→    } else if (c === '') {
+   647→      response = [];
+   648→    } else {
+   649→      response = [`bash: ${cmd}: command not found`];
+   650→    }
+   651→
+   652→    setLabOutput(p => [...newOutput, ...response.map(l => l || '\x1b[0m'), '']);
+   653→    setLabInput('');
+   654→  };
+   655→
+   656→  const startQuiz = (courseId: string) => {
+   657→    const qs = DEMO_QUIZZES[courseId];
+   658→    if (!qs) return;
+   659→    setQuizCourse(courseId);
+   660→    setQuizQuestions(qs);
+   661→    setQuizIndex(0);
+   662→    setQuizAnswers({});
+   663→    setQuizSubmitted(false);
+   664→    setQuizScore(0);
+   665→    setQuizTimeLeft(300);
+   666→  };
+   667→
+   668→  const submitQuiz = () => {
+   669→    if (!quizCourse) return;
+   670→    let score = 0;
+   671→    quizQuestions.forEach((q, i) => {
+   672→      if (quizAnswers[q.id] === q.correctIndex) score += 20;
+   673→    });
+   674→    setQuizScore(score);
+   675→    setQuizSubmitted(true);
+   676→    if (quizTimerRef.current) clearInterval(quizTimerRef.current);
+   677→  };
+   678→
+   679→  const submitCtfFlag = (challengeId: string) => {
+   680→    const challenge = ctfChallenges.find(c => c.id === challengeId);
+   681→    if (!challenge || !ctfFlag.trim()) return;
+   682→
+   683→    const isCorrect = ctfFlag.trim().toLowerCase().includes('cybershield');
+   684→    if (isCorrect) {
+   685→      setCtfChallenges(p => p.map(c => c.id === challengeId ? { ...c, solved: true, solveCount: c.solveCount + 1 } : c));
+   686→      setUser(u => ({ ...u, xp: u.xp + challenge.points }));
+   687→    }
+   688→    setCtfResult({
+   689→      correct: isCorrect,
+   690→      message: isCorrect ? `Correct! +${challenge.points} XP` : 'Incorrect flag. Try again!',
+   691→      points: isCorrect ? challenge.points : 0,
+   692→    });
+   693→    setCtfFlag('');
+   694→    setTimeout(() => setCtfResult(null), 4000);
+   695→  };
+   696→
+   697→  const filteredCourses = courseFilter === 'all'
+   698→    ? DEMO_COURSES
+   699→    : DEMO_COURSES.filter(c => c.category === courseFilter);
+   700→
+   701→  const filteredCtf = ctfFilter === 'all'
+   702→    ? ctfChallenges
+   703→    : ctfChallenges.filter(c => c.category === ctfFilter);
+   704→
+   705→  // ─── LOGIN SCREEN ──────────────────────────────────────────────────────────
+   706→
+   707→  if (!isAuthenticated) {
+   708→    return (
+   709→      <div className="min-h-screen flex items-center justify-center p-4 relative">
+   710→        <Particles />
+   711→        <motion.div
+   712→          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+   713→          animate={{ opacity: 1, y: 0, scale: 1 }}
+   714→          transition={{ duration: 0.6, ease: 'easeOut' }}
+   715→          className="login-card w-full max-w-md p-8 relative z-10"
+   716→        >
+   717→          <div className="flex flex-col items-center mb-8">
+   718→            <motion.div
+   719→              className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4"
+   720→              style={{
+   721→                background: 'linear-gradient(135deg, rgba(0,240,255,0.2), rgba(191,0,255,0.2))',
+   722→                border: '1px solid rgba(0,240,255,0.3)',
+   723→                boxShadow: '0 0 30px rgba(0,240,255,0.15)',
+   724→              }}
+   725→              animate={{ rotateY: [0, 360] }}
+   726→              transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+   727→            >
+   728→              <Shield className="w-10 h-10 text-[#00f0ff]" />
+   729→            </motion.div>
+   730→            <h1 className="text-3xl font-bold neon-text tracking-wider">CyberShield</h1>
+   731→            <p className="text-sm text-[#64748b] mt-1 tracking-widest uppercase">AI-Powered Academy</p>
+   732→          </div>
+   733→
+   734→          <div className="space-y-4">
+   735→            <div className="flex gap-2 mb-6">
+   736→              <button
+   737→                onClick={() => { setLoginMode('login'); setLoginError(''); }}
+   738→                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${loginMode === 'login'
+   739→                  ? 'bg-[#00f0ff]/15 text-[#00f0ff] border border-[#00f0ff]/30'
+   740→                  : 'text-[#64748b] border border-transparent hover:text-[#cbd5e1]'}`}
+   741→              >
+   742→                Sign In
+   743→              </button>
+   744→              <button
+   745→                onClick={() => { setLoginMode('signup'); setLoginError(''); }}
+   746→                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${loginMode === 'signup'
+   747→                  ? 'bg-[#00f0ff]/15 text-[#00f0ff] border border-[#00f0ff]/30'
+   748→                  : 'text-[#64748b] border border-transparent hover:text-[#cbd5e1]'}`}
+   749→              >
+   750→                Sign Up
+   751→              </button>
+   752→            </div>
+   753→
+   754→            {loginError && (
+   755→              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-[#ff006e]/10 border border-[#ff006e]/30 rounded-xl p-3 text-[#ff006e] text-sm text-center">
+   756→                {loginError}
+   757→              </motion.div>
+   758→            )}
+   759→
+   760→            {loginMode === 'signup' && (
+   761→              <div className="relative">
+   762→                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+   763→                <input
+   764→                  type="text"
+   765→                  placeholder="Full Name"
+   766→                  value={loginName}
+   767→                  onChange={e => setLoginName(e.target.value)}
+   768→                  className="holo-input w-full pl-10"
+   769→                />
+   770→              </div>
+   771→            )}
+   772→
+   773→            <div className="relative">
+   774→              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+   775→              <input
+   776→                type="email"
+   777→                placeholder="Email address"
+   778→                value={loginEmail}
+   779→                onChange={e => setLoginEmail(e.target.value)}
+   780→                className="holo-input w-full pl-10"
+   781→              />
+   782→            </div>
+   783→
+   784→            <div className="relative">
+   785→              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+   786→              <input
+   787→                type={showPassword ? 'text' : 'password'}
+   788→                placeholder="Password"
+   789→                value={loginPassword}
+   790→                onChange={e => setLoginPassword(e.target.value)}
+   791→                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+   792→                className="holo-input w-full pl-10 pr-10"
+   793→              />
+   794→              <button
+   795→                type="button"
+   796→                onClick={() => setShowPassword(!showPassword)}
+   797→                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-[#cbd5e1] transition-colors"
+   798→              >
+   799→                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+   800→              </button>
+   801→            </div>
+   802→
+   803→            <button onClick={handleLogin} className="holo-btn holo-btn-primary w-full py-3 text-base rounded-xl mt-2">
+   804→              {loginMode === 'login' ? 'Sign In' : 'Create Account'}
+   805→            </button>
+   806→
+   807→            <p className="text-center text-xs text-[#475569] mt-4">
+   808→              Enter any credentials to explore the demo
+   809→            </p>
+   810→          </div>
+   811→        </motion.div>
+   812→      </div>
+   813→    );
+   814→  }
+   815→
+   816→  // ─── MAIN APP ──────────────────────────────────────────────────────────────
+   817→
+   818→  return (
+   819→    <div className="min-h-screen flex flex-col relative">
+   820→      <Particles />
+   821→
+   822→      {/* ── Top Navigation Bar ── */}
+   823→      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#050810]/80 border-b border-[#1e293b]/50">
+   824→        <div className="max-w-[1400px] mx-auto px-4 h-14 flex items-center justify-between">
+   825→          <div className="flex items-center gap-3">
+   826→            <Shield className="w-6 h-6 text-[#00f0ff]" />
+   827→            <span className="text-lg font-bold neon-text tracking-wider hidden sm:block">CyberShield</span>
+   828→          </div>
+   829→
+   830→          {/* XP Bar in Nav */}
+   831→          <div className="hidden md:flex items-center gap-3 flex-1 max-w-xs mx-8">
+   832→            <div className="text-xs text-[#64748b]">Lv.{user.level}</div>
+   833→            <div className="holo-progress flex-1">
+   834→              <div className="holo-progress-bar" style={{ width: `${Math.min(xpProgress, 100)}%` }} />
+   835→            </div>
+   836→            <div className="text-xs text-[#00f0ff] font-mono">{user.xp} XP</div>
+   837→          </div>
+   838→
+   839→          <div className="flex items-center gap-2">
+   840→            {/* Voice Toggle */}
+   841→            <button
+   842→              onClick={() => setVoiceEnabled(!voiceEnabled)}
+   843→              className={`p-2 rounded-lg transition-all ${voiceEnabled ? 'text-[#00f0ff] bg-[#00f0ff]/10' : 'text-[#64748b]'}`}
+   844→              title={voiceEnabled ? 'Voice enabled' : 'Voice disabled'}
+   845→            >
+   846→              {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+   847→            </button>
+   848→
+   849→            {/* Streak */}
+   850→            <div className="flex items-center gap-1 text-[#ff6b35] text-sm">
+   851→              <Flame className="w-4 h-4" />
+   852→              <span className="font-bold">{user.streakDays}</span>
+   853→            </div>
+   854→
+   855→            {/* Notifications */}
+   856→            <div className="relative">
+   857→              <button
+   858→                onClick={() => setNotifOpen(!notifOpen)}
+   859→                className="p-2 rounded-lg text-[#64748b] hover:text-[#e2e8f0] hover:bg-[#1a1f35] transition-all relative"
+   860→              >
+   861→                <Activity className="w-4 h-4" />
+   862→                {notifications.some(n => !n.read) && <div className="notif-dot absolute top-1 right-1" />}
+   863→              </button>
+   864→              <AnimatePresence>
+   865→                {notifOpen && (
+   866→                  <motion.div
+   867→                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+   868→                    animate={{ opacity: 1, y: 0, scale: 1 }}
+   869→                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+   870→                    className="absolute right-0 top-12 w-80 holo-card p-0 z-50"
+   871→                  >
+   872→                    <div className="p-3 border-b border-[#1e293b] flex items-center justify-between">
+   873→                      <span className="text-sm font-semibold text-[#e2e8f0]">Notifications</span>
+   874→                      <span className="text-xs text-[#64748b]">{notifications.filter(n => !n.read).length} new</span>
+   875→                    </div>
+   876→                    <ScrollArea className="max-h-64">
+   877→                      {notifications.map(n => (
+   878→                        <div key={n.id} className="p-3 border-b border-[#1e293b]/50 hover:bg-[#1a1f35]/50 transition-colors">
+   879→                          <div className="flex items-start gap-2">
+   880→                            {!n.read && <div className="w-2 h-2 rounded-full bg-[#00f0ff] mt-1.5 shrink-0" />}
+   881→                            <div className={!n.read ? '' : 'pl-4'}>
+   882→                              <p className="text-sm font-medium text-[#e2e8f0]">{n.title}</p>
+   883→                              <p className="text-xs text-[#64748b] mt-0.5">{n.message}</p>
+   884→                              <p className="text-xs text-[#475569] mt-1">{n.time}</p>
+   885→                            </div>
+   886→                          </div>
+   887→                        </div>
+   888→                      ))}
+   889→                    </ScrollArea>
+   890→                  </motion.div>
+   891→                )}
+   892→              </AnimatePresence>
+   893→            </div>
+   894→
+   895→            {/* User Menu */}
+   896→            <div className="flex items-center gap-2 ml-1 pl-2 border-l border-[#1e293b]">
+   897→              <Avatar className="w-8 h-8 border border-[#00f0ff]/30">
+   898→                <AvatarFallback className="bg-[#0a0e1a] text-[#00f0ff] text-xs font-bold">
+   899→                  {user.name.split(' ').map(n => n[0]).join('')}
+   900→                </AvatarFallback>
+   901→              </Avatar>
+   902→              <span className="text-sm font-medium hidden lg:block">{user.name}</span>
+   903→              <button onClick={handleLogout} className="p-1.5 rounded-lg text-[#64748b] hover:text-[#ff006e] hover:bg-[#ff006e]/10 transition-all" title="Sign out">
+   904→                <LogOut className="w-4 h-4" />
+   905→              </button>
+   906→            </div>
+   907→          </div>
+   908→        </div>
+   909→      </header>
+   910→
+   911→      {/* ── Tab Navigation ── */}
+   912→      <nav className="sticky top-14 z-40 backdrop-blur-xl bg-[#050810]/60 border-b border-[#1e293b]/30 overflow-x-auto">
+   913→        <div className="max-w-[1400px] mx-auto px-4 flex items-center gap-1 py-1.5">
+   914→          {TABS.map(tab => (
+   915→            <button
+   916→              key={tab.id}
+   917→              onClick={() => { setActiveTab(tab.id); setSelectedCourse(null); }}
+   918→              className={`holo-tab flex items-center gap-1.5 whitespace-nowrap text-sm ${activeTab === tab.id ? 'holo-tab-active' : ''}`}
+   919→            >
+   920→              <tab.icon className="w-4 h-4" />
+   921→              <span className="hidden sm:inline">{tab.label}</span>
+   922→            </button>
+   923→          ))}
+   924→        </div>
+   925→      </nav>
+   926→
+   927→      {/* ── Main Content ── */}
+   928→      <main className="flex-1 relative z-10">
+   929→        <div className="max-w-[1400px] mx-auto p-4 md:p-6">
+   930→
+   931→          {/* ════════════════════ DASHBOARD ════════════════════ */}
+   932→          {activeTab === 'dashboard' && (
+   933→            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+   934→              {/* Welcome + Level */}
+   935→              <div className="holo-card p-6">
+   936→                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+   937→                  <div>
+   938→                    <h1 className="text-2xl md:text-3xl font-bold">
+   939→                      Welcome back, <span className="neon-text">{user.name.split(' ')[0]}</span>
+   940→                    </h1>
+   941→                    <p className="text-[#64748b] mt-1">Continue your cybersecurity journey. You&apos;re on a <span className="text-[#ff6b35] font-semibold">{user.streakDays}-day streak</span>!</p>
+   942→                  </div>
+   943→                  <div className="flex items-center gap-4">
+   944→                    <div className="text-center">
+   945→                      <div className="text-3xl font-black neon-text">{user.level}</div>
+   946→                      <div className="text-xs text-[#64748b]">Level</div>
+   947→                    </div>
+   948→                    <div className="text-center">
+   949→                      <div className="text-lg font-bold text-[#bf00ff]">{LEVEL_TITLES[Math.min(user.level - 1, LEVEL_TITLES.length - 1)]}</div>
+   950→                      <div className="text-xs text-[#64748b]">Rank Title</div>
+   951→                    </div>
+   952→                  </div>
+   953→                </div>
+   954→                <div className="mt-4">
+   955→                  <div className="flex items-center justify-between text-xs text-[#64748b] mb-1">
+   956→                    <span>Level {user.level} Progress</span>
+   957→                    <span>{user.xp} / {xpForNext} XP</span>
+   958→                  </div>
+   959→                  <div className="holo-progress h-3">
+   960→                    <div className="holo-progress-bar" style={{ width: `${Math.min(xpProgress, 100)}%` }} />
+   961→                  </div>
+   962→                </div>
+   963→              </div>
+   964→
+   965→              {/* Stats Grid */}
+   966→              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+   967→                {[
+   968→                  { label: 'Courses Enrolled', value: '3', icon: BookOpen, color: '#00f0ff' },
+   969→                  { label: 'Quizzes Passed', value: '12', icon: Target, color: '#39ff14' },
+   970→                  { label: 'Lab Hours', value: '24.5', icon: TerminalIcon, color: '#bf00ff' },
+   971→                  { label: 'CTF Flags', value: '4', icon: Flag, color: '#ff006e' },
+   972→                ].map((stat, i) => (
+   973→                  <motion.div
+   974→                    key={stat.label}
+   975→                    initial={{ opacity: 0, y: 20 }}
+   976→                    animate={{ opacity: 1, y: 0 }}
+   977→                    transition={{ delay: i * 0.1 }}
+   978→                    className="holo-card p-4"
+   979→                  >
+   980→                    <div className="flex items-center justify-between">
+   981→                      <div>
+   982→                        <div className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
+   983→                        <div className="text-xs text-[#64748b] mt-0.5">{stat.label}</div>
+   984→                      </div>
+   985→                      <stat.icon className="w-8 h-8" style={{ color: `${stat.color}40` }} />
+   986→                    </div>
+   987→                  </motion.div>
+   988→                ))}
+   989→              </div>
+   990→
+   991→              {/* Focus Score + Quick Actions */}
+   992→              <div className="grid md:grid-cols-3 gap-4">
+   993→                <div className="holo-card p-5 scan-line">
+   994→                  <div className="text-sm text-[#64748b] mb-2">Focus Score</div>
+   995→                  <div className="flex items-end gap-2">
+   996→                    <span className="text-4xl font-black" style={{ color: focusScore > 70 ? '#39ff14' : focusScore > 40 ? '#ff6b35' : '#ff006e' }}>
+   997→                      {focusScore}%
+   998→                    </span>
+   999→                    <span className="text-sm text-[#64748b] mb-1">current session</span>
+  1000→                  </div>
+  1001→                  <div className="holo-progress mt-3">
+  1002→                    <div className="holo-progress-bar" style={{ width: `${focusScore}%`, background: focusScore > 70 ? 'linear-gradient(90deg, #39ff14, #00f0ff)' : focusScore > 40 ? 'linear-gradient(90deg, #ff6b35, #ff006e)' : '#ff006e' }} />
+  1003→                  </div>
+  1004→                </div>
+  1005→
+  1006→                <div className="holo-card p-5 flex flex-col justify-between">
+  1007→                  <div className="text-sm text-[#64748b] mb-3">Quick Actions</div>
+  1008→                  <div className="space-y-2">
+  1009→                    <button onClick={() => { setActiveTab('classroom'); }} className="holo-btn w-full text-sm py-2 flex items-center gap-2">
+  1010→                      <Brain className="w-4 h-4" /> Talk to AI Professor
+  1011→                    </button>
+  1012→                    <button onClick={() => { setActiveTab('ctf'); }} className="holo-btn w-full text-sm py-2 flex items-center gap-2">
+  1013→                      <Swords className="w-4 h-4" /> Enter CTF Arena
+  1014→                    </button>
+  1015→                  </div>
+  1016→                </div>
+  1017→
+  1018→                <div className="holo-card p-5">
+  1019→                  <div className="text-sm text-[#64748b] mb-3">Recent Badges</div>
+  1020→                  <div className="flex gap-2 flex-wrap">
+  1021→                    {DEMO_BADGES.filter(b => b.earned).map(b => (
+  1022→                      <div key={b.name} className="hex-badge hex-badge-rare text-sm" title={b.description}>
+  1023→                        {b.icon}
+  1024→                      </div>
+  1025→                    ))}
+  1026→                    <div className="hex-badge hex-badge-rare text-sm opacity-30" title="Locked">🔒</div>
+  1027→                  </div>
+  1028→                </div>
+  1029→              </div>
+  1030→
+  1031→              {/* Active Course Progress */}
+  1032→              <div className="holo-card p-5">
+  1033→                <div className="flex items-center justify-between mb-4">
+  1034→                  <h2 className="text-lg font-semibold">Active Courses</h2>
+  1035→                  <button onClick={() => setActiveTab('courses')} className="text-sm text-[#00f0ff] hover:underline flex items-center gap-1">
+  1036→                    View All <ChevronRight className="w-4 h-4" />
+  1037→                  </button>
+  1038→                </div>
+  1039→                <div className="grid md:grid-cols-2 gap-4">
+  1040→                  {DEMO_COURSES.filter(c => c.enrolled).map(course => (
+  1041→                    <div key={course.id} className="bg-[#0a0e1a]/60 rounded-xl p-4 border border-[#1e293b]">
+  1042→                      <div className="flex items-center justify-between mb-2">
+  1043→                        <h3 className="font-semibold text-sm">{course.title}</h3>
+  1044→                        <span className={`holo-badge ${course.difficulty === 'advanced' ? 'holo-badge-pink' : 'holo-badge-cyan'}`}>
+  1045→                          {course.difficulty}
+  1046→                        </span>
+  1047→                      </div>
+  1048→                      <div className="flex items-center justify-between text-xs text-[#64748b] mb-2">
+  1049→                        <span>{course.modules?.filter(m => m.completed).length || 0}/{course.moduleCount} modules</span>
+  1050→                        <span>{course.progress || 0}%</span>
+  1051→                      </div>
+  1052→                      <div className="holo-progress">
+  1053→                        <div className="holo-progress-bar" style={{ width: `${course.progress || 0}%` }} />
+  1054→                      </div>
+  1055→                    </div>
+  1056→                  ))}
+  1057→                </div>
+  1058→              </div>
+  1059→            </motion.div>
+  1060→          )}
+  1061→
+  1062→          {/* ════════════════════ COURSES ════════════════════ */}
+  1063→          {activeTab === 'courses' && (
+  1064→            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+  1065→              {!selectedCourse ? (
+  1066→                <>
+  1067→                  <div className="flex items-center justify-between flex-wrap gap-3">
+  1068→                    <h1 className="text-2xl font-bold neon-text">Course Catalog</h1>
+  1069→                    <div className="relative">
+  1070→                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+  1071→                      <input type="text" placeholder="Search courses..." className="holo-input pl-10 w-64 text-sm" />
+  1072→                    </div>
+  1073→                  </div>
+  1074→
+  1075→                  <div className="flex gap-2 flex-wrap">
+  1076→                    {NAV_CATEGORIES.map(cat => (
+  1077→                      <button
+  1078→                        key={cat.id}
+  1079→                        onClick={() => setCourseFilter(cat.id)}
+  1080→                        className={`holo-badge ${courseFilter === cat.id ? 'holo-badge-cyan' : 'bg-[#1a1f35] border-[#1e293b] text-[#64748b] hover:text-[#cbd5e1]'}`}
+  1081→                      >
+  1082→                        {cat.label}
+  1083→                      </button>
+  1084→                    ))}
+  1085→                  </div>
+  1086→
+  1087→                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+  1088→                    {filteredCourses.map((course, i) => (
+  1089→                      <motion.div
+  1090→                        key={course.id}
+  1091→                        initial={{ opacity: 0, y: 20 }}
+  1092→                        animate={{ opacity: 1, y: 0 }}
+  1093→                        transition={{ delay: i * 0.05 }}
+  1094→                        className="holo-card p-5 cursor-pointer group"
+  1095→                        onClick={() => setSelectedCourse(course)}
+  1096→                      >
+  1097→                        <div className="flex items-start justify-between mb-3">
+  1098→                          <div className={`hex-badge hex-badge-${course.difficulty === 'advanced' ? 'epic' : 'rare'} text-lg w-10 h-11`}>
+  1099→                            {course.category === 'networking' ? <Wifi className="w-5 h-5 text-white" /> :
+  1100→                             course.category === 'web' ? <Globe className="w-5 h-5 text-white" /> :
+  1101→                             course.category === 'pentesting' ? <Swords className="w-5 h-5 text-white" /> :
+  1102→                             course.category === 'forensics' ? <Fingerprint className="w-5 h-5 text-white" /> :
+  1103→                             course.category === 'cloud' ? <Database className="w-5 h-5 text-white" /> :
+  1104→                             <Bug className="w-5 h-5 text-white" />}
+  1105→                          </div>
+  1106→                          <span className={`holo-badge ${course.difficulty === 'advanced' ? 'holo-badge-pink' : course.difficulty === 'beginner' ? 'holo-badge-green' : 'holo-badge-cyan'}`}>
+  1107→                            {course.difficulty}
+  1108→                          </span>
+  1109→                        </div>
+  1110→                        <h3 className="font-semibold text-base mb-1 group-hover:text-[#00f0ff] transition-colors">{course.title}</h3>
+  1111→                        <p className="text-sm text-[#64748b] mb-4 line-clamp-2">{course.description}</p>
+  1112→                        <div className="flex items-center justify-between text-xs text-[#64748b]">
+  1113→                          <div className="flex items-center gap-3">
+  1114→                            <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" /> {course.moduleCount}</span>
+  1115→                            <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {course.studentCount}</span>
+  1116→                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {course.durationHours}h</span>
+  1117→                          </div>
+  1118→                          {course.enrolled && (
+  1119→                            <span className="text-[#39ff14] flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Enrolled</span>
+  1120→                          )}
+  1121→                        </div>
+  1122→                        {course.enrolled && course.progress !== undefined && (
+  1123→                          <div className="mt-3">
+  1124→                            <div className="holo-progress">
+  1125→                              <div className="holo-progress-bar" style={{ width: `${course.progress}%` }} />
+  1126→                            </div>
+  1127→                          </div>
+  1128→                        )}
+  1129→                      </motion.div>
+  1130→                    ))}
+  1131→                  </div>
+  1132→                </>
+  1133→              ) : (
+  1134→                <div className="space-y-4">
+  1135→                  <button onClick={() => setSelectedCourse(null)} className="text-sm text-[#00f0ff] hover:underline flex items-center gap-1">
+  1136→                    <ChevronRight className="w-4 h-4 rotate-180" /> Back to Catalog
+  1137→                  </button>
+  1138→                  <div className="holo-card p-6">
+  1139→                    <h1 className="text-2xl font-bold mb-2">{selectedCourse.title}</h1>
+  1140→                    <p className="text-[#64748b] mb-6">{selectedCourse.description}</p>
+  1141→                    {selectedCourse.modules ? (
+  1142→                      <div className="space-y-2">
+  1143→                        {selectedCourse.modules.map((mod, i) => (
+  1144→                          <div key={i} className={`flex items-center gap-3 p-3 rounded-xl ${mod.completed ? 'bg-[#39ff14]/5 border border-[#39ff14]/20' : 'bg-[#0a0e1a]/60 border border-[#1e293b]'}`}>
+  1145→                            {mod.completed
+  1146→                              ? <CheckCircle2 className="w-5 h-5 text-[#39ff14] shrink-0" />
+  1147→                              : <Circle className="w-5 h-5 text-[#475569] shrink-0" />}
+  1148→                            <span className={`text-sm ${mod.completed ? 'text-[#cbd5e1]' : 'text-[#64748b]'}`}>{mod.title}</span>
+  1149→                            {mod.completed && <span className="holo-badge holo-badge-green ml-auto text-xs">Completed</span>}
+  1150→                          </div>
+  1151→                        ))}
+  1152→                      </div>
+  1153→                    ) : (
+  1154→                      <div className="flex gap-3">
+  1155→                        <button className="holo-btn holo-btn-primary" onClick={() => { setSelectedCourse({ ...selectedCourse, enrolled: true, progress: 0, modules: [{ title: 'Getting Started', completed: false }] }); }}>
+  1156→                          Enroll Now
+  1157→                        </button>
+  1158→                        <button className="holo-btn" onClick={() => setActiveTab('quizzes')}>
+  1159→                          Take Quiz
+  1160→                        </button>
+  1161→                      </div>
+  1162→                    )}
+  1163→                  </div>
+  1164→                </div>
+  1165→              )}
+  1166→            </motion.div>
+  1167→          )}
+  1168→
+  1169→          {/* ════════════════════ AI CLASSROOM ════════════════════ */}
+  1170→          {activeTab === 'classroom' && (
+  1171→            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="h-[calc(100vh-10rem)] flex flex-col">
+  1172→              <div className="holo-card flex-1 flex flex-col overflow-hidden">
+  1173→                {/* Chat Header */}
+  1174→                <div className="p-4 border-b border-[#1e293b] flex items-center justify-between shrink-0">
+  1175→                  <div className="flex items-center gap-3">
+  1176→                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00f0ff]/20 to-[#bf00ff]/20 border border-[#00f0ff]/30 flex items-center justify-center">
+  1177→                      <Brain className="w-5 h-5 text-[#00f0ff]" />
+  1178→                    </div>
+  1179→                    <div>
+  1180→                      <h2 className="font-semibold">Prof. Shield</h2>
+  1181→                      <div className="flex items-center gap-1.5">
+  1182→                        <div className="w-2 h-2 rounded-full bg-[#39ff14] animate-pulse" />
+  1183→                        <span className="text-xs text-[#39ff14]">Online</span>
+  1184→                        {isTyping && <span className="text-xs text-[#bf00ff] typing-cursor">thinking</span>}
+  1185→                      </div>
+  1186→                    </div>
+  1187→                  </div>
+  1188→                  <div className="flex items-center gap-2">
+  1189→                    <div className="flex items-center gap-2 text-xs text-[#64748b]">
+  1190→                      <span>Focus:</span>
+  1191→                      <span className={`font-bold ${focusScore > 70 ? 'text-[#39ff14]' : focusScore > 40 ? 'text-[#ff6b35]' : 'text-[#ff006e]'}`}>{focusScore}%</span>
+  1192→                    </div>
+  1193→                  </div>
+  1194→                </div>
+  1195→
+  1196→                {/* Messages */}
+  1197→                <ScrollArea className="flex-1 p-4">
+  1198→                  <div className="space-y-4 max-w-3xl mx-auto">
+  1199→                    {messages.map(msg => (
+  1200→                      <motion.div
+  1201→                        key={msg.id}
+  1202→                        initial={{ opacity: 0, y: 10 }}
+  1203→                        animate={{ opacity: 1, y: 0 }}
+  1204→                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+  1205→                      >
+  1206→                        <div className={`max-w-[80%] ${msg.role === 'user'
+  1207→                          ? 'bg-[#00f0ff]/10 border border-[#00f0ff]/20 rounded-2xl rounded-br-sm px-4 py-3'
+  1208→                          : 'bg-[#1a1f35]/60 border border-[#1e293b] rounded-2xl rounded-bl-sm px-4 py-3'}`}>
+  1209→                          {msg.role === 'assistant' && (
+  1210→                            <div className="flex items-center gap-2 mb-2">
+  1211→                              <Sparkles className="w-3.5 h-3.5 text-[#bf00ff]" />
+  1212→                              <span className="text-xs text-[#bf00ff] font-semibold">Prof. Shield</span>
+  1213→                            </div>
+  1214→                          )}
+  1215→                          <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none
+  1216→                            prose-headings:text-[#00f0ff] prose-h1:text-lg prose-h2:text-base prose-h3:text-sm
+  1217→                            prose-strong:text-[#e2e8f0] prose-code:text-[#39ff14] prose-code:bg-[#0a0e1a] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+  1218→                            prose-li:text-[#cbd5e1] prose-a:text-[#00f0ff]">
+  1219→                            {msg.content}
+  1220→                          </div>
+  1221→                          {msg.role === 'assistant' && msg.content && (
+  1222→                            <button
+  1223→                              onClick={() => speakText(msg.content)}
+  1224→                              className="mt-2 flex items-center gap-1 text-xs text-[#64748b] hover:text-[#00f0ff] transition-colors"
+  1225→                            >
+  1226→                              <Volume2 className="w-3 h-3" /> Read aloud
+  1227→                            </button>
+  1228→                          )}
+  1229→                        </div>
+  1230→                      </motion.div>
+  1231→                    ))}
+  1232→                    {isTyping && (
+  1233→                      <div className="flex justify-start">
+  1234→                        <div className="bg-[#1a1f35]/60 border border-[#1e293b] rounded-2xl rounded-bl-sm px-4 py-3">
+  1235→                          <div className="flex gap-1">
+  1236→                            {[0, 1, 2].map(i => (
+  1237→                              <motion.div
+  1238→                                key={i}
+  1239→                                className="w-2 h-2 rounded-full bg-[#00f0ff]"
+  1240→                                animate={{ opacity: [0.3, 1, 0.3], y: [0, -4, 0] }}
+  1241→                                transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.2 }}
+  1242→                              />
+  1243→                            ))}
+  1244→                          </div>
+  1245→                        </div>
+  1246→                      </div>
+  1247→                    )}
+  1248→                    <div ref={chatEndRef} />
+  1249→                  </div>
+  1250→                </ScrollArea>
+  1251→
+  1252→                {/* Voice Indicator */}
+  1253→                <AnimatePresence>
+  1254→                  {isRecording && (
+  1255→                    <motion.div
+  1256→                      initial={{ opacity: 0, height: 0 }}
+  1257→                      animate={{ opacity: 1, height: 'auto' }}
+  1258→                      exit={{ opacity: 0, height: 0 }}
+  1259→                      className="px-4 py-2 flex items-center gap-2"
+  1260→                    >
+  1261→                      <div className="pulse-ring w-3 h-3 rounded-full bg-[#ff006e]" />
+  1262→                      <span className="text-sm text-[#ff006e] font-medium">Listening...</span>
+  1263→                      <div className="flex gap-0.5">
+  1264→                        {[0, 1, 2, 3, 4].map(i => (
+  1265→                          <motion.div
+  1266→                            key={i}
+  1267→                            className="w-1 bg-[#ff006e] rounded-full"
+  1268→                            animate={{ height: [8, 16 + Math.random() * 16, 8] }}
+  1269→                            transition={{ duration: 0.4, repeat: Infinity, delay: i * 0.1 }}
+  1270→                          />
+  1271→                        ))}
+  1272→                      </div>
+  1273→                    </motion.div>
+  1274→                  )}
+  1275→                  {isSpeaking && !isRecording && (
+  1276→                    <motion.div
+  1277→                      initial={{ opacity: 0, height: 0 }}
+  1278→                      animate={{ opacity: 1, height: 'auto' }}
+  1279→                      exit={{ opacity: 0, height: 0 }}
+  1280→                      className="px-4 py-2 flex items-center gap-2"
+  1281→                    >
+  1282→                      <Volume2 className="w-4 h-4 text-[#00f0ff] animate-pulse" />
+  1283→                      <span className="text-sm text-[#00f0ff]">Speaking...</span>
+  1284→                      <button onClick={stopSpeaking} className="ml-2 p-1 rounded hover:bg-[#ff006e]/10 text-[#ff006e]">
+  1285→                        <X className="w-3 h-3" />
+  1286→                      </button>
+  1287→                    </motion.div>
+  1288→                  )}
+  1289→                </AnimatePresence>
+  1290→
+  1291→                {/* Input Bar */}
+  1292→                <div className="p-4 border-t border-[#1e293b] shrink-0">
+  1293→                  <div className="flex items-center gap-2 max-w-3xl mx-auto">
+  1294→                    <button
+  1295→                      onClick={toggleRecording}
+  1296→                      className={`p-3 rounded-xl transition-all shrink-0 ${isRecording
+  1297→                        ? 'bg-[#ff006e]/20 border border-[#ff006e]/40 text-[#ff006e]'
+  1298→                        : 'bg-[#0a0e1a] border border-[#1e293b] text-[#64748b] hover:text-[#00f0ff] hover:border-[#00f0ff]/30'}`}
+  1299→                      title={isRecording ? 'Stop recording' : 'Start voice input'}
+  1300→                    >
+  1301→                      {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+  1302→                    </button>
+  1303→                    <input
+  1304→                      type="text"
+  1305→                      value={inputMsg}
+  1306→                      onChange={e => setInputMsg(e.target.value)}
+  1307→                      onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+  1308→                      placeholder="Ask Prof. Shield anything about cybersecurity..."
+  1309→                      className="holo-input flex-1 text-sm"
+  1310→                    />
+  1311→                    <button
+  1312→                      onClick={() => sendMessage()}
+  1313→                      disabled={!inputMsg.trim()}
+  1314→                      className="p-3 rounded-xl bg-[#00f0ff]/15 border border-[#00f0ff]/30 text-[#00f0ff] hover:bg-[#00f0ff]/25 disabled:opacity-30 disabled:cursor-not-allowed transition-all shrink-0"
+  1315→                    >
+  1316→                      <Send className="w-5 h-5" />
+  1317→                    </button>
+  1318→                  </div>
+  1319→                </div>
+  1320→              </div>
+  1321→            </motion.div>
+  1322→          )}
+  1323→
+  1324→          {/* ════════════════════ QUIZZES ════════════════════ */}
+  1325→          {activeTab === 'quizzes' && (
+  1326→            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+  1327→              {!quizCourse ? (
+  1328→                <>
+  1329→                  <h1 className="text-2xl font-bold neon-text">Assessment Center</h1>
+  1330→                  <p className="text-[#64748b]">Test your knowledge with module quizzes. Earn XP for high scores!</p>
+  1331→                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+  1332→                    {DEMO_COURSES.map((course, i) => (
+  1333→                      <motion.div
+  1334→                        key={course.id}
+  1335→                        initial={{ opacity: 0, y: 20 }}
+  1336→                        animate={{ opacity: 1, y: 0 }}
+  1337→                        transition={{ delay: i * 0.05 }}
+  1338→                        className="holo-card p-5"
+  1339→                      >
+  1340→                        <h3 className="font-semibold mb-2">{course.title}</h3>
+  1341→                        <p className="text-sm text-[#64748b] mb-4">{course.moduleCount} modules &middot; {DEMO_QUIZZES[course.id]?.length || 0} questions</p>
+  1342→                        <button onClick={() => startQuiz(course.id)} className="holo-btn w-full text-sm">
+  1343→                          <Target className="w-4 h-4 inline mr-2" />Start Quiz
+  1344→                        </button>
+  1345→                      </motion.div>
+  1346→                    ))}
+  1347→                  </div>
+  1348→                </>
+  1349→              ) : (
+  1350→                <div className="max-w-2xl mx-auto">
+  1351→                  {!quizSubmitted ? (
+  1352→                    <div className="holo-card p-6">
+  1353→                      <div className="flex items-center justify-between mb-6">
+  1354→                        <h2 className="text-lg font-semibold">
+  1355→                          {DEMO_COURSES.find(c => c.id === quizCourse)?.title} Quiz
+  1356→                        </h2>
+  1357→                        <div className="flex items-center gap-3">
+  1358→                          <div className={`flex items-center gap-1 text-sm font-mono ${quizTimeLeft < 60 ? 'text-[#ff006e]' : 'text-[#00f0ff]'}`}>
+  1359→                            <Clock className="w-4 h-4" />
+  1360→                            {Math.floor(quizTimeLeft / 60)}:{String(quizTimeLeft % 60).padStart(2, '0')}
+  1361→                          </div>
+  1362→                          <span className="holo-badge holo-badge-cyan">
+  1363→                            Q{quizIndex + 1}/{quizQuestions.length}
+  1364→                          </span>
+  1365→                        </div>
+  1366→                      </div>
+  1367→
+  1368→                      {/* Progress */}
+  1369→                      <div className="holo-progress mb-6">
+  1370→                        <div className="holo-progress-bar" style={{ width: `${((quizIndex + 1) / quizQuestions.length) * 100}%` }} />
+  1371→                      </div>
+  1372→
+  1373→                      {/* Question */}
+  1374→                      <AnimatePresence mode="wait">
+  1375→                        <motion.div
+  1376→                          key={quizQuestions[quizIndex].id}
+  1377→                          initial={{ opacity: 0, x: 20 }}
+  1378→                          animate={{ opacity: 1, x: 0 }}
+  1379→                          exit={{ opacity: 0, x: -20 }}
+  1380→                        >
+  1381→                          <h3 className="text-base font-medium mb-4">{quizQuestions[quizIndex].question}</h3>
+  1382→                          <RadioGroup
+  1383→                            value={quizAnswers[quizQuestions[quizIndex].id]?.toString() || ''}
+  1384→                            onValueChange={v => setQuizAnswers(p => ({ ...p, [quizQuestions[quizIndex].id]: parseInt(v) }))}
+  1385→                            className="space-y-2"
+  1386→                          >
+  1387→                            {quizQuestions[quizIndex].options.map((opt, i) => (
+  1388→                              <label key={i} className="flex items-center gap-3 p-3 rounded-xl border border-[#1e293b] hover:border-[#00f0ff]/30 hover:bg-[#00f0ff]/5 cursor-pointer transition-all">
+  1389→                                <RadioGroupItem value={i.toString()} className="border-[#00f0ff]/50 text-[#00f0ff]" />
+  1390→                                <span className="text-sm">{opt}</span>
+  1391→                              </label>
+  1392→                            ))}
+  1393→                          </RadioGroup>
+  1394→                        </motion.div>
+  1395→                      </AnimatePresence>
+  1396→
+  1397→                      {/* Nav */}
+  1398→                      <div className="flex items-center justify-between mt-6 pt-4 border-t border-[#1e293b]">
+  1399→                        <button
+  1400→                          onClick={() => setQuizIndex(Math.max(0, quizIndex - 1))}
+  1401→                          disabled={quizIndex === 0}
+  1402→                          className="holo-btn text-sm disabled:opacity-30"
+  1403→                        >
+  1404→                          <ChevronRight className="w-4 h-4 rotate-180 inline mr-1" /> Previous
+  1405→                        </button>
+  1406→                        {quizIndex < quizQuestions.length - 1 ? (
+  1407→                          <button onClick={() => setQuizIndex(quizIndex + 1)} className="holo-btn text-sm">
+  1408→                            Next <ChevronRight className="w-4 h-4 inline ml-1" />
+  1409→                          </button>
+  1410→                        ) : (
+  1411→                          <button onClick={submitQuiz} className="holo-btn holo-btn-primary text-sm">
+  1412→                            Submit Quiz
+  1413→                          </button>
+  1414→                        )}
+  1415→                      </div>
+  1416→                    </div>
+  1417→                  ) : (
+  1418→                    <div className="holo-card p-6 text-center">
+  1419→                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', bounce: 0.5 }}>
+  1420→                        <div className={`text-6xl font-black ${quizScore >= 80 ? 'neon-text-green' : quizScore >= 60 ? 'neon-text' : 'neon-text-purple'}`}>
+  1421→                          {quizScore}%
+  1422→                        </div>
+  1423→                      </motion.div>
+  1424→                      <p className="text-lg mt-3 font-semibold">
+  1425→                        {quizScore >= 80 ? 'Excellent Work!' : quizScore >= 60 ? 'Good Effort!' : 'Keep Practicing!'}
+  1426→                      </p>
+  1427→                      <p className="text-sm text-[#64748b] mt-1">
+  1428→                        You got {quizQuestions.filter((q, i) => quizAnswers[q.id] === q.correctIndex).length} out of {quizQuestions.length} correct
+  1429→                      </p>
+  1430→
+  1431→                      {/* Answer Review */}
+  1432→                      <div className="mt-6 space-y-3 text-left">
+  1433→                        {quizQuestions.map((q, i) => {
+  1434→                          const userAnswer = quizAnswers[q.id];
+  1435→                          const isCorrect = userAnswer === q.correctIndex;
+  1436→                          return (
+  1437→                            <div key={q.id} className={`p-3 rounded-xl border ${isCorrect ? 'bg-[#39ff14]/5 border-[#39ff14]/20' : 'bg-[#ff006e]/5 border-[#ff006e]/20'}`}>
+  1438→                              <div className="flex items-start gap-2">
+  1439→                                {isCorrect ? <CheckCircle2 className="w-4 h-4 text-[#39ff14] shrink-0 mt-0.5" /> : <X className="w-4 h-4 text-[#ff006e] shrink-0 mt-0.5" />}
+  1440→                                <div>
+  1441→                                  <p className="text-sm font-medium">{q.question}</p>
+  1442→                                  {!isCorrect && <p className="text-xs text-[#ff006e] mt-1">Your answer: {q.options[userAnswer ?? 0]}</p>}
+  1443→                                  <p className="text-xs text-[#39ff14] mt-1">Correct: {q.options[q.correctIndex]}</p>
+  1444→                                  <p className="text-xs text-[#64748b] mt-1">{q.explanation}</p>
+  1445→                                </div>
+  1446→                              </div>
+  1447→                            </div>
+  1448→                          );
+  1449→                        })}
+  1450→                      </div>
+  1451→
+  1452→                      <button onClick={() => setQuizCourse(null)} className="holo-btn mt-6">
+  1453→                        Back to Quizzes
+  1454→                      </button>
+  1455→                    </div>
+  1456→                  )}
+  1457→                </div>
+  1458→              )}
+  1459→            </motion.div>
+  1460→          )}
+  1461→
+  1462→          {/* ════════════════════ LAB TERMINAL ════════════════════ */}
+  1463→          {activeTab === 'labs' && (
+  1464→            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="h-[calc(100vh-10rem)] flex flex-col">
+  1465→              {!labActive ? (
+  1466→                <div className="flex-1 flex items-center justify-center">
+  1467→                  <div className="text-center">
+  1468→                    <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[#00f0ff]/10 to-[#bf00ff]/10 border border-[#00f0ff]/20 flex items-center justify-center mb-4">
+  1469→                      <TerminalIcon className="w-10 h-10 text-[#00f0ff]" />
+  1470→                    </div>
+  1471→                    <h2 className="text-xl font-bold mb-2">Secure Lab Environment</h2>
+  1472→                    <p className="text-sm text-[#64748b] mb-6 max-w-md">
+  1473→                      Launch an isolated sandbox environment to practice cybersecurity tools and techniques safely.
+  1474→                    </p>
+  1475→                    <button onClick={() => setLabActive(true)} className="holo-btn holo-btn-primary text-base px-8 py-3">
+  1476→                      <Play className="w-5 h-5 inline mr-2" />Launch Lab Terminal
+  1477→                    </button>
+  1478→                  </div>
+  1479→                </div>
+  1480→              ) : (
+  1481→                <div className="holo-terminal flex-1 flex flex-col overflow-hidden">
+  1482→                  <div className="holo-terminal-header">
+  1483→                    <div className="holo-terminal-dot bg-[#ff5f57]" />
+  1484→                    <div className="holo-terminal-dot bg-[#ffbd2e]" />
+  1485→                    <div className="holo-terminal-dot bg-[#28ca42]" />
+  1486→                    <span className="ml-3 text-xs text-[#64748b]">cybershield@lab:~</span>
+  1487→                    <div className="ml-auto flex items-center gap-2">
+  1488→                      <span className="holo-badge holo-badge-green text-xs">Connected</span>
+  1489→                      <button onClick={() => { setLabActive(false); setLabOutput(['\x1b[32mLab session terminated.\x1b[0m', '']); }} className="p-1 rounded hover:bg-[#ff006e]/10 text-[#ff006e]">
+  1490→                        <X className="w-4 h-4" />
+  1491→                      </button>
+  1492→                    </div>
+  1493→                  </div>
+  1494→                  <ScrollArea className="flex-1 p-4 font-mono text-sm">
+  1495→                    <div className="space-y-0">
+  1496→                      {labOutput.map((line, i) => (
+  1497→                        <div key={i} className="whitespace-pre-wrap leading-6 text-[#39ff14]" style={{ color: undefined }}>
+  1498→                          {line.includes('\x1b[32m') ? <span className="text-[#39ff14]">{line.replace(/\x1b\[\d+m/g, '')}</span> :
+  1499→                           line.includes('\x1b[34m') ? <span className="text-[#00f0ff]">{line.replace(/\x1b\[\d+m/g, '')}</span> :
+  1500→                           line.includes('\x1b[0m') ? <span className="text-[#e2e8f0]">{line.replace(/\x1b\[\d+m/g, '')}</span> :
+  1501→                           <span className="text-[#e2e8f0]">{line}</span>}
+  1502→                        </div>
+  1503→                      ))}
+  1504→                      <div ref={labEndRef} />
+  1505→                    </div>
+  1506→                  </ScrollArea>
+  1507→                  <div className="p-3 border-t border-[#1e293b] flex items-center gap-2">
+  1508→                    <span className="text-[#39ff14] font-mono text-sm shrink-0">cybershield@lab:~$</span>
+  1509→                    <input
+  1510→                      type="text"
+  1511→                      value={labInput}
+  1512→                      onChange={e => setLabInput(e.target.value)}
+  1513→                      onKeyDown={e => { if (e.key === 'Enter') handleLabCommand(labInput); }}
+  1514→                      className="flex-1 bg-transparent border-none outline-none text-[#e2e8f0] font-mono text-sm"
+  1515→                      autoFocus
+  1516→                      placeholder="Type a command..."
+  1517→                    />
+  1518→                  </div>
+  1519→                </div>
+  1520→              )}
+  1521→            </motion.div>
+  1522→          )}
+  1523→
+  1524→          {/* ════════════════════ CTF ARENA ════════════════════ */}
+  1525→          {activeTab === 'ctf' && (
+  1526→            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+  1527→              <div className="flex items-center justify-between flex-wrap gap-3">
+  1528→                <div>
+  1529→                  <h1 className="text-2xl font-bold neon-text flex items-center gap-2">
+  1530→                    <Flag className="w-6 h-6" /> CTF Arena
+  1531→                  </h1>
+  1532→                  <p className="text-sm text-[#64748b] mt-1">Capture the flag challenges. Submit flags to earn XP!</p>
+  1533→                </div>
+  1534→                <div className="flex items-center gap-2 text-sm">
+  1535→                  <Trophy className="w-4 h-4 text-[#ffd700]" />
+  1536→                  <span className="text-[#64748b]">Total Points:</span>
+  1537→                  <span className="font-bold text-[#00f0ff]">{ctfChallenges.filter(c => c.solved).reduce((a, c) => a + c.points, 0)}</span>
+  1538→                </div>
+  1539→              </div>
+  1540→
+  1541→              <div className="flex gap-2 flex-wrap">
+  1542→                {CTF_CATEGORIES.map(cat => (
+  1543→                  <button
+  1544→                    key={cat.id}
+  1545→                    onClick={() => setCtfFilter(cat.id)}
+  1546→                    className={`holo-badge ${ctfFilter === cat.id ? 'holo-badge-purple' : 'bg-[#1a1f35] border-[#1e293b] text-[#64748b] hover:text-[#cbd5e1]'}`}
+  1547→                  >
+  1548→                    {cat.label}
+  1549→                  </button>
+  1550→                ))}
+  1551→              </div>
+  1552→
+  1553→              <div className="grid md:grid-cols-2 gap-4">
+  1554→                {filteredCtf.map((challenge, i) => (
+  1555→                  <motion.div
+  1556→                    key={challenge.id}
+  1557→                    initial={{ opacity: 0, y: 20 }}
+  1558→                    animate={{ opacity: 1, y: 0 }}
+  1559→                    transition={{ delay: i * 0.05 }}
+  1560→                    className="holo-card p-5"
+  1561→                  >
+  1562→                    <div className="flex items-start justify-between mb-3">
+  1563→                      <div>
+  1564→                        <h3 className="font-semibold flex items-center gap-2">
+  1565→                          {challenge.title}
+  1566→                          {challenge.solved && <CheckCircle2 className="w-4 h-4 text-[#39ff14]" />}
+  1567→                        </h3>
+  1568→                        <div className="flex items-center gap-2 mt-1">
+  1569→                          <span className={`holo-badge ${challenge.difficulty === 'easy' ? 'holo-badge-green' : challenge.difficulty === 'medium' ? 'holo-badge-orange' : 'holo-badge-pink'}`}>
+  1570→                            {challenge.difficulty}
+  1571→                          </span>
+  1572→                          <span className="holo-badge holo-badge-purple">{challenge.category}</span>
+  1573→                        </div>
+  1574→                      </div>
+  1575→                      <div className="text-right">
+  1576→                        <div className="text-xl font-bold text-[#00f0ff]">{challenge.points}</div>
+  1577→                        <div className="text-xs text-[#64748b]">points</div>
+  1578→                      </div>
+  1579→                    </div>
+  1580→                    <p className="text-sm text-[#64748b] mb-4 whitespace-pre-line font-mono">{challenge.description}</p>
+  1581→                    <div className="flex items-center gap-2 text-xs text-[#64748b] mb-3">
+  1582→                      <Users className="w-3 h-3" /> {challenge.solveCount} solves
+  1583→                    </div>
+  1584→                    {challenge.solved ? (
+  1585→                      <div className="bg-[#39ff14]/10 border border-[#39ff14]/20 rounded-xl p-3 text-center">
+  1586→                        <span className="text-sm text-[#39ff14] font-semibold flex items-center justify-center gap-1">
+  1587→                          <CheckCircle2 className="w-4 h-4" /> Flag Captured!
+  1588→                        </span>
+  1589→                      </div>
+  1590→                    ) : (
+  1591→                      <div className="flex gap-2">
+  1592→                        <input
+  1593→                          type="text"
+  1594→                          value={ctfFlag}
+  1595→                          onChange={e => setCtfFlag(e.target.value)}
+  1596→                          onKeyDown={e => { if (e.key === 'Enter') submitCtfFlag(challenge.id); }}
+  1597→                          placeholder="Enter flag (e.g., CYBERSHIELD{...})"
+  1598→                          className="holo-input flex-1 text-sm font-mono"
+  1599→                        />
+  1600→                        <button onClick={() => submitCtfFlag(challenge.id)} className="holo-btn holo-btn-primary text-sm px-4">
+  1601→                          Submit
+  1602→                        </button>
+  1603→                      </div>
+  1604→                    )}
+  1605→                    {ctfResult && (
+  1606→                      <motion.div
+  1607→                        initial={{ opacity: 0, y: 10 }}
+  1608→                        animate={{ opacity: 1, y: 0 }}
+  1609→                        className={`mt-3 p-3 rounded-xl text-sm font-medium text-center ${ctfResult.correct
+  1610→                          ? 'bg-[#39ff14]/10 border border-[#39ff14]/20 text-[#39ff14]'
+  1611→                          : 'bg-[#ff006e]/10 border border-[#ff006e]/20 text-[#ff006e]'}`}
+  1612→                      >
+  1613→                        {ctfResult.message}
+  1614→                      </motion.div>
+  1615→                    )}
+  1616→                  </motion.div>
+  1617→                ))}
+  1618→              </div>
+  1619→            </motion.div>
+  1620→          )}
+  1621→
+  1622→          {/* ════════════════════ GAMIFICATION ════════════════════ */}
+  1623→          {activeTab === 'gamification' && (
+  1624→            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+  1625→              {/* Profile Card */}
+  1626→              <div className="holo-card p-6">
+  1627→                <div className="flex flex-col md:flex-row items-center gap-6">
+  1628→                  <div className="relative">
+  1629→                    <Avatar className="w-20 h-20 border-2 border-[#00f0ff]/40">
+  1630→                      <AvatarFallback className="bg-gradient-to-br from-[#00f0ff]/20 to-[#bf00ff]/20 text-[#00f0ff] text-2xl font-bold">
+  1631→                        {user.name.split(' ').map(n => n[0]).join('')}
+  1632→                      </AvatarFallback>
+  1633→                    </Avatar>
+  1634→                    <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-[#00f0ff] to-[#0080ff] flex items-center justify-center text-xs font-bold text-[#050810] border-2 border-[#050810]">
+  1635→                      {user.level}
+  1636→                    </div>
+  1637→                  </div>
+  1638→                  <div className="text-center md:text-left flex-1">
+  1639→                    <h1 className="text-2xl font-bold">{user.name}</h1>
+  1640→                    <div className="flex items-center gap-2 justify-center md:justify-start mt-1">
+  1641→                      <Crown className="w-4 h-4 text-[#ffd700]" />
+  1642→                      <span className="text-[#bf00ff] font-semibold">{LEVEL_TITLES[Math.min(user.level - 1, LEVEL_TITLES.length - 1)]}</span>
+  1643→                    </div>
+  1644→                    <div className="mt-3 max-w-sm">
+  1645→                      <div className="flex justify-between text-xs text-[#64748b] mb-1">
+  1646→                        <span>Level {user.level}</span>
+  1647→                        <span>{user.xp} / {xpForNext} XP</span>
+  1648→                      </div>
+  1649→                      <div className="holo-progress h-3">
+  1650→                        <div className="holo-progress-bar" style={{ width: `${Math.min(xpProgress, 100)}%` }} />
+  1651→                      </div>
+  1652→                    </div>
+  1653→                  </div>
+  1654→                  <div className="grid grid-cols-3 gap-4 text-center">
+  1655→                    <div>
+  1656→                      <div className="text-2xl font-bold text-[#ff6b35] flex items-center justify-center gap-1"><Flame className="w-5 h-5" />{user.streakDays}</div>
+  1657→                      <div className="text-xs text-[#64748b]">Day Streak</div>
+  1658→                    </div>
+  1659→                    <div>
+  1660→                      <div className="text-2xl font-bold text-[#00f0ff]">{DEMO_BADGES.filter(b => b.earned).length}</div>
+  1661→                      <div className="text-xs text-[#64748b]">Badges</div>
+  1662→                    </div>
+  1663→                    <div>
+  1664→                      <div className="text-2xl font-bold text-[#39ff14]">{ctfChallenges.filter(c => c.solved).length}</div>
+  1665→                      <div className="text-xs text-[#64748b]">CTF Flags</div>
+  1666→                    </div>
+  1667→                  </div>
+  1668→                </div>
+  1669→              </div>
+  1670→
+  1671→              {/* Badges */}
+  1672→              <div>
+  1673→                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+  1674→                  <Hexagon className="w-5 h-5 text-[#bf00ff]" /> Badges Collection
+  1675→                </h2>
+  1676→                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+  1677→                  {DEMO_BADGES.map((badge, i) => (
+  1678→                    <motion.div
+  1679→                      key={badge.name}
+  1680→                      initial={{ opacity: 0, scale: 0.8 }}
+  1681→                      animate={{ opacity: 1, scale: 1 }}
+  1682→                      transition={{ delay: i * 0.05 }}
+  1683→                      className={`holo-card p-4 text-center ${!badge.earned ? 'opacity-40 grayscale' : ''}`}
+  1684→                    >
+  1685→                      <div className={`hex-badge mx-auto mb-2 hex-badge-${badge.rarity === 'legendary' ? 'legendary' : badge.rarity === 'epic' ? 'epic' : badge.rarity === 'rare' ? 'rare' : 'common'}`}>
+  1686→                        {badge.earned ? badge.icon : '🔒'}
+  1687→                      </div>
+  1688→                      <div className="text-xs font-semibold">{badge.name}</div>
+  1689→                      <div className="text-[10px] text-[#64748b] mt-0.5">{badge.description}</div>
+  1690→                      <div className={`holo-badge mt-2 text-[10px] ${badge.rarity === 'legendary' ? 'holo-badge-orange' : badge.rarity === 'epic' ? 'holo-badge-purple' : badge.rarity === 'rare' ? 'holo-badge-cyan' : 'holo-badge-green'}`}>
+  1691→                        {badge.rarity}
+  1692→                      </div>
+  1693→                    </motion.div>
+  1694→                  ))}
+  1695→                </div>
+  1696→              </div>
+  1697→
+  1698→              {/* Leaderboard */}
+  1699→              <div>
+  1700→                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+  1701→                  <Trophy className="w-5 h-5 text-[#ffd700]" /> Global Leaderboard
+  1702→                </h2>
+  1703→                <div className="holo-card overflow-hidden">
+  1704→                  {DEMO_LEADERBOARD.map((entry, i) => (
+  1705→                    <div key={entry.id} className={`flex items-center gap-4 px-5 py-3 ${i < DEMO_LEADERBOARD.length - 1 ? 'border-b border-[#1e293b]/50' : ''} ${entry.id === 'l4' ? 'bg-[#00f0ff]/5' : ''}`}>
+  1706→                      <div className={`w-8 text-center font-bold ${entry.rank <= 3 ? `rank-${entry.rank}` : 'text-[#64748b]'}`}>
+  1707→                        {entry.rank <= 3 ? <Crown className="w-5 h-5 mx-auto" /> : `#${entry.rank}`}
+  1708→                      </div>
+  1709→                      <Avatar className="w-8 h-8 border border-[#1e293b]">
+  1710→                        <AvatarFallback className="bg-[#0a0e1a] text-xs text-[#64748b]">
+  1711→                          {entry.name.split(' ').map(n => n[0]).join('')}
+  1712→                        </AvatarFallback>
+  1713→                      </Avatar>
+  1714→                      <div className="flex-1 min-w-0">
+  1715→                        <div className="text-sm font-medium truncate">{entry.name} {entry.id === 'l4' && <span className="text-[#00f0ff] text-xs">(You)</span>}</div>
+  1716→                        <div className="text-xs text-[#64748b]">{entry.title}</div>
+  1717→                      </div>
+  1718→                      <div className="text-right shrink-0">
+  1719→                        <div className="text-sm font-bold text-[#00f0ff]">{entry.xp.toLocaleString()} XP</div>
+  1720→                        <div className="text-xs text-[#64748b]">Lv.{entry.level} &middot; {entry.badges} badges</div>
+  1721→                      </div>
+  1722→                    </div>
+  1723→                  ))}
+  1724→                </div>
+  1725→              </div>
+  1726→            </motion.div>
+  1727→          )}
+  1728→
+  1729→          {/* ════════════════════ ANALYTICS ════════════════════ */}
+  1730→          {activeTab === 'analytics' && (
+  1731→            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+  1732→              <h1 className="text-2xl font-bold neon-text">Performance Analytics</h1>
+  1733→
+  1734→              <div className="grid md:grid-cols-4 gap-4">
+  1735→                {[
+  1736→                  { label: 'Total XP Earned', value: user.xp.toLocaleString(), change: '+120 this week', color: '#00f0ff' },
+  1737→                  { label: 'Avg Quiz Score', value: '82%', change: '+5% vs last month', color: '#39ff14' },
+  1738→                  { label: 'Lab Completion', value: '68%', change: '12 of 18 labs', color: '#bf00ff' },
+  1739→                  { label: 'Focus Score Avg', value: '84%', change: '+2% improving', color: '#ff6b35' },
+  1740→                ].map((stat, i) => (
+  1741→                  <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="holo-card p-4">
+  1742→                    <div className="text-xs text-[#64748b] mb-1">{stat.label}</div>
+  1743→                    <div className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
+  1744→                    <div className="text-xs text-[#39ff14] mt-1">{stat.change}</div>
+  1745→                  </motion.div>
+  1746→                ))}
+  1747→              </div>
+  1748→
+  1749→              {/* Performance Chart Placeholder */}
+  1750→              <div className="holo-card p-5">
+  1751→                <h2 className="text-base font-semibold mb-4">Weekly Activity</h2>
+  1752→                <div className="flex items-end gap-3 h-48">
+  1753→                  {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day, i) => {
+  1754→                    const heights = [60, 80, 45, 90, 70, 30, 55];
+  1755→                    const h = heights[i];
+  1756→                    return (
+  1757→                      <div key={day} className="flex-1 flex flex-col items-center gap-1">
+  1758→                        <div className="w-full relative" style={{ height: '100%' }}>
+  1759→                          <motion.div
+  1760→                            initial={{ height: 0 }}
+  1761→                            animate={{ height: `${h}%` }}
+  1762→                            transition={{ delay: i * 0.1, duration: 0.5 }}
+  1763→                            className="absolute bottom-0 w-full rounded-t-lg"
+  1764→                            style={{
+  1765→                              background: `linear-gradient(to top, #00f0ff${Math.round(h * 1.5).toString(16).padStart(2, '0')}, #bf00ff${Math.round(h * 1.5).toString(16).padStart(2, '0')})`,
+  1766→                            }}
+  1767→                          />
+  1768→                        </div>
+  1769→                        <span className="text-xs text-[#64748b]">{day}</span>
+  1770→                      </div>
+  1771→                    );
+  1772→                  })}
+  1773→                </div>
+  1774→              </div>
+  1775→
+  1776→              {/* Skills Radar */}
+  1777→              <div className="grid md:grid-cols-2 gap-4">
+  1778→                <div className="holo-card p-5">
+  1779→                  <h2 className="text-base font-semibold mb-4">Skill Breakdown</h2>
+  1780→                  <div className="space-y-3">
+  1781→                    {[
+  1782→                      { skill: 'Network Security', score: 85, color: '#00f0ff' },
+  1783→                      { skill: 'Web Security', score: 72, color: '#bf00ff' },
+  1784→                      { skill: 'Cryptography', score: 68, color: '#39ff14' },
+  1785→                      { skill: 'Forensics', score: 55, color: '#ff6b35' },
+  1786→                      { skill: 'Cloud Security', score: 42, color: '#ff006e' },
+  1787→                      { skill: 'Malware Analysis', score: 38, color: '#ffd700' },
+  1788→                    ].map(s => (
+  1789→                      <div key={s.skill}>
+  1790→                        <div className="flex justify-between text-sm mb-1">
+  1791→                          <span>{s.skill}</span>
+  1792→                          <span style={{ color: s.color }}>{s.score}%</span>
+  1793→                        </div>
+  1794→                        <div className="holo-progress">
+  1795→                          <div className="holo-progress-bar" style={{ width: `${s.score}%`, background: s.color }} />
+  1796→                        </div>
+  1797→                      </div>
+  1798→                    ))}
+  1799→                  </div>
+  1800→                </div>
+  1801→
+  1802→                <div className="holo-card p-5">
+  1803→                  <h2 className="text-base font-semibold mb-4">Recent Activity</h2>
+  1804→                  <div className="space-y-3">
+  1805→                    {[
+  1806→                      { icon: CheckCircle2, text: 'Completed Network Scanning module', time: '2h ago', color: '#39ff14' },
+  1807→                      { icon: Target, text: 'Scored 90% on Cryptography Quiz', time: '5h ago', color: '#00f0ff' },
+  1808→                      { icon: Flag, text: 'Captured flag: Caesar\'s Secret', time: '1d ago', color: '#bf00ff' },
+  1809→                      { icon: TerminalIcon, text: 'Completed Firewall Lab (45 min)', time: '1d ago', color: '#ff6b35' },
+  1810→                      { icon: Award, text: 'Earned "Quiz Master" badge', time: '2d ago', color: '#ffd700' },
+  1811→                      { icon: Brain, text: 'AI session: IDS/IPS deep dive', time: '3d ago', color: '#ff006e' },
+  1812→                    ].map((a, i) => (
+  1813→                      <div key={i} className="flex items-start gap-3">
+  1814→                        <a.icon className="w-4 h-4 mt-0.5 shrink-0" style={{ color: a.color }} />
+  1815→                        <div className="flex-1 min-w-0">
+  1816→                          <p className="text-sm">{a.text}</p>
+  1817→                          <p className="text-xs text-[#64748b]">{a.time}</p>
+  1818→                        </div>
+  1819→                      </div>
+  1820→                    ))}
+  1821→                  </div>
+  1822→                </div>
+  1823→              </div>
+  1824→            </motion.div>
+  1825→          )}
+  1826→
+  1827→          {/* ════════════════════ CERTIFICATES ════════════════════ */}
+  1828→          {activeTab === 'certificates' && (
+  1829→            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+  1830→              <h1 className="text-2xl font-bold neon-text">Certificates</h1>
+  1831→              <p className="text-[#64748b]">Earn certificates by completing courses. Each certificate includes a verification hash.</p>
+  1832→
+  1833→              <div className="grid md:grid-cols-2 gap-6">
+  1834→                {/* Earned Certificate */}
+  1835→                <div className="holo-card p-6 scan-line relative overflow-hidden">
+  1836→                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00f0ff] via-[#bf00ff] to-[#ff006e]" />
+  1837→                  <div className="flex items-center gap-3 mb-4">
+  1838→                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#00f0ff]/20 to-[#bf00ff]/20 border border-[#00f0ff]/30 flex items-center justify-center">
+  1839→                      <Award className="w-6 h-6 text-[#00f0ff]" />
+  1840→                    </div>
+  1841→                    <div>
+  1842→                      <h3 className="font-semibold">Network Security Fundamentals</h3>
+  1843→                      <p className="text-xs text-[#64748b]">Issued: June 15, 2026</p>
+  1844→                    </div>
+  1845→                  </div>
+  1846→                  <p className="text-sm text-[#64748b] mb-4">This certifies that <span className="text-[#e2e8f0] font-medium">{user.name}</span> has successfully completed all modules and assessments.</p>
+  1847→                  <div className="bg-[#0a0e1a] rounded-lg p-3 mb-4">
+  1848→                    <div className="text-xs text-[#64748b] mb-1">Verification Hash</div>
+  1849→                    <div className="text-xs font-mono text-[#00f0ff] break-all">SHA256:a3f8d2e1b9c4f7a6d0e3b2c1f8a9d7e6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e</div>
+  1850→                  </div>
+  1851→                  <div className="flex gap-2">
+  1852→                    <button className="holo-btn text-sm flex-1 flex items-center justify-center gap-1">
+  1853→                      <Download className="w-4 h-4" /> Download PDF
+  1854→                    </button>
+  1855→                    <button className="holo-btn text-sm flex items-center justify-center gap-1">
+  1856→                      <Copy className="w-4 h-4" /> Copy Link
+  1857→                    </button>
+  1858→                  </div>
+  1859→                </div>
+  1860→
+  1861→                {/* In Progress */}
+  1862→                <div className="holo-card p-6 border-dashed">
+  1863→                  <div className="flex items-center gap-3 mb-4">
+  1864→                    <div className="w-12 h-12 rounded-xl bg-[#1a1f35] border border-[#1e293b] flex items-center justify-center">
+  1865→                      <Lock className="w-6 h-6 text-[#64748b]" />
+  1866→                    </div>
+  1867→                    <div>
+  1868→                      <h3 className="font-semibold text-[#64748b]">Ethical Hacking & Penetration Testing</h3>
+  1869→                      <p className="text-xs text-[#475569]">Complete all modules to earn</p>
+  1870→                    </div>
+  1871→                  </div>
+  1872→                  <div className="text-sm text-[#64748b] mb-4">
+  1873→                    You need to complete <span className="text-[#ff6b35] font-semibold">6 more modules</span> and achieve a minimum of 60% quiz accuracy.
+  1874→                  </div>
+  1875→                  <div className="holo-progress">
+  1876→                    <div className="holo-progress-bar" style={{ width: '20%' }} />
+  1877→                  </div>
+  1878→                  <div className="text-xs text-[#64748b] mt-2 text-right">20% complete</div>
+  1879→                </div>
+  1880→              </div>
+  1881→
+  1882→              {/* Verify Certificate */}
+  1883→              <div className="holo-card p-6">
+  1884→                <h2 className="text-base font-semibold mb-4">Verify a Certificate</h2>
+  1885→                <div className="flex gap-2">
+  1886→                  <input type="text" placeholder="Paste verification hash or certificate URL..." className="holo-input flex-1 text-sm font-mono" />
+  1887→                  <button className="holo-btn holo-btn-primary text-sm px-6">Verify</button>
+  1888→                </div>
+  1889→              </div>
+  1890→            </motion.div>
+  1891→          )}
+  1892→
+  1893→        </div>
+  1894→      </main>
+  1895→
+  1896→      {/* ── Footer ── */}
+  1897→      <footer className="relative z-10 border-t border-[#1e293b]/50 mt-auto">
+  1898→        <div className="max-w-[1400px] mx-auto px-4 py-3 flex items-center justify-between text-xs text-[#475569]">
+  1899→          <div className="flex items-center gap-2">
+  1900→            <Shield className="w-3.5 h-3.5 text-[#00f0ff]/50" />
+  1901→            <span>CyberShield Academy</span>
+  1902→          </div>
+  1903→          <div className="flex items-center gap-4">
+  1904→            <span>AI-Powered Cybersecurity Training</span>
+  1905→            <span className="hidden sm:inline">&middot;</span>
+  1906→            <span className="hidden sm:inline">v2.0 Holographic Edition</span>
+  1907→          </div>
+  1908→        </div>
+  1909→      </footer>
+  1910→
+  1911→      {/* ── Click outside to close notifications ── */}
+  1912→      {notifOpen && <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />}
+  1913→    </div>
+  1914→  );
+  1915→}

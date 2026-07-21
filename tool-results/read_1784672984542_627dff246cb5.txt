@@ -1,0 +1,502 @@
+     1→   801→            </div>
+     2→   802→
+     3→   803→            <button onClick={handleLogin} className="holo-btn holo-btn-primary w-full py-3 text-base rounded-xl mt-2">
+     4→   804→              {loginMode === 'login' ? 'Sign In' : 'Create Account'}
+     5→   805→            </button>
+     6→   806→
+     7→   807→            <p className="text-center text-xs text-[#475569] mt-4">
+     8→   808→              Enter any credentials to explore the demo
+     9→   809→            </p>
+    10→   810→          </div>
+    11→   811→        </motion.div>
+    12→   812→      </div>
+    13→   813→    );
+    14→   814→  }
+    15→   815→
+    16→   816→  // ─── MAIN APP ──────────────────────────────────────────────────────────────
+    17→   817→
+    18→   818→  return (
+    19→   819→    <div className="min-h-screen flex flex-col relative">
+    20→   820→      <Particles />
+    21→   821→
+    22→   822→      {/* ── Top Navigation Bar ── */}
+    23→   823→      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#050810]/80 border-b border-[#1e293b]/50">
+    24→   824→        <div className="max-w-[1400px] mx-auto px-4 h-14 flex items-center justify-between">
+    25→   825→          <div className="flex items-center gap-3">
+    26→   826→            <Shield className="w-6 h-6 text-[#00f0ff]" />
+    27→   827→            <span className="text-lg font-bold neon-text tracking-wider hidden sm:block">CyberShield</span>
+    28→   828→          </div>
+    29→   829→
+    30→   830→          {/* XP Bar in Nav */}
+    31→   831→          <div className="hidden md:flex items-center gap-3 flex-1 max-w-xs mx-8">
+    32→   832→            <div className="text-xs text-[#64748b]">Lv.{user.level}</div>
+    33→   833→            <div className="holo-progress flex-1">
+    34→   834→              <div className="holo-progress-bar" style={{ width: `${Math.min(xpProgress, 100)}%` }} />
+    35→   835→            </div>
+    36→   836→            <div className="text-xs text-[#00f0ff] font-mono">{user.xp} XP</div>
+    37→   837→          </div>
+    38→   838→
+    39→   839→          <div className="flex items-center gap-2">
+    40→   840→            {/* Voice Toggle */}
+    41→   841→            <button
+    42→   842→              onClick={() => setVoiceEnabled(!voiceEnabled)}
+    43→   843→              className={`p-2 rounded-lg transition-all ${voiceEnabled ? 'text-[#00f0ff] bg-[#00f0ff]/10' : 'text-[#64748b]'}`}
+    44→   844→              title={voiceEnabled ? 'Voice enabled' : 'Voice disabled'}
+    45→   845→            >
+    46→   846→              {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+    47→   847→            </button>
+    48→   848→
+    49→   849→            {/* Streak */}
+    50→   850→            <div className="flex items-center gap-1 text-[#ff6b35] text-sm">
+    51→   851→              <Flame className="w-4 h-4" />
+    52→   852→              <span className="font-bold">{user.streakDays}</span>
+    53→   853→            </div>
+    54→   854→
+    55→   855→            {/* Notifications */}
+    56→   856→            <div className="relative">
+    57→   857→              <button
+    58→   858→                onClick={() => setNotifOpen(!notifOpen)}
+    59→   859→                className="p-2 rounded-lg text-[#64748b] hover:text-[#e2e8f0] hover:bg-[#1a1f35] transition-all relative"
+    60→   860→              >
+    61→   861→                <Activity className="w-4 h-4" />
+    62→   862→                {notifications.some(n => !n.read) && <div className="notif-dot absolute top-1 right-1" />}
+    63→   863→              </button>
+    64→   864→              <AnimatePresence>
+    65→   865→                {notifOpen && (
+    66→   866→                  <motion.div
+    67→   867→                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+    68→   868→                    animate={{ opacity: 1, y: 0, scale: 1 }}
+    69→   869→                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+    70→   870→                    className="absolute right-0 top-12 w-80 holo-card p-0 z-50"
+    71→   871→                  >
+    72→   872→                    <div className="p-3 border-b border-[#1e293b] flex items-center justify-between">
+    73→   873→                      <span className="text-sm font-semibold text-[#e2e8f0]">Notifications</span>
+    74→   874→                      <span className="text-xs text-[#64748b]">{notifications.filter(n => !n.read).length} new</span>
+    75→   875→                    </div>
+    76→   876→                    <ScrollArea className="max-h-64">
+    77→   877→                      {notifications.map(n => (
+    78→   878→                        <div key={n.id} className="p-3 border-b border-[#1e293b]/50 hover:bg-[#1a1f35]/50 transition-colors">
+    79→   879→                          <div className="flex items-start gap-2">
+    80→   880→                            {!n.read && <div className="w-2 h-2 rounded-full bg-[#00f0ff] mt-1.5 shrink-0" />}
+    81→   881→                            <div className={!n.read ? '' : 'pl-4'}>
+    82→   882→                              <p className="text-sm font-medium text-[#e2e8f0]">{n.title}</p>
+    83→   883→                              <p className="text-xs text-[#64748b] mt-0.5">{n.message}</p>
+    84→   884→                              <p className="text-xs text-[#475569] mt-1">{n.time}</p>
+    85→   885→                            </div>
+    86→   886→                          </div>
+    87→   887→                        </div>
+    88→   888→                      ))}
+    89→   889→                    </ScrollArea>
+    90→   890→                  </motion.div>
+    91→   891→                )}
+    92→   892→              </AnimatePresence>
+    93→   893→            </div>
+    94→   894→
+    95→   895→            {/* User Menu */}
+    96→   896→            <div className="flex items-center gap-2 ml-1 pl-2 border-l border-[#1e293b]">
+    97→   897→              <Avatar className="w-8 h-8 border border-[#00f0ff]/30">
+    98→   898→                <AvatarFallback className="bg-[#0a0e1a] text-[#00f0ff] text-xs font-bold">
+    99→   899→                  {user.name.split(' ').map(n => n[0]).join('')}
+   100→   900→                </AvatarFallback>
+   101→   901→              </Avatar>
+   102→   902→              <span className="text-sm font-medium hidden lg:block">{user.name}</span>
+   103→   903→              <button onClick={handleLogout} className="p-1.5 rounded-lg text-[#64748b] hover:text-[#ff006e] hover:bg-[#ff006e]/10 transition-all" title="Sign out">
+   104→   904→                <LogOut className="w-4 h-4" />
+   105→   905→              </button>
+   106→   906→            </div>
+   107→   907→          </div>
+   108→   908→        </div>
+   109→   909→      </header>
+   110→   910→
+   111→   911→      {/* ── Tab Navigation ── */}
+   112→   912→      <nav className="sticky top-14 z-40 backdrop-blur-xl bg-[#050810]/60 border-b border-[#1e293b]/30 overflow-x-auto">
+   113→   913→        <div className="max-w-[1400px] mx-auto px-4 flex items-center gap-1 py-1.5">
+   114→   914→          {TABS.map(tab => (
+   115→   915→            <button
+   116→   916→              key={tab.id}
+   117→   917→              onClick={() => { setActiveTab(tab.id); setSelectedCourse(null); }}
+   118→   918→              className={`holo-tab flex items-center gap-1.5 whitespace-nowrap text-sm ${activeTab === tab.id ? 'holo-tab-active' : ''}`}
+   119→   919→            >
+   120→   920→              <tab.icon className="w-4 h-4" />
+   121→   921→              <span className="hidden sm:inline">{tab.label}</span>
+   122→   922→            </button>
+   123→   923→          ))}
+   124→   924→        </div>
+   125→   925→      </nav>
+   126→   926→
+   127→   927→      {/* ── Main Content ── */}
+   128→   928→      <main className="flex-1 relative z-10">
+   129→   929→        <div className="max-w-[1400px] mx-auto p-4 md:p-6">
+   130→   930→
+   131→   931→          {/* ════════════════════ DASHBOARD ════════════════════ */}
+   132→   932→          {activeTab === 'dashboard' && (
+   133→   933→            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+   134→   934→              {/* Welcome + Level */}
+   135→   935→              <div className="holo-card p-6">
+   136→   936→                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+   137→   937→                  <div>
+   138→   938→                    <h1 className="text-2xl md:text-3xl font-bold">
+   139→   939→                      Welcome back, <span className="neon-text">{user.name.split(' ')[0]}</span>
+   140→   940→                    </h1>
+   141→   941→                    <p className="text-[#64748b] mt-1">Continue your cybersecurity journey. You&apos;re on a <span className="text-[#ff6b35] font-semibold">{user.streakDays}-day streak</span>!</p>
+   142→   942→                  </div>
+   143→   943→                  <div className="flex items-center gap-4">
+   144→   944→                    <div className="text-center">
+   145→   945→                      <div className="text-3xl font-black neon-text">{user.level}</div>
+   146→   946→                      <div className="text-xs text-[#64748b]">Level</div>
+   147→   947→                    </div>
+   148→   948→                    <div className="text-center">
+   149→   949→                      <div className="text-lg font-bold text-[#bf00ff]">{LEVEL_TITLES[Math.min(user.level - 1, LEVEL_TITLES.length - 1)]}</div>
+   150→   950→                      <div className="text-xs text-[#64748b]">Rank Title</div>
+   151→   951→                    </div>
+   152→   952→                  </div>
+   153→   953→                </div>
+   154→   954→                <div className="mt-4">
+   155→   955→                  <div className="flex items-center justify-between text-xs text-[#64748b] mb-1">
+   156→   956→                    <span>Level {user.level} Progress</span>
+   157→   957→                    <span>{user.xp} / {xpForNext} XP</span>
+   158→   958→                  </div>
+   159→   959→                  <div className="holo-progress h-3">
+   160→   960→                    <div className="holo-progress-bar" style={{ width: `${Math.min(xpProgress, 100)}%` }} />
+   161→   961→                  </div>
+   162→   962→                </div>
+   163→   963→              </div>
+   164→   964→
+   165→   965→              {/* Stats Grid */}
+   166→   966→              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+   167→   967→                {[
+   168→   968→                  { label: 'Courses Enrolled', value: '3', icon: BookOpen, color: '#00f0ff' },
+   169→   969→                  { label: 'Quizzes Passed', value: '12', icon: Target, color: '#39ff14' },
+   170→   970→                  { label: 'Lab Hours', value: '24.5', icon: TerminalIcon, color: '#bf00ff' },
+   171→   971→                  { label: 'CTF Flags', value: '4', icon: Flag, color: '#ff006e' },
+   172→   972→                ].map((stat, i) => (
+   173→   973→                  <motion.div
+   174→   974→                    key={stat.label}
+   175→   975→                    initial={{ opacity: 0, y: 20 }}
+   176→   976→                    animate={{ opacity: 1, y: 0 }}
+   177→   977→                    transition={{ delay: i * 0.1 }}
+   178→   978→                    className="holo-card p-4"
+   179→   979→                  >
+   180→   980→                    <div className="flex items-center justify-between">
+   181→   981→                      <div>
+   182→   982→                        <div className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
+   183→   983→                        <div className="text-xs text-[#64748b] mt-0.5">{stat.label}</div>
+   184→   984→                      </div>
+   185→   985→                      <stat.icon className="w-8 h-8" style={{ color: `${stat.color}40` }} />
+   186→   986→                    </div>
+   187→   987→                  </motion.div>
+   188→   988→                ))}
+   189→   989→              </div>
+   190→   990→
+   191→   991→              {/* Focus Score + Quick Actions */}
+   192→   992→              <div className="grid md:grid-cols-3 gap-4">
+   193→   993→                <div className="holo-card p-5 scan-line">
+   194→   994→                  <div className="text-sm text-[#64748b] mb-2">Focus Score</div>
+   195→   995→                  <div className="flex items-end gap-2">
+   196→   996→                    <span className="text-4xl font-black" style={{ color: focusScore > 70 ? '#39ff14' : focusScore > 40 ? '#ff6b35' : '#ff006e' }}>
+   197→   997→                      {focusScore}%
+   198→   998→                    </span>
+   199→   999→                    <span className="text-sm text-[#64748b] mb-1">current session</span>
+   200→  1000→                  </div>
+   201→  1001→                  <div className="holo-progress mt-3">
+   202→  1002→                    <div className="holo-progress-bar" style={{ width: `${focusScore}%`, background: focusScore > 70 ? 'linear-gradient(90deg, #39ff14, #00f0ff)' : focusScore > 40 ? 'linear-gradient(90deg, #ff6b35, #ff006e)' : '#ff006e' }} />
+   203→  1003→                  </div>
+   204→  1004→                </div>
+   205→  1005→
+   206→  1006→                <div className="holo-card p-5 flex flex-col justify-between">
+   207→  1007→                  <div className="text-sm text-[#64748b] mb-3">Quick Actions</div>
+   208→  1008→                  <div className="space-y-2">
+   209→  1009→                    <button onClick={() => { setActiveTab('classroom'); }} className="holo-btn w-full text-sm py-2 flex items-center gap-2">
+   210→  1010→                      <Brain className="w-4 h-4" /> Talk to AI Professor
+   211→  1011→                    </button>
+   212→  1012→                    <button onClick={() => { setActiveTab('ctf'); }} className="holo-btn w-full text-sm py-2 flex items-center gap-2">
+   213→  1013→                      <Swords className="w-4 h-4" /> Enter CTF Arena
+   214→  1014→                    </button>
+   215→  1015→                  </div>
+   216→  1016→                </div>
+   217→  1017→
+   218→  1018→                <div className="holo-card p-5">
+   219→  1019→                  <div className="text-sm text-[#64748b] mb-3">Recent Badges</div>
+   220→  1020→                  <div className="flex gap-2 flex-wrap">
+   221→  1021→                    {DEMO_BADGES.filter(b => b.earned).map(b => (
+   222→  1022→                      <div key={b.name} className="hex-badge hex-badge-rare text-sm" title={b.description}>
+   223→  1023→                        {b.icon}
+   224→  1024→                      </div>
+   225→  1025→                    ))}
+   226→  1026→                    <div className="hex-badge hex-badge-rare text-sm opacity-30" title="Locked">🔒</div>
+   227→  1027→                  </div>
+   228→  1028→                </div>
+   229→  1029→              </div>
+   230→  1030→
+   231→  1031→              {/* Active Course Progress */}
+   232→  1032→              <div className="holo-card p-5">
+   233→  1033→                <div className="flex items-center justify-between mb-4">
+   234→  1034→                  <h2 className="text-lg font-semibold">Active Courses</h2>
+   235→  1035→                  <button onClick={() => setActiveTab('courses')} className="text-sm text-[#00f0ff] hover:underline flex items-center gap-1">
+   236→  1036→                    View All <ChevronRight className="w-4 h-4" />
+   237→  1037→                  </button>
+   238→  1038→                </div>
+   239→  1039→                <div className="grid md:grid-cols-2 gap-4">
+   240→  1040→                  {DEMO_COURSES.filter(c => c.enrolled).map(course => (
+   241→  1041→                    <div key={course.id} className="bg-[#0a0e1a]/60 rounded-xl p-4 border border-[#1e293b]">
+   242→  1042→                      <div className="flex items-center justify-between mb-2">
+   243→  1043→                        <h3 className="font-semibold text-sm">{course.title}</h3>
+   244→  1044→                        <span className={`holo-badge ${course.difficulty === 'advanced' ? 'holo-badge-pink' : 'holo-badge-cyan'}`}>
+   245→  1045→                          {course.difficulty}
+   246→  1046→                        </span>
+   247→  1047→                      </div>
+   248→  1048→                      <div className="flex items-center justify-between text-xs text-[#64748b] mb-2">
+   249→  1049→                        <span>{course.modules?.filter(m => m.completed).length || 0}/{course.moduleCount} modules</span>
+   250→  1050→                        <span>{course.progress || 0}%</span>
+   251→  1051→                      </div>
+   252→  1052→                      <div className="holo-progress">
+   253→  1053→                        <div className="holo-progress-bar" style={{ width: `${course.progress || 0}%` }} />
+   254→  1054→                      </div>
+   255→  1055→                    </div>
+   256→  1056→                  ))}
+   257→  1057→                </div>
+   258→  1058→              </div>
+   259→  1059→            </motion.div>
+   260→  1060→          )}
+   261→  1061→
+   262→  1062→          {/* ════════════════════ COURSES ════════════════════ */}
+   263→  1063→          {activeTab === 'courses' && (
+   264→  1064→            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+   265→  1065→              {!selectedCourse ? (
+   266→  1066→                <>
+   267→  1067→                  <div className="flex items-center justify-between flex-wrap gap-3">
+   268→  1068→                    <h1 className="text-2xl font-bold neon-text">Course Catalog</h1>
+   269→  1069→                    <div className="relative">
+   270→  1070→                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+   271→  1071→                      <input type="text" placeholder="Search courses..." className="holo-input pl-10 w-64 text-sm" />
+   272→  1072→                    </div>
+   273→  1073→                  </div>
+   274→  1074→
+   275→  1075→                  <div className="flex gap-2 flex-wrap">
+   276→  1076→                    {NAV_CATEGORIES.map(cat => (
+   277→  1077→                      <button
+   278→  1078→                        key={cat.id}
+   279→  1079→                        onClick={() => setCourseFilter(cat.id)}
+   280→  1080→                        className={`holo-badge ${courseFilter === cat.id ? 'holo-badge-cyan' : 'bg-[#1a1f35] border-[#1e293b] text-[#64748b] hover:text-[#cbd5e1]'}`}
+   281→  1081→                      >
+   282→  1082→                        {cat.label}
+   283→  1083→                      </button>
+   284→  1084→                    ))}
+   285→  1085→                  </div>
+   286→  1086→
+   287→  1087→                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+   288→  1088→                    {filteredCourses.map((course, i) => (
+   289→  1089→                      <motion.div
+   290→  1090→                        key={course.id}
+   291→  1091→                        initial={{ opacity: 0, y: 20 }}
+   292→  1092→                        animate={{ opacity: 1, y: 0 }}
+   293→  1093→                        transition={{ delay: i * 0.05 }}
+   294→  1094→                        className="holo-card p-5 cursor-pointer group"
+   295→  1095→                        onClick={() => setSelectedCourse(course)}
+   296→  1096→                      >
+   297→  1097→                        <div className="flex items-start justify-between mb-3">
+   298→  1098→                          <div className={`hex-badge hex-badge-${course.difficulty === 'advanced' ? 'epic' : 'rare'} text-lg w-10 h-11`}>
+   299→  1099→                            {course.category === 'networking' ? <Wifi className="w-5 h-5 text-white" /> :
+   300→  1100→                             course.category === 'web' ? <Globe className="w-5 h-5 text-white" /> :
+   301→  1101→                             course.category === 'pentesting' ? <Swords className="w-5 h-5 text-white" /> :
+   302→  1102→                             course.category === 'forensics' ? <Fingerprint className="w-5 h-5 text-white" /> :
+   303→  1103→                             course.category === 'cloud' ? <Database className="w-5 h-5 text-white" /> :
+   304→  1104→                             <Bug className="w-5 h-5 text-white" />}
+   305→  1105→                          </div>
+   306→  1106→                          <span className={`holo-badge ${course.difficulty === 'advanced' ? 'holo-badge-pink' : course.difficulty === 'beginner' ? 'holo-badge-green' : 'holo-badge-cyan'}`}>
+   307→  1107→                            {course.difficulty}
+   308→  1108→                          </span>
+   309→  1109→                        </div>
+   310→  1110→                        <h3 className="font-semibold text-base mb-1 group-hover:text-[#00f0ff] transition-colors">{course.title}</h3>
+   311→  1111→                        <p className="text-sm text-[#64748b] mb-4 line-clamp-2">{course.description}</p>
+   312→  1112→                        <div className="flex items-center justify-between text-xs text-[#64748b]">
+   313→  1113→                          <div className="flex items-center gap-3">
+   314→  1114→                            <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" /> {course.moduleCount}</span>
+   315→  1115→                            <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {course.studentCount}</span>
+   316→  1116→                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {course.durationHours}h</span>
+   317→  1117→                          </div>
+   318→  1118→                          {course.enrolled && (
+   319→  1119→                            <span className="text-[#39ff14] flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Enrolled</span>
+   320→  1120→                          )}
+   321→  1121→                        </div>
+   322→  1122→                        {course.enrolled && course.progress !== undefined && (
+   323→  1123→                          <div className="mt-3">
+   324→  1124→                            <div className="holo-progress">
+   325→  1125→                              <div className="holo-progress-bar" style={{ width: `${course.progress}%` }} />
+   326→  1126→                            </div>
+   327→  1127→                          </div>
+   328→  1128→                        )}
+   329→  1129→                      </motion.div>
+   330→  1130→                    ))}
+   331→  1131→                  </div>
+   332→  1132→                </>
+   333→  1133→              ) : (
+   334→  1134→                <div className="space-y-4">
+   335→  1135→                  <button onClick={() => setSelectedCourse(null)} className="text-sm text-[#00f0ff] hover:underline flex items-center gap-1">
+   336→  1136→                    <ChevronRight className="w-4 h-4 rotate-180" /> Back to Catalog
+   337→  1137→                  </button>
+   338→  1138→                  <div className="holo-card p-6">
+   339→  1139→                    <h1 className="text-2xl font-bold mb-2">{selectedCourse.title}</h1>
+   340→  1140→                    <p className="text-[#64748b] mb-6">{selectedCourse.description}</p>
+   341→  1141→                    {selectedCourse.modules ? (
+   342→  1142→                      <div className="space-y-2">
+   343→  1143→                        {selectedCourse.modules.map((mod, i) => (
+   344→  1144→                          <div key={i} className={`flex items-center gap-3 p-3 rounded-xl ${mod.completed ? 'bg-[#39ff14]/5 border border-[#39ff14]/20' : 'bg-[#0a0e1a]/60 border border-[#1e293b]'}`}>
+   345→  1145→                            {mod.completed
+   346→  1146→                              ? <CheckCircle2 className="w-5 h-5 text-[#39ff14] shrink-0" />
+   347→  1147→                              : <Circle className="w-5 h-5 text-[#475569] shrink-0" />}
+   348→  1148→                            <span className={`text-sm ${mod.completed ? 'text-[#cbd5e1]' : 'text-[#64748b]'}`}>{mod.title}</span>
+   349→  1149→                            {mod.completed && <span className="holo-badge holo-badge-green ml-auto text-xs">Completed</span>}
+   350→  1150→                          </div>
+   351→  1151→                        ))}
+   352→  1152→                      </div>
+   353→  1153→                    ) : (
+   354→  1154→                      <div className="flex gap-3">
+   355→  1155→                        <button className="holo-btn holo-btn-primary" onClick={() => { setSelectedCourse({ ...selectedCourse, enrolled: true, progress: 0, modules: [{ title: 'Getting Started', completed: false }] }); }}>
+   356→  1156→                          Enroll Now
+   357→  1157→                        </button>
+   358→  1158→                        <button className="holo-btn" onClick={() => setActiveTab('quizzes')}>
+   359→  1159→                          Take Quiz
+   360→  1160→                        </button>
+   361→  1161→                      </div>
+   362→  1162→                    )}
+   363→  1163→                  </div>
+   364→  1164→                </div>
+   365→  1165→              )}
+   366→  1166→            </motion.div>
+   367→  1167→          )}
+   368→  1168→
+   369→  1169→          {/* ════════════════════ AI CLASSROOM ════════════════════ */}
+   370→  1170→          {activeTab === 'classroom' && (
+   371→  1171→            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="h-[calc(100vh-10rem)] flex flex-col">
+   372→  1172→              <div className="holo-card flex-1 flex flex-col overflow-hidden">
+   373→  1173→                {/* Chat Header */}
+   374→  1174→                <div className="p-4 border-b border-[#1e293b] flex items-center justify-between shrink-0">
+   375→  1175→                  <div className="flex items-center gap-3">
+   376→  1176→                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00f0ff]/20 to-[#bf00ff]/20 border border-[#00f0ff]/30 flex items-center justify-center">
+   377→  1177→                      <Brain className="w-5 h-5 text-[#00f0ff]" />
+   378→  1178→                    </div>
+   379→  1179→                    <div>
+   380→  1180→                      <h2 className="font-semibold">Prof. Shield</h2>
+   381→  1181→                      <div className="flex items-center gap-1.5">
+   382→  1182→                        <div className="w-2 h-2 rounded-full bg-[#39ff14] animate-pulse" />
+   383→  1183→                        <span className="text-xs text-[#39ff14]">Online</span>
+   384→  1184→                        {isTyping && <span className="text-xs text-[#bf00ff] typing-cursor">thinking</span>}
+   385→  1185→                      </div>
+   386→  1186→                    </div>
+   387→  1187→                  </div>
+   388→  1188→                  <div className="flex items-center gap-2">
+   389→  1189→                    <div className="flex items-center gap-2 text-xs text-[#64748b]">
+   390→  1190→                      <span>Focus:</span>
+   391→  1191→                      <span className={`font-bold ${focusScore > 70 ? 'text-[#39ff14]' : focusScore > 40 ? 'text-[#ff6b35]' : 'text-[#ff006e]'}`}>{focusScore}%</span>
+   392→  1192→                    </div>
+   393→  1193→                  </div>
+   394→  1194→                </div>
+   395→  1195→
+   396→  1196→                {/* Messages */}
+   397→  1197→                <ScrollArea className="flex-1 p-4">
+   398→  1198→                  <div className="space-y-4 max-w-3xl mx-auto">
+   399→  1199→                    {messages.map(msg => (
+   400→  1200→                      <motion.div
+   401→  1201→                        key={msg.id}
+   402→  1202→                        initial={{ opacity: 0, y: 10 }}
+   403→  1203→                        animate={{ opacity: 1, y: 0 }}
+   404→  1204→                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+   405→  1205→                      >
+   406→  1206→                        <div className={`max-w-[80%] ${msg.role === 'user'
+   407→  1207→                          ? 'bg-[#00f0ff]/10 border border-[#00f0ff]/20 rounded-2xl rounded-br-sm px-4 py-3'
+   408→  1208→                          : 'bg-[#1a1f35]/60 border border-[#1e293b] rounded-2xl rounded-bl-sm px-4 py-3'}`}>
+   409→  1209→                          {msg.role === 'assistant' && (
+   410→  1210→                            <div className="flex items-center gap-2 mb-2">
+   411→  1211→                              <Sparkles className="w-3.5 h-3.5 text-[#bf00ff]" />
+   412→  1212→                              <span className="text-xs text-[#bf00ff] font-semibold">Prof. Shield</span>
+   413→  1213→                            </div>
+   414→  1214→                          )}
+   415→  1215→                          <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none
+   416→  1216→                            prose-headings:text-[#00f0ff] prose-h1:text-lg prose-h2:text-base prose-h3:text-sm
+   417→  1217→                            prose-strong:text-[#e2e8f0] prose-code:text-[#39ff14] prose-code:bg-[#0a0e1a] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+   418→  1218→                            prose-li:text-[#cbd5e1] prose-a:text-[#00f0ff]">
+   419→  1219→                            {msg.content}
+   420→  1220→                          </div>
+   421→  1221→                          {msg.role === 'assistant' && msg.content && (
+   422→  1222→                            <button
+   423→  1223→                              onClick={() => speakText(msg.content)}
+   424→  1224→                              className="mt-2 flex items-center gap-1 text-xs text-[#64748b] hover:text-[#00f0ff] transition-colors"
+   425→  1225→                            >
+   426→  1226→                              <Volume2 className="w-3 h-3" /> Read aloud
+   427→  1227→                            </button>
+   428→  1228→                          )}
+   429→  1229→                        </div>
+   430→  1230→                      </motion.div>
+   431→  1231→                    ))}
+   432→  1232→                    {isTyping && (
+   433→  1233→                      <div className="flex justify-start">
+   434→  1234→                        <div className="bg-[#1a1f35]/60 border border-[#1e293b] rounded-2xl rounded-bl-sm px-4 py-3">
+   435→  1235→                          <div className="flex gap-1">
+   436→  1236→                            {[0, 1, 2].map(i => (
+   437→  1237→                              <motion.div
+   438→  1238→                                key={i}
+   439→  1239→                                className="w-2 h-2 rounded-full bg-[#00f0ff]"
+   440→  1240→                                animate={{ opacity: [0.3, 1, 0.3], y: [0, -4, 0] }}
+   441→  1241→                                transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.2 }}
+   442→  1242→                              />
+   443→  1243→                            ))}
+   444→  1244→                          </div>
+   445→  1245→                        </div>
+   446→  1246→                      </div>
+   447→  1247→                    )}
+   448→  1248→                    <div ref={chatEndRef} />
+   449→  1249→                  </div>
+   450→  1250→                </ScrollArea>
+   451→  1251→
+   452→  1252→                {/* Voice Indicator */}
+   453→  1253→                <AnimatePresence>
+   454→  1254→                  {isRecording && (
+   455→  1255→                    <motion.div
+   456→  1256→                      initial={{ opacity: 0, height: 0 }}
+   457→  1257→                      animate={{ opacity: 1, height: 'auto' }}
+   458→  1258→                      exit={{ opacity: 0, height: 0 }}
+   459→  1259→                      className="px-4 py-2 flex items-center gap-2"
+   460→  1260→                    >
+   461→  1261→                      <div className="pulse-ring w-3 h-3 rounded-full bg-[#ff006e]" />
+   462→  1262→                      <span className="text-sm text-[#ff006e] font-medium">Listening...</span>
+   463→  1263→                      <div className="flex gap-0.5">
+   464→  1264→                        {[0, 1, 2, 3, 4].map(i => (
+   465→  1265→                          <motion.div
+   466→  1266→                            key={i}
+   467→  1267→                            className="w-1 bg-[#ff006e] rounded-full"
+   468→  1268→                            animate={{ height: [8, 16 + Math.random() * 16, 8] }}
+   469→  1269→                            transition={{ duration: 0.4, repeat: Infinity, delay: i * 0.1 }}
+   470→  1270→                          />
+   471→  1271→                        ))}
+   472→  1272→                      </div>
+   473→  1273→                    </motion.div>
+   474→  1274→                  )}
+   475→  1275→                  {isSpeaking && !isRecording && (
+   476→  1276→                    <motion.div
+   477→  1277→                      initial={{ opacity: 0, height: 0 }}
+   478→  1278→                      animate={{ opacity: 1, height: 'auto' }}
+   479→  1279→                      exit={{ opacity: 0, height: 0 }}
+   480→  1280→                      className="px-4 py-2 flex items-center gap-2"
+   481→  1281→                    >
+   482→  1282→                      <Volume2 className="w-4 h-4 text-[#00f0ff] animate-pulse" />
+   483→  1283→                      <span className="text-sm text-[#00f0ff]">Speaking...</span>
+   484→  1284→                      <button onClick={stopSpeaking} className="ml-2 p-1 rounded hover:bg-[#ff006e]/10 text-[#ff006e]">
+   485→  1285→                        <X className="w-3 h-3" />
+   486→  1286→                      </button>
+   487→  1287→                    </motion.div>
+   488→  1288→                  )}
+   489→  1289→                </AnimatePresence>
+   490→  1290→
+   491→  1291→                {/* Input Bar */}
+   492→  1292→                <div className="p-4 border-t border-[#1e293b] shrink-0">
+   493→  1293→                  <div className="flex items-center gap-2 max-w-3xl mx-auto">
+   494→  1294→                    <button
+   495→  1295→                      onClick={toggleRecording}
+   496→  1296→                      className={`p-3 rounded-xl transition-all shrink-0 ${isRecording
+   497→  1297→                        ? 'bg-[#ff006e]/20 border border-[#ff006e]/40 text-[#ff006e]'
+   498→  1298→                        : 'bg-[#0a0e1a] border border-[#1e293b] text-[#64748b] hover:text-[#00f0ff] hover:border-[#00f0ff]/30'}`}
+   499→  1299→                      title={isRecording ? 'Stop recording' : 'Start voice input'}
+   500→  1300→                    >
+   501→
+   502→[showing lines 801-1300 of 1915; use offset=1301 with limit to continue reading]
