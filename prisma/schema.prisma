@@ -11,49 +11,106 @@ model User {
   id            String    @id @default(cuid())
   email         String    @unique
   name          String
+  passwordHash  String?
   role          String    @default("student")
   avatarUrl     String?
+  bio           String?
   enrolledIn    Enrollment[]
   interactionHistory InteractionHistory[]
   telemetryLogs TelemetryLog[]
   labSessions   LabSession[]
   performanceMetrics PerformanceMetrics[]
   certificates  Certificate[]
+  quizAttempts  QuizAttempt[]
+  notifications  Notification[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
 
 model Course {
-  id          String    @id @default(cuid())
-  title       String
-  description String?
-  category    String    @default("cybersecurity")
-  thumbnailUrl String?
-  difficulty  String    @default("intermediate")
-  modules     Module[]
-  enrollments Enrollment[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String       @id @default(cuid())
+  title         String
+  description   String?
+  category      String       @default("cybersecurity")
+  thumbnailUrl  String?
+  difficulty    String       @default("intermediate")
+  durationHours Float        @default(0)
+  rating        Float        @default(0)
+  studentCount  Int          @default(0)
+  isPublished   Boolean      @default(true)
+  modules       Module[]
+  enrollments   Enrollment[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([category])
+  @@index([difficulty])
 }
 
 model Module {
-  id          String     @id @default(cuid())
-  courseId    String
-  course      Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  title       String
-  description String?
-  content     String
-  contentType String     @default("markdown")
-  orderIndex  Int        @default(0)
-  durationMinutes Int    @default(30)
-  isPublished Boolean    @default(false)
-  embeddings  Embedding[]
-  labConfig   String?
-  quizQuestions String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id            String     @id @default(cuid())
+  courseId      String
+  course        Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  content       String
+  contentType   String     @default("markdown")
+  orderIndex    Int        @default(0)
+  durationMinutes Int      @default(30)
+  isPublished   Boolean    @default(false)
+  videoUrl      String?
+  labConfig     String?
+  quiz          Quiz[]
+  embeddings    Embedding[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   @@index([courseId, orderIndex])
+}
+
+model Quiz {
+  id            String       @id @default(cuid())
+  moduleId      String
+  module        Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title         String
+  timeLimitSec  Int          @default(300)
+  passingScore  Float        @default(0.7)
+  questions     QuizQuestion[]
+  attempts      QuizAttempt[]
+  createdAt     DateTime     @default(now())
+
+  @@index([moduleId])
+}
+
+model QuizQuestion {
+  id            String   @id @default(cuid())
+  quizId        String
+  quiz          Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questionText  String
+  questionType  String   @default("multiple_choice")
+  options       String
+  correctAnswer String
+  explanation   String?
+  points        Float    @default(1)
+  orderIndex    Int      @default(0)
+
+  @@index([quizId])
+}
+
+model QuizAttempt {
+  id            String   @id @default(cuid())
+  quizId        String
+  quiz          Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers       String
+  score         Float
+  maxScore      Float
+  passed        Boolean  @default(false)
+  timeTakenSec  Int
+  createdAt     DateTime @default(now())
+
+  @@index([userId, quizId])
 }
 
 model Embedding {
@@ -69,17 +126,17 @@ model Embedding {
 }
 
 model Enrollment {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId      String
-  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  status        String   @default("active")
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId        String
+  course          Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status          String    @default("active")
   currentModuleId String?
-  overallProgress Float  @default(0)
-  enrolledAt    DateTime @default(now())
-  completedAt   DateTime?
-  updatedAt     DateTime @updatedAt
+  overallProgress Float     @default(0)
+  enrolledAt      DateTime  @default(now())
+  completedAt     DateTime?
+  updatedAt       DateTime  @updatedAt
 
   @@unique([userId, courseId])
   @@index([userId])
@@ -104,39 +161,39 @@ model TelemetryLog {
 }
 
 model InteractionHistory {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  moduleId      String?
-  sessionId     String
-  interactionType String
-  content       String
-  aiResponse    String?
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId          String?
+  sessionId         String
+  interactionType   String
+  content           String
+  aiResponse        String?
   comprehensionScore Float?
-  timestamp     DateTime @default(now())
+  timestamp         DateTime @default(now())
 
   @@index([userId, timestamp])
   @@index([sessionId])
 }
 
 model LabSession {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  moduleId      String?
-  containerId   String
-  containerName String
-  status        String   @default("starting")
-  topic         String
-  objectives    String
-  commandHistory String?
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId          String?
+  containerId       String
+  containerName     String
+  status            String   @default("starting")
+  topic             String
+  objectives        String
+  commandHistory    String?
   objectivesCompleted String?
-  score         Float?
-  startedAt     DateTime @default(now())
-  completedAt   DateTime?
-  terminatedAt  DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  score             Float?
+  startedAt         DateTime @default(now())
+  completedAt       DateTime?
+  terminatedAt      DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@index([userId])
   @@index([status])
@@ -165,19 +222,32 @@ model PerformanceMetrics {
 }
 
 model Certificate {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId        String
   courseName      String
   userName        String
   verificationHash String
-  status          String   @default("active")
-  issuedAt        DateTime @default(now())
+  status          String    @default("active")
+  issuedAt        DateTime  @default(now())
   expiresAt       DateTime?
   revokedAt       DateTime?
 
   @@unique([verificationHash])
   @@index([userId])
   @@index([verificationHash])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("info")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
 }

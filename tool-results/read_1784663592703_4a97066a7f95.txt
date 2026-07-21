@@ -1,0 +1,580 @@
+   949→            </div>
+   950→          </TabsContent>
+   951→
+   952→          {/* ─── TAB 2: LAB TERMINAL ──────────────────────────────────── */}
+   953→          <TabsContent value="lab" className="flex-1 min-h-0">
+   954→            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 h-[calc(100vh-10rem)]">
+   955→              {/* Terminal Area */}
+   956→              <div className="lg:col-span-3 flex flex-col gap-4">
+   957→                {/* Lab Controls */}
+   958→                <Card>
+   959→                  <CardContent className="py-3">
+   960→                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+   961→                      <Select value={labTopic} onValueChange={setLabTopic}>
+   962→                        <SelectTrigger className="w-full sm:w-64">
+   963→                          <SelectValue placeholder="Select lab topic..." />
+   964→                        </SelectTrigger>
+   965→                        <SelectContent>
+   966→                          {labTopics.map((t) => (
+   967→                            <SelectItem key={t.value} value={t.value}>
+   968→                              {t.label}
+   969→                            </SelectItem>
+   970→                          ))}
+   971→                        </SelectContent>
+   972→                      </Select>
+   973→                      <div className="flex items-center gap-3">
+   974→                        <Button
+   975→                          onClick={handleStartLab}
+   976→                          disabled={!labTopic || labStatus === 'starting' || labStatus === 'running'}
+   977→                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+   978→                        >
+   979→                          <TerminalIcon className="h-4 w-4 mr-2" />
+   980→                          {labStatus === 'starting' ? 'Starting...' : labStatus === 'running' ? 'Lab Active' : 'Start Lab'}
+   981→                        </Button>
+   982→                        <Badge
+   983→                          variant={
+   984→                            labStatus === 'running'
+   985→                              ? 'default'
+   986→                              : labStatus === 'completed'
+   987→                                ? 'secondary'
+   988→                                : labStatus === 'failed'
+   989→                                  ? 'destructive'
+   990→                                  : 'outline'
+   991→                          }
+   992→                          className={
+   993→                            labStatus === 'running'
+   994→                              ? 'bg-emerald-600 text-white'
+   995→                              : ''
+   996→                          }
+   997→                        >
+   998→                          {labStatus === 'idle' && 'No Lab Running'}
+   999→                          {labStatus === 'starting' && 'Provisioning...'}
+  1000→                          {labStatus === 'running' && '● Active'}
+  1001→                          {labStatus === 'completed' && '✓ Completed'}
+  1002→                          {labStatus === 'failed' && '✗ Failed'}
+  1003→                        </Badge>
+  1004→                      </div>
+  1005→                    </div>
+  1006→                  </CardContent>
+  1007→                </Card>
+  1008→
+  1009→                {/* Terminal */}
+  1010→                <div className="flex-1 rounded-lg border shadow-sm overflow-hidden bg-slate-950 flex flex-col">
+  1011→                  {/* Terminal header bar */}
+  1012→                  <div className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-slate-400 text-xs">
+  1013→                    <div className="flex gap-1.5">
+  1014→                      <span className="h-3 w-3 rounded-full bg-red-500/80" />
+  1015→                      <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
+  1016→                      <span className="h-3 w-3 rounded-full bg-green-500/80" />
+  1017→                    </div>
+  1018→                    <span className="ml-2 font-mono">student@cybershield-lab:~</span>
+  1019→                  </div>
+  1020→
+  1021→                  {/* Terminal output */}
+  1022→                  <ScrollArea className="flex-1 p-4">
+  1023→                    <div className="font-mono text-sm space-y-0.5">
+  1024→                      {terminalLines.length === 0 && (
+  1025→                        <div className="text-slate-500 text-center py-8">
+  1026→                          {labStatus === 'idle'
+  1027→                            ? 'Select a topic and click "Start Lab" to begin.'
+  1028→                            : labStatus === 'starting'
+  1029→                              ? 'Provisioning lab environment...'
+  1030→                              : 'Waiting for terminal connection...'}
+  1031→                        </div>
+  1032→                      )}
+  1033→                      {terminalLines.map((line, i) => (
+  1034→                        <div
+  1035→                          key={i}
+  1036→                          className="text-green-400 whitespace-pre-wrap leading-5 break-all"
+  1037→                          dangerouslySetInnerHTML={{
+  1038→                            __html: line
+  1039→                              .replace(/\x1b\[[0-9;]*m/g, '')
+  1040→                              .replace(/&/g, '&amp;')
+  1041→                              .replace(/</g, '&lt;')
+  1042→                              .replace(/>/g, '&gt;')
+  1043→                              .replace(/╔|╗|╚|╝|║|═/g, (m) =>
+  1044→                                `<span class="text-emerald-300">${m}</span>`
+  1045→                              ),
+  1046→                          }}
+  1047→                        />
+  1048→                      ))}
+  1049→                      <div ref={terminalEndRef} />
+  1050→                    </div>
+  1051→                  </ScrollArea>
+  1052→
+  1053→                  {/* Terminal input */}
+  1054→                  <div className="flex items-center gap-0 px-4 py-2 bg-slate-900/50 border-t border-slate-800">
+  1055→                    <span className="text-emerald-400 font-mono text-sm shrink-0">
+  1056→                      student@cybershield:~$&nbsp;
+  1057→                    </span>
+  1058→                    <input
+  1059→                      ref={terminalInputRef}
+  1060→                      type="text"
+  1061→                      value={terminalInput}
+  1062→                      onChange={(e) => setTerminalInput(e.target.value)}
+  1063→                      onKeyDown={handleTerminalKeyDown}
+  1064→                      disabled={!labActive}
+  1065→                      placeholder={labActive ? '' : 'Start a lab first...'}
+  1066→                      className="flex-1 bg-transparent text-green-400 font-mono text-sm outline-none placeholder:text-slate-600 min-w-0"
+  1067→                      autoComplete="off"
+  1068→                      spellCheck={false}
+  1069→                    />
+  1070→                  </div>
+  1071→                </div>
+  1072→              </div>
+  1073→
+  1074→              {/* Right Sidebar */}
+  1075→              <div className="flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-10rem)]">
+  1076→                {/* Objectives */}
+  1077→                <Card>
+  1078→                  <CardHeader className="pb-3">
+  1079→                    <CardTitle className="text-sm font-semibold flex items-center gap-2">
+  1080→                      <Target className="h-4 w-4 text-emerald-600" />
+  1081→                      Lab Objectives
+  1082→                    </CardTitle>
+  1083→                    <CardDescription className="text-xs">
+  1084→                      {labObjectives.filter((o) => o.completed).length}/{labObjectives.length} completed
+  1085→                    </CardDescription>
+  1086→                  </CardHeader>
+  1087→                  <CardContent>
+  1088→                    <Progress
+  1089→                      value={
+  1090→                        labObjectives.length > 0
+  1091→                          ? (labObjectives.filter((o) => o.completed).length / labObjectives.length) * 100
+  1092→                          : 0
+  1093→                      }
+  1094→                      className="h-2 mb-4"
+  1095→                    />
+  1096→                    <div className="space-y-2">
+  1097→                      {labObjectives.map((obj) => (
+  1098→                        <div key={obj.id} className="flex items-start gap-2">
+  1099→                          {obj.completed ? (
+  1100→                            <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+  1101→                          ) : (
+  1102→                            <Circle className="h-4 w-4 text-slate-300 mt-0.5 shrink-0" />
+  1103→                          )}
+  1104→                          <span
+  1105→                            className={`text-xs leading-relaxed ${
+  1106→                              obj.completed ? 'text-muted-foreground line-through' : 'text-slate-700'
+  1107→                            }`}
+  1108→                          >
+  1109→                            {obj.description}
+  1110→                          </span>
+  1111→                        </div>
+  1112→                      ))}
+  1113→                    </div>
+  1114→                  </CardContent>
+  1115→                </Card>
+  1116→
+  1117→                {/* Command History */}
+  1118→                <Card>
+  1119→                  <CardHeader className="pb-3">
+  1120→                    <CardTitle className="text-sm font-semibold flex items-center gap-2">
+  1121→                      <Clock className="h-4 w-4 text-emerald-600" />
+  1122→                      Command History
+  1123→                    </CardTitle>
+  1124→                  </CardHeader>
+  1125→                  <CardContent>
+  1126→                    <ScrollArea className="max-h-48">
+  1127→                      {commandHistory.length === 0 ? (
+  1128→                        <p className="text-xs text-muted-foreground">No commands executed yet.</p>
+  1129→                      ) : (
+  1130→                        <div className="space-y-1">
+  1131→                          {commandHistory.map((cmd, i) => (
+  1132→                            <div
+  1133→                              key={i}
+  1134→                              className="font-mono text-xs bg-slate-50 rounded px-2 py-1 text-slate-600 break-all"
+  1135→                            >
+  1136→                              <span className="text-emerald-600">$ </span>
+  1137→                              {cmd}
+  1138→                            </div>
+  1139→                          ))}
+  1140→                        </div>
+  1141→                      )}
+  1142→                    </ScrollArea>
+  1143→                  </CardContent>
+  1144→                </Card>
+  1145→              </div>
+  1146→            </div>
+  1147→          </TabsContent>
+  1148→
+  1149→          {/* ─── TAB 3: ANALYTICS ─────────────────────────────────────── */}
+  1150→          <TabsContent value="analytics" className="flex-1 min-h-0">
+  1151→            <div className="space-y-6 overflow-y-auto max-h-[calc(100vh-10rem)] pb-8">
+  1152→              {/* Stats Cards Row */}
+  1153→              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+  1154→                <StatCard
+  1155→                  icon={Target}
+  1156→                  label="Quiz Accuracy"
+  1157→                  value={`${Math.round(progressData.overallQuizAccuracy * 100)}%`}
+  1158→                  progress={progressData.overallQuizAccuracy}
+  1159→                  color="emerald"
+  1160→                />
+  1161→                <StatCard
+  1162→                  icon={Activity}
+  1163→                  label="Focus Score"
+  1164→                  value={`${progressData.averageFocusScore}/100`}
+  1165→                  progress={progressData.averageFocusScore / 100}
+  1166→                  color="emerald"
+  1167→                />
+  1168→                <StatCard
+  1169→                  icon={CheckCircle2}
+  1170→                  label="Lab Completion"
+  1171→                  value={`${Math.round(progressData.labCompletionRate * 100)}%`}
+  1172→                  progress={progressData.labCompletionRate}
+  1173→                  color="emerald"
+  1174→                />
+  1175→                <StatCard
+  1176→                  icon={Clock}
+  1177→                  label="Study Time"
+  1178→                  value={formatStudyTime(progressData.totalTimeSpentMinutes)}
+  1179→                  progress={Math.min(progressData.totalTimeSpentMinutes / 2000, 1)}
+  1180→                  color="emerald"
+  1181→                />
+  1182→              </div>
+  1183→
+  1184→              {/* Bar Chart */}
+  1185→              <Card>
+  1186→                <CardHeader>
+  1187→                  <CardTitle className="text-base font-semibold">Module Performance</CardTitle>
+  1188→                  <CardDescription>Quiz accuracy per module</CardDescription>
+  1189→                </CardHeader>
+  1190→                <CardContent>
+  1191→                  <ChartContainer config={chartConfig} className="h-72 sm:h-80 w-full">
+  1192→                    <ResponsiveContainer width="100%" height="100%">
+  1193→                      <BarChart data={progressData.moduleBreakdown} margin={{ top: 5, right: 10, left: -10, bottom: 40 }}>
+  1194→                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+  1195→                        <XAxis
+  1196→                          dataKey="moduleTitle"
+  1197→                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+  1198→                          angle={-35}
+  1199→                          textAnchor="end"
+  1200→                          height={70}
+  1201→                        />
+  1202→                        <YAxis
+  1203→                          domain={[0, 100]}
+  1204→                          tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+  1205→                          tickFormatter={(v: number) => `${v}%`}
+  1206→                        />
+  1207→                        <Tooltip content={<ChartTooltipContent />} />
+  1208→                        <Bar dataKey={(d: typeof progressData.moduleBreakdown[0]) => Math.round(d.quizAccuracy * 100)} radius={[4, 4, 0, 0]}>
+  1209→                          {progressData.moduleBreakdown.map((entry, index) => (
+  1210→                            <Cell
+  1211→                              key={`cell-${index}`}
+  1212→                              fill={
+  1213→                                entry.quizAccuracy >= 0.8
+  1214→                                  ? '#10b981'
+  1215→                                  : entry.quizAccuracy >= 0.6
+  1216→                                    ? '#f59e0b'
+  1217→                                    : entry.quizAccuracy > 0
+  1218→                                      ? '#ef4444'
+  1219→                                      : '#e2e8f0'
+  1220→                              }
+  1221→                            />
+  1222→                          ))}
+  1223→                        </Bar>
+  1224→                      </BarChart>
+  1225→                    </ResponsiveContainer>
+  1226→                  </ChartContainer>
+  1227→                </CardContent>
+  1228→              </Card>
+  1229→
+  1230→              {/* Strengths / Weaknesses / Recommendations */}
+  1231→              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+  1232→                {/* Strengths */}
+  1233→                <Card className="border-emerald-200 bg-emerald-50/50">
+  1234→                  <CardHeader className="pb-3">
+  1235→                    <CardTitle className="text-sm font-semibold flex items-center gap-2 text-emerald-800">
+  1236→                      <TrendingUp className="h-4 w-4 text-emerald-600" />
+  1237→                      Strengths
+  1238→                    </CardTitle>
+  1239→                  </CardHeader>
+  1240→                  <CardContent>
+  1241→                    <ul className="space-y-2">
+  1242→                      {progressData.strengths.map((s, i) => (
+  1243→                        <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+  1244→                          <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+  1245→                          <span>{s}</span>
+  1246→                        </li>
+  1247→                      ))}
+  1248→                    </ul>
+  1249→                  </CardContent>
+  1250→                </Card>
+  1251→
+  1252→                {/* Weaknesses */}
+  1253→                <Card className="border-amber-200 bg-amber-50/50">
+  1254→                  <CardHeader className="pb-3">
+  1255→                    <CardTitle className="text-sm font-semibold flex items-center gap-2 text-amber-800">
+  1256→                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+  1257→                      Areas for Improvement
+  1258→                    </CardTitle>
+  1259→                  </CardHeader>
+  1260→                  <CardContent>
+  1261→                    <ul className="space-y-2">
+  1262→                      {progressData.weaknesses.map((w, i) => (
+  1263→                        <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+  1264→                          <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+  1265→                          <span>{w}</span>
+  1266→                        </li>
+  1267→                      ))}
+  1268→                    </ul>
+  1269→                  </CardContent>
+  1270→                </Card>
+  1271→
+  1272→                {/* Recommendations */}
+  1273→                <Card className="border-blue-200 bg-blue-50/50">
+  1274→                  <CardHeader className="pb-3">
+  1275→                    <CardTitle className="text-sm font-semibold flex items-center gap-2 text-blue-800">
+  1276→                      <Lightbulb className="h-4 w-4 text-blue-600" />
+  1277→                      Recommendations
+  1278→                    </CardTitle>
+  1279→                  </CardHeader>
+  1280→                  <CardContent>
+  1281→                    <ul className="space-y-2">
+  1282→                      {progressData.recommendations.map((r, i) => (
+  1283→                        <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+  1284→                          <Lightbulb className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+  1285→                          <span>{r}</span>
+  1286→                        </li>
+  1287→                      ))}
+  1288→                    </ul>
+  1289→                  </CardContent>
+  1290→                </Card>
+  1291→              </div>
+  1292→
+  1293→              {/* Module Breakdown Table */}
+  1294→              <Card>
+  1295→                <CardHeader>
+  1296→                  <CardTitle className="text-base font-semibold">Detailed Module Breakdown</CardTitle>
+  1297→                  <CardDescription>Performance across all course modules</CardDescription>
+  1298→                </CardHeader>
+  1299→                <CardContent>
+  1300→                  <div className="overflow-x-auto">
+  1301→                    <table className="w-full text-sm">
+  1302→                      <thead>
+  1303→                        <tr className="border-b text-left">
+  1304→                          <th className="pb-3 pr-4 font-medium text-muted-foreground">Module</th>
+  1305→                          <th className="pb-3 pr-4 font-medium text-muted-foreground text-center">Quiz</th>
+  1306→                          <th className="pb-3 pr-4 font-medium text-muted-foreground text-center">Focus</th>
+  1307→                          <th className="pb-3 pr-4 font-medium text-muted-foreground text-center">Lab</th>
+  1308→                          <th className="pb-3 font-medium text-muted-foreground text-center">Time</th>
+  1309→                        </tr>
+  1310→                      </thead>
+  1311→                      <tbody>
+  1312→                        {progressData.moduleBreakdown.map((mod) => (
+  1313→                          <tr key={mod.moduleTitle} className="border-b last:border-0">
+  1314→                            <td className="py-3 pr-4 font-medium">{mod.moduleTitle}</td>
+  1315→                            <td className="py-3 pr-4 text-center">
+  1316→                              <Badge
+  1317→                                variant={mod.quizAccuracy >= 0.8 ? 'default' : mod.quizAccuracy > 0 ? 'secondary' : 'outline'}
+  1318→                                className={
+  1319→                                  mod.quizAccuracy >= 0.8
+  1320→                                    ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+  1321→                                    : mod.quizAccuracy >= 0.6
+  1322→                                      ? 'bg-amber-100 text-amber-700 hover:bg-amber-100'
+  1323→                                      : mod.quizAccuracy > 0
+  1324→                                        ? 'bg-red-100 text-red-700 hover:bg-red-100'
+  1325→                                        : ''
+  1326→                                }
+  1327→                              >
+  1328→                                {mod.quizAccuracy > 0 ? `${Math.round(mod.quizAccuracy * 100)}%` : 'N/A'}
+  1329→                              </Badge>
+  1330→                            </td>
+  1331→                            <td className="py-3 pr-4 text-center">
+  1332→                              <span className={mod.focusScore >= 75 ? 'text-emerald-600' : mod.focusScore >= 50 ? 'text-amber-600' : 'text-slate-400'}>
+  1333→                                {mod.focusScore > 0 ? `${mod.focusScore}%` : '—'}
+  1334→                              </span>
+  1335→                            </td>
+  1336→                            <td className="py-3 pr-4 text-center">
+  1337→                              {mod.labCompleted ? (
+  1338→                                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200">
+  1339→                                  {mod.labScore ? `${Math.round(mod.labScore * 100)}%` : 'Done'}
+  1340→                                </Badge>
+  1341→                              ) : (
+  1342→                                <span className="text-slate-400 text-xs">Pending</span>
+  1343→                              )}
+  1344→                            </td>
+  1345→                            <td className="py-3 text-center text-muted-foreground">{mod.timeSpentMinutes}m</td>
+  1346→                          </tr>
+  1347→                        ))}
+  1348→                      </tbody>
+  1349→                    </table>
+  1350→                  </div>
+  1351→                </CardContent>
+  1352→              </Card>
+  1353→            </div>
+  1354→          </TabsContent>
+  1355→
+  1356→          {/* ─── TAB 4: CERTIFICATES ──────────────────────────────────── */}
+  1357→          <TabsContent value="certificates" className="flex-1 min-h-0">
+  1358→            <div className="space-y-6 overflow-y-auto max-h-[calc(100vh-10rem)] pb-8">
+  1359→              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+  1360→                <div>
+  1361→                  <h2 className="text-lg font-semibold">Your Certificates</h2>
+  1362→                  <p className="text-sm text-muted-foreground">
+  1363→                    Earn certificates by completing courses with strong performance.
+  1364→                  </p>
+  1365→                </div>
+  1366→              </div>
+  1367→
+  1368→              {/* Certificate Cards */}
+  1369→              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+  1370→                {certificates.map((cert) => (
+  1371→                  <Card key={cert.id} className="relative overflow-hidden">
+  1372→                    {/* Decorative top bar */}
+  1373→                    <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
+  1374→                    <CardHeader className="pb-3">
+  1375→                      <div className="flex items-start justify-between">
+  1376→                        <div className="flex items-center gap-3">
+  1377→                          <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+  1378→                            <Award className="h-5 w-5 text-emerald-600" />
+  1379→                          </div>
+  1380→                          <div>
+  1381→                            <CardTitle className="text-sm font-semibold">{cert.courseName}</CardTitle>
+  1382→                            <CardDescription className="text-xs mt-0.5">
+  1383→                              Issued {formatDate(cert.issuedAt)}
+  1384→                            </CardDescription>
+  1385→                          </div>
+  1386→                        </div>
+  1387→                        <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-200 bg-emerald-50">
+  1388→                          Active
+  1389→                        </Badge>
+  1390→                      </div>
+  1391→                    </CardHeader>
+  1392→                    <CardContent className="space-y-4">
+  1393→                      <div className="space-y-1">
+  1394→                        <p className="text-xs font-medium text-muted-foreground">Issued to</p>
+  1395→                        <p className="text-sm font-medium flex items-center gap-2">
+  1396→                          <User className="h-3.5 w-3.5 text-muted-foreground" />
+  1397→                          {cert.userName}
+  1398→                        </p>
+  1399→                      </div>
+  1400→                      <div className="space-y-1">
+  1401→                        <p className="text-xs font-medium text-muted-foreground">Verification Hash</p>
+  1402→                        <p className="text-[11px] font-mono text-slate-500 bg-slate-50 rounded px-2 py-1.5 break-all leading-relaxed">
+  1403→                          {cert.verificationHash}
+  1404→                        </p>
+  1405→                      </div>
+  1406→                      <Separator />
+  1407→                      <Button
+  1408→                        variant="outline"
+  1409→                        size="sm"
+  1410→                        className="w-full text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+  1411→                        onClick={() => handleDownloadCert(cert.id)}
+  1412→                      >
+  1413→                        <Download className="h-4 w-4 mr-2" />
+  1414→                        Download PDF
+  1415→                      </Button>
+  1416→                    </CardContent>
+  1417→                  </Card>
+  1418→                ))}
+  1419→              </div>
+  1420→
+  1421→              {/* Verify Certificate */}
+  1422→              <Card>
+  1423→                <CardHeader>
+  1424→                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+  1425→                    <Search className="h-4 w-4 text-emerald-600" />
+  1426→                    Verify Certificate
+  1427→                  </CardTitle>
+  1428→                  <CardDescription>
+  1429→                    Paste a verification hash to validate an issued certificate.
+  1430→                  </CardDescription>
+  1431→                </CardHeader>
+  1432→                <CardContent className="space-y-4">
+  1433→                  <div className="flex flex-col sm:flex-row gap-3">
+  1434→                    <Input
+  1435→                      value={verifyHash}
+  1436→                      onChange={(e) => {
+  1437→                        setVerifyHash(e.target.value);
+  1438→                        setVerifyResult(null);
+  1439→                      }}
+  1440→                      placeholder="sha256:abcdef1234567890..."
+  1441→                      className="font-mono text-sm"
+  1442→                      onKeyDown={(e) => {
+  1443→                        if (e.key === 'Enter') handleVerifyCertificate();
+  1444→                      }}
+  1445→                    />
+  1446→                    <Button
+  1447→                      onClick={handleVerifyCertificate}
+  1448→                      disabled={!verifyHash.trim() || isVerifying}
+  1449→                      className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
+  1450→                    >
+  1451→                      {isVerifying ? (
+  1452→                        <span className="flex items-center gap-2">
+  1453→                          <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+  1454→                          Verifying...
+  1455→                        </span>
+  1456→                      ) : (
+  1457→                        <>
+  1458→                          <Search className="h-4 w-4 mr-2" />
+  1459→                          Verify
+  1460→                        </>
+  1461→                      )}
+  1462→                    </Button>
+  1463→                  </div>
+  1464→                  {verifyResult && (
+  1465→                    <div
+  1466→                      className={`rounded-lg px-4 py-3 text-sm flex items-start gap-2 ${
+  1467→                        verifyResult.valid
+  1468→                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+  1469→                          : 'bg-red-50 text-red-700 border border-red-200'
+  1470→                      }`}
+  1471→                    >
+  1472→                      {verifyResult.valid ? (
+  1473→                        <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
+  1474→                      ) : (
+  1475→                        <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+  1476→                      )}
+  1477→                      <span>{verifyResult.message}</span>
+  1478→                    </div>
+  1479→                  )}
+  1480→                </CardContent>
+  1481→              </Card>
+  1482→            </div>
+  1483→          </TabsContent>
+  1484→        </Tabs>
+  1485→      </main>
+  1486→    </div>
+  1487→  );
+  1488→}
+  1489→
+  1490→// ─── Sub-components ──────────────────────────────────────────────────────────
+  1491→
+  1492→function StatCard({
+  1493→  icon: Icon,
+  1494→  label,
+  1495→  value,
+  1496→  progress,
+  1497→  color,
+  1498→}: {
+  1499→  icon: LucideIcon;
+  1500→  label: string;
+  1501→  value: string;
+  1502→  progress: number;
+  1503→  color: string;
+  1504→}) {
+  1505→  return (
+  1506→    <Card>
+  1507→      <CardContent className="p-4 sm:p-6">
+  1508→        <div className="flex items-center justify-between mb-3">
+  1509→          <div className="h-9 w-9 rounded-lg bg-emerald-100 flex items-center justify-center">
+  1510→            <Icon className="h-4.5 w-4.5 text-emerald-600" />
+  1511→          </div>
+  1512→          <span className="text-2xl font-bold">{value}</span>
+  1513→        </div>
+  1514→        <p className="text-sm font-medium text-muted-foreground mb-2">{label}</p>
+  1515→        <Progress value={Math.round(progress * 100)} className="h-2" />
+  1516→      </CardContent>
+  1517→    </Card>
+  1518→  );
+  1519→}
+  1520→
+  1521→function formatStudyTime(minutes: number): string {
+  1522→  const hours = Math.floor(minutes / 60);
+  1523→  const mins = minutes % 60;
+  1524→  if (hours >= 1) {
+  1525→    return `${hours}h ${mins}m`;
+  1526→  }
+  1527→  return `${mins}m`;
+  1528→}

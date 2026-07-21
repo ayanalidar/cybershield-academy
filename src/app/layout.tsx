@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CyberShield Academy - AI-Powered Cybersecurity Learning",
-  description: "Learn cybersecurity with Prof. Shield, an AI professor. Interactive labs, real-time progress tracking, and professional certifications.",
+  title: "CyberShield Academy",
+  description: "AI-Powered Cybersecurity Learning Platform",
   keywords: ["CyberShield Academy", "cybersecurity", "AI learning", "network security", "ethical hacking", "certificates"],
   authors: [{ name: "CyberShield Academy" }],
   icons: {

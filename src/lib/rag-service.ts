@@ -1,6 +1,9 @@
 import { db } from '@/lib/db';
 import type { RAGContext } from '@/lib/types';
 
+const EMBEDDING_DIMENSIONS = 128;
+const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL ?? 'hash-fallback';
+
 function cosineSimilarity(vecA: number[], vecB: number[]): number {
   if (vecA.length !== vecB.length || vecA.length === 0) return 0;
   let dot = 0;
@@ -25,7 +28,7 @@ function parseVector(vectorStr: string): number[] {
   }
 }
 
-function simpleHashEmbedding(text: string, dimensions: number = 128): number[] {
+function simpleHashEmbedding(text: string, dimensions: number = EMBEDDING_DIMENSIONS): number[] {
   const vector = new Array(dimensions).fill(0);
   const words = text.toLowerCase().split(/\s+/);
   for (const word of words) {
@@ -119,4 +122,43 @@ export async function queryRAG(
 export async function invalidateModuleCache(moduleId: string): Promise<number> {
   const result = await db.embedding.deleteMany({ where: { moduleId } });
   return result.count;
+}
+
+async function generateRealEmbedding(text: string): Promise<number[] | null> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: process.env.EMBEDDING_MODEL ?? 'text-embedding-3-small',
+        input: text,
+        dimensions: EMBEDDING_DIMENSIONS,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`Embedding API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.data[0].embedding;
+  } catch (error) {
+    console.error('Embedding generation failed:', error);
+    return null;
+  }
+}
+
+export async function embedText(text: string): Promise<number[]> {
+  if (EMBEDDING_MODEL !== 'hash-fallback') {
+    const realVector = await generateRealEmbedding(text);
+    if (realVector) return realVector;
+  }
+  return simpleHashEmbedding(text);
 }

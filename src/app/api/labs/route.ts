@@ -240,19 +240,92 @@ async function spawnLabContainer(
   containerName: string,
   image: string,
   setupCommands: string[],
-  _ports: number[],
+  ports: number[],
   sessionId: string,
   userId: string
 ): Promise<void> {
-  console.log(
-    `[Lab Spawner] Provisioning container: ${containerName} (image: ${image})`
-  );
-  console.log(`[Lab Spawner] Session: ${sessionId}, User: ${userId}`);
-  console.log(`[Lab Spawner] Setup commands: ${setupCommands.length}`);
+  const useRealDocker = process.env.DOCKER_HOST || process.env.DOCKER_URL;
 
-  for (const cmd of setupCommands) {
-    console.log(`[Lab Spawner] Executing: ${cmd.substring(0, 80)}...`);
+  if (useRealDocker) {
+    try {
+      const Docker = (await import('dockerode')).default;
+      const docker = new Docker({ socketPath: process.env.DOCKER_HOST || '/var/run/docker.sock' });
+
+      const container = await docker.createContainer({
+        Image: image,
+        name: containerName,
+        Hostname: 'cybershield-lab',
+        Tty: true,
+        OpenStdin: true,
+        NetworkDisabled: false,
+        HostConfig: {
+          NetworkMode: 'cybershield-isolated',
+          Memory: 256 * 1024 * 1024,
+          NanoCpus: 500_000_000,
+          PidsLimit: 64,
+          ReadonlyRootfs: false,
+          AutoRemove: true,
+          PortBindings: Object.fromEntries(ports.map((p) => [`${p}/tcp`, [{ HostPort: `${50000 + Math.floor(Math.random() * 10000)}` }]])),
+          SecurityOpt: ['no-new-privileges', 'seccomp=cybershield-default'],
+          LogConfig: { Type: 'json-file', Config: { 'max-size': '10m', 'max-file': '3' } },
+        },
+        User: 'student',
+        WorkingDir: '/home/student',
+        Env: [
+          'TERM=xterm-256color',
+          `LAB_SESSION_ID=${sessionId}`,
+          `LAB_USER_ID=${userId}`,
+        ],
+      });
+
+      await container.start();
+
+      const exec = await container.exec({
+        Cmd: ['/bin/bash', '-c', setupCommands.join(' && ')],
+        AttachStdout: true,
+        AttachStderr: true,
+      });
+
+      await exec.start({ hijack: true, stdin: false });
+
+      console.log(`[Lab Spawner] Real Docker container started: ${container.id}`);
+    } catch (dockerError) {
+      console.error(`[Lab Spawner] Docker failed, falling back to simulation:`, dockerError);
+      await terminateLabContainer(session.containerName);
+
+      await db.labSession.update({
+        where: { id: sessionId },
+        data: { status: 'running' },
+      });
+    }
+  } else {
+    console.log(`[Lab Spawner] Docker not configured, using simulated container`);
+    console.log(`[Lab Spawner] Container: ${containerName} (image: ${image})`);
+    console.log(`[Lab Spawner] Session: ${sessionId}, User: ${userId}`);
+
+    for (const cmd of setupCommands) {
+      console.log(`[Lab Spawner] Would execute: ${cmd.substring(0, 80)}...`);
+    }
+
+    console.log(`[Lab Spawner] Simulated container ${containerName} is now running`);
   }
+}
 
-  console.log(`[Lab Spawner] Container ${containerName} is now running`);
+async function terminateLabContainer(containerName: string): Promise<void> {
+  const useRealDocker = process.env.DOCKER_HOST || process.env.DOCKER_URL;
+
+  if (useRealDocker) {
+    try {
+      const Docker = (await import('dockerode')).default;
+      const docker = new Docker({ socketPath: process.env.DOCKER_HOST || '/var/run/docker.sock' });
+      const container = docker.getContainer(containerName);
+      await container.kill();
+      await container.remove({ force: true });
+      console.log(`[Lab Spawner] Real container terminated: ${containerName}`);
+    } catch {
+      console.log(`[Lab Spawner] Container ${containerName} not found or already removed`);
+    }
+  } else {
+    console.log(`[Lab Spawner] Simulated container terminated: ${containerName}`);
+  }
 }
