@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  role          String    @default("student")
+  avatarUrl     String?
+  enrolledIn    Enrollment[]
+  interactionHistory InteractionHistory[]
+  telemetryLogs TelemetryLog[]
+  labSessions   LabSession[]
+  performanceMetrics PerformanceMetrics[]
+  certificates  Certificate[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Course {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  category    String    @default("cybersecurity")
+  thumbnailUrl String?
+  difficulty  String    @default("intermediate")
+  modules     Module[]
+  enrollments Enrollment[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Module {
+  id          String     @id @default(cuid())
+  courseId    String
+  course      Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  content     String
+  contentType String     @default("markdown")
+  orderIndex  Int        @default(0)
+  durationMinutes Int    @default(30)
+  isPublished Boolean    @default(false)
+  embeddings  Embedding[]
+  labConfig   String?
+  quizQuestions String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([courseId, orderIndex])
+}
+
+model Embedding {
+  id        String  @id @default(cuid())
+  moduleId  String
+  module    Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  chunkIndex Int
+  content   String
+  vector    String
+  createdAt DateTime @default(now())
+
+  @@index([moduleId])
+}
+
+model Enrollment {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status        String   @default("active")
+  currentModuleId String?
+  overallProgress Float  @default(0)
+  enrolledAt    DateTime @default(now())
+  completedAt   DateTime?
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+}
+
+model TelemetryLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId   String
+  eventType   String
+  eventValue  String?
+  durationMs  Int?
+  focusScore  Float?
+  pageUrl     String?
+  moduleContext String?
+  timestamp   DateTime @default(now())
+
+  @@index([userId, timestamp])
+  @@index([sessionId])
+}
+
+model InteractionHistory {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId      String?
+  sessionId     String
+  interactionType String
+  content       String
+  aiResponse    String?
+  comprehensionScore Float?
+  timestamp     DateTime @default(now())
+
+  @@index([userId, timestamp])
+  @@index([sessionId])
+}
+
+model LabSession {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId      String?
+  containerId   String
+  containerName String
+  status        String   @default("starting")
+  topic         String
+  objectives    String
+  commandHistory String?
+  objectivesCompleted String?
+  score         Float?
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+  terminatedAt  DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model PerformanceMetrics {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId              String
+  moduleId              String?
+  sessionId             String?
+  quizAccuracy          Float    @default(0)
+  comprehensionScore    Float    @default(0)
+  averageFocusScore     Float    @default(0)
+  labCompletionRate     Float    @default(0)
+  interactionCount      Int      @default(0)
+  timeSpentMinutes      Float    @default(0)
+  strengths             String?
+  weaknesses            String?
+  recommendations       String?
+  recordedAt            DateTime @default(now())
+
+  @@index([userId, courseId])
+  @@index([recordedAt])
+}
+
+model Certificate {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId        String
+  courseName      String
+  userName        String
+  verificationHash String
+  status          String   @default("active")
+  issuedAt        DateTime @default(now())
+  expiresAt       DateTime?
+  revokedAt       DateTime?
+
+  @@unique([verificationHash])
+  @@index([userId])
+  @@index([verificationHash])
+}
