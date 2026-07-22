@@ -1,0 +1,724 @@
+   201→    case 'env':
+   202→      return Object.entries(session.env).map(([k, v]) => `${k}=${v}`).join('\n');
+   203→
+   204→    case 'echo':
+   205→      return args.join(' ').replace(/["']/g, '');
+   206→
+   207→    case 'history':
+   208→      return session.commandHistory.map((c, i) => `  ${i + 1}  ${c}`).join('\n');
+   209→
+   210→    case 'date':
+   211→      return new Date().toString();
+   212→
+   213→    case 'ps': {
+   214→      const procs = [
+   215→        'USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND',
+   216→        'root         1  0.0  0.1 169936 13080 ?        Ss   10:00   0:01 /sbin/init',
+   217→        'root        42  0.0  0.1  72284  5536 ?        Ss   10:00   0:00 /usr/sbin/sshd',
+   218→        'student    100  0.0  0.2  21468 10892 pts/0    Ss   10:01   0:00 -bash',
+   219→        'www-data   200  0.1  0.3 142680 22804 ?        S    10:00   0:02 nginx: worker',
+   220→        'mysql      300  0.5  2.1 1256780 172036 ?      Sl   10:00   0:08 /usr/sbin/mysqld',
+   221→        'root       400  0.0  0.1  12564  8192 ?        Ss   10:05   0:00 /usr/sbin/cron',
+   222→        `student    ${500 + Math.floor(Math.random() * 100)}  0.0  0.0  3736  3412 pts/0    R+   ${new Date().toTimeString().slice(0, 5)}   0:00 ps aux`,
+   223→      ];
+   224→      return procs.join('\n');
+   225→    }
+   226→
+   227→    case 'netstat': case 'ss': {
+   228→      const conns = [
+   229→        'Active Internet connections (servers and established)',
+   230→        'Proto Recv-Q Send-Q Local Address           Foreign Address         State',
+   231→        'tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN',
+   232→        'tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN',
+   233→        'tcp        0      0 0.0.0.0:443             0.0.0.0:*               LISTEN',
+   234→        'tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN',
+   235→        'tcp        0      0 0.0.0.0:8080            0.0.0.0:*               LISTEN',
+   236→        `tcp        0      0 172.17.0.3:22           10.0.0.1:${40000 + Math.floor(Math.random() * 10000)}  ESTABLISHED`,
+   237→        'tcp6       0      0 :::80                   :::*                    LISTEN',
+   238→        'udp        0      0 0.0.0.0:53              0.0.0.0:*               ',
+   239→      ];
+   240→      return conns.join('\n');
+   241→    }
+   242→
+   243→    case 'ping': {
+   244→      const target = args.find(a => !a.startsWith('-')) ?? '8.8.8.8';
+   245→      return [
+   246→        `PING ${target} (${target}) 56(84) bytes of data.`,
+   247→        `64 bytes from ${target}: icmp_seq=1 ttl=118 time=${(Math.random() * 20 + 5).toFixed(1)} ms`,
+   248→        `64 bytes from ${target}: icmp_seq=2 ttl=118 time=${(Math.random() * 20 + 5).toFixed(1)} ms`,
+   249→        `64 bytes from ${target}: icmp_seq=3 ttl=118 time=${(Math.random() * 20 + 5).toFixed(1)} ms`,
+   250→        `--- ${target} ping statistics ---`,
+   251→        '3 packets transmitted, 3 received, 0% packet loss, time 2003ms',
+   252→      ].join('\n');
+   253→    }
+   254→
+   255→    case 'traceroute': {
+   256→      const target = args.find(a => !a.startsWith('-')) ?? '8.8.8.8';
+   257→      return [
+   258→        `traceroute to ${target}, 30 hops max, 60 byte packets`,
+   259→        ` 1  gateway (192.168.1.1)  0.5ms  0.4ms  0.3ms`,
+   260→        ` 2  10.0.0.1 (10.0.0.1)  1.2ms  1.1ms  1.3ms`,
+   261→        ` 3  isp-router.example.com (72.14.215.85)  5.8ms  5.6ms  5.9ms`,
+   262→        ` 4  core-router.example.com (108.170.252.1)  8.2ms  8.1ms  8.3ms`,
+   263→        ` 5  ${target} (${target})  ${Math.floor(Math.random() * 5 + 10)}.0ms  ${Math.floor(Math.random() * 5 + 10)}.1ms  ${Math.floor(Math.random() * 5 + 10)}.0ms`,
+   264→      ].join('\n');
+   265→    }
+   266→
+   267→    case 'ls': {
+   268→      const target = args[0] ? resolvePath(session.cwd, args[0]) : session.cwd;
+   269→      const showLong = args.includes('-l') || args.includes('-la') || args.includes('-al');
+   270→      const showHidden = args.includes('-a') || args.includes('-la') || args.includes('-al');
+   271→      const contents = SIMULATED_FS[target];
+   272→      if (!contents) return `ls: cannot access '${target}': No such file or directory`;
+   273→      if (showLong) {
+   274→        const lines = contents.map(f => {
+   275→          const isDir = SIMULATED_FS[target + '/' + f] !== undefined || f.endsWith('/');
+   276→          const perm = isDir ? 'drwxr-xr-x' : '-rw-r--r--';
+   277→          const size = isDir ? '4096' : String(Math.floor(Math.random() * 5000) + 100);
+   278→          const date = 'Jul 22 10:' + String(Math.floor(Math.random() * 60)).padStart(2, '0');
+   279→          return `${perm}  1 student student ${size.padStart(6)} ${date} ${f}`;
+   280→        });
+   281→        return ['total ' + (contents.length * 4 + 8), ...lines].join('\n');
+   282→      }
+   283→      let output = '';
+   284→      if (showHidden) output += '.  ..  ';
+   285→      output += contents.join('  ');
+   286→      return output;
+   287→    }
+   288→
+   289→    case 'tree': {
+   290→      const target = args[0] ? resolvePath(session.cwd, args[0]) : session.cwd;
+   291→      function treeRecurse(path: string, prefix: string = ''): string[] {
+   292→        const items = SIMULATED_FS[path];
+   293→        if (!items) return [];
+   294→        const lines: string[] = [];
+   295→        items.forEach((item, i) => {
+   296→          const isLast = i === items.length - 1;
+   297→          const connector = isLast ? '`-- ' : '|-- ';
+   298→          const childPath = path + '/' + item;
+   299→          const isDir = SIMULATED_FS[childPath] !== undefined;
+   300→          lines.push(prefix + connector + item + (isDir ? '/' : ''));
+   301→          if (isDir && prefix.length < 20) {
+   302→            lines.push(...treeRecurse(childPath, prefix + (isLast ? '    ' : '|   ')));
+   303→          }
+   304→        });
+   305→        return lines;
+   306→      }
+   307→      return [target, ...treeRecurse(target)].join('\n');
+   308→    }
+   309→
+   310→    case 'cd': {
+   311→      if (!args[0] || args[0] === '~') { session.cwd = '/home/student'; return ''; }
+   312→      const target = resolvePath(session.cwd, args[0]);
+   313→      if (SIMULATED_FS[target] !== undefined) { session.cwd = target; return ''; }
+   314→      return `cd: ${args[0]}: No such file or directory`;
+   315→    }
+   316→
+   317→    case 'cat': {
+   318→      if (!args[0]) return 'cat: missing operand';
+   319→      const filePath = resolvePath(session.cwd, args[0]);
+   320→      const content = FILE_CONTENTS[filePath];
+   321→      if (!content) return `cat: ${args[0]}: No such file or directory`;
+   322→      checkObjectives(session, trimmed);
+   323→      return content;
+   324→    }
+   325→
+   326→    case 'head': {
+   327→      if (!args[0]) return 'head: missing operand';
+   328→      const filePath = resolvePath(session.cwd, args[0]);
+   329→      const content = FILE_CONTENTS[filePath];
+   330→      if (!content) return `head: ${args[0]}: No such file or directory`;
+   331→      const n = parseInt(args.find(a => a.startsWith('-n'))?.slice(2) || '5');
+   332→      return content.split('\n').slice(0, n).join('\n');
+   333→    }
+   334→
+   335→    case 'tail': {
+   336→      if (!args[0]) return 'tail: missing operand';
+   337→      const filePath = resolvePath(session.cwd, args[0]);
+   338→      const content = FILE_CONTENTS[filePath];
+   339→      if (!content) return `tail: ${args[0]}: No such file or directory`;
+   340→      const n = parseInt(args.find(a => a.startsWith('-n'))?.slice(2) || '5');
+   341→      return content.split('\n').slice(-n).join('\n');
+   342→    }
+   343→
+   344→    case 'grep': {
+   345→      if (args.length < 2) return 'Usage: grep <pattern> <file>';
+   346→      const pattern = args[0];
+   347→      const filePath = resolvePath(session.cwd, args[1]);
+   348→      const content = FILE_CONTENTS[filePath];
+   349→      if (!content) return `grep: ${args[1]}: No such file or directory`;
+   350→      const matches = content.split('\n').filter(l => l.toLowerCase().includes(pattern.toLowerCase()));
+   351→      return matches.length ? matches.join('\n') : '(no matches found)';
+   352→    }
+   353→
+   354→    case 'find': {
+   355→      const nameArg = args.indexOf('-name');
+   356→      const target = nameArg > 0 ? args[nameArg + 1] : '';
+   357→      if (!target) return 'Usage: find <path> -name <pattern>';
+   358→      const results: string[] = [];
+   359→      function searchDir(path: string) {
+   360→        const items = SIMULATED_FS[path];
+   361→        if (!items) return;
+   362→        for (const item of items) {
+   363→          const full = path + '/' + item;
+   364→          if (item.includes(target.replace(/\*/g, ''))) results.push(full);
+   365→          if (SIMULATED_FS[full]) searchDir(full);
+   366→        }
+   367→      }
+   368→      searchDir('/');
+   369→      return results.length ? results.join('\n') : 'No files found.';
+   370→    }
+   371→
+   372→    case 'wc': {
+   373→      if (!args[0]) return 'wc: missing operand';
+   374→      const filePath = resolvePath(session.cwd, args[0]);
+   375→      const content = FILE_CONTENTS[filePath];
+   376→      if (!content) return `wc: ${args[0]}: No such file or directory`;
+   377→      const lines = content.split('\n').length;
+   378→      const words = content.split(/\s+/).length;
+   379→      const chars = content.length;
+   380→      return `  ${lines}  ${words} ${chars} ${args[0]}`;
+   381→    }
+   382→
+   383→    case 'chmod': case 'chown':
+   384→      checkObjectives(session, trimmed);
+   385→      return args.length >= 2 ? `Permissions updated for ${args[args.length - 1]}` : 'Usage: chmod <mode> <file>';
+   386→
+   387→    case 'nmap': {
+   388→      checkObjectives(session, trimmed);
+   389→      const target = args.find(a => !a.startsWith('-')) ?? '192.168.1.1';
+   390→      const hasVuln = args.includes('-sV') || args.includes('-A') || args.includes('-sC');
+   391→      const lines = [
+   392→        `Starting Nmap 7.94 ( https://nmap.org ) at ${new Date().toISOString()}`,
+   393→        `Nmap scan report for ${target}`,
+   394→        `Host is up (0.0023s latency).`,
+   395→        ``,
+   396→        `PORT     STATE SERVICE       VERSION`,
+   397→        `22/tcp   open  ssh           OpenSSH 8.9p1 Ubuntu 3ubuntu0.6`,
+   398→        `80/tcp   open  http          Apache/2.4.52 (Ubuntu)`,
+   399→        `443/tcp  open  ssl/https     Apache/2.4.52 (Ubuntu)`,
+   400→        `3306/tcp open  mysql         MySQL 8.0.32-0ubuntu0.22.04.2`,
+   401→        `8080/tcp open  http-proxy    nginx/1.23.3`,
+   402→      ];
+   403→      if (hasVuln) {
+   404→        lines.push('', '| VULNERABILITIES DETECTED:', '|   CVE-2023-25690  Apache HTTP Server mod_proxy SSRF',
+   405→          '|   CVE-2023-22515  Confluence Broken Access Control', '|   CVE-2023-44487  HTTP/2 Rapid Reset Attack',
+   406→          `|   OS: Ubuntu 22.04 LTS`, `|   Network Distance: 2 hops`);
+   407→      }
+   408→      lines.push('', `Nmap done: 1 IP address (1 host up) scanned in ${(Math.random() * 5 + 2).toFixed(2)} seconds`);
+   409→      return lines.join('\n');
+   410→    }
+   411→
+   412→    case 'curl': {
+   413→      checkObjectives(session, trimmed);
+   414→      const url = args.find(a => a.startsWith('http')) ?? 'http://localhost:8080';
+   415→      return [
+   416→        `  % Total    % Received % Xferd  Average Speed   Time`,
+   417→        `100  1562  100  1562    0     0   52500      0 --:--:-- --:--:-- --:--:--  52333`,
+   418→        `<!DOCTYPE html>`,
+   419→        `<html><head><title>Target Corp - Portal</title></head>`,
+   420→        `<body>`,
+   421→        `<h1>Welcome to Target Corp Internal Portal</h1>`,
+   422→        `<p>Server: Apache/2.4.52 (Ubuntu)</p>`,
+   423→        `<p>Powered by PHP 8.1.2</p>`,
+   424→        `<p>X-Frame-Options: DENY</p>`,
+   425→        `</body></html>`,
+   426→      ].join('\n');
+   427→    }
+   428→
+   429→    case 'dig': case 'nslookup': {
+   430→      checkObjectives(session, trimmed);
+   431→      const domain = args.find(a => !a.startsWith('-') && a.includes('.')) ?? 'example.com';
+   432→      return command === 'dig'
+   433→        ? [
+   434→          `; <<>> DiG 9.18.18-0ubuntu0.22.04.1-Ubuntu <<>> ${domain}`,
+   435→          `;; global options: +cmd`,
+   436→          `;; Got answer:`,
+   437→          `;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: ${Math.floor(Math.random() * 65535)}`,
+   438→          `;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1`,
+   439→          ``,
+   440→          `;; QUESTION SECTION:`,
+   441→          `;${domain}.                    IN      A`,
+   442→          ``,
+   443→          `;; ANSWER SECTION:`,
+   444→          `${domain}.             300     IN      A       93.184.216.34`,
+   445→          ``,
+   446→          `;; Query time: 12 msec`,
+   447→          `;; SERVER: 8.8.8.8#53(8.8.8.8)`,
+   448→        ].join('\n')
+   449→        : [
+   450→          `Server:              8.8.8.8`,
+   451→          `Address:     8.8.8.8#53`,
+   452→          ``,
+   453→          `Non-authoritative answer:`,
+   454→          `Name:        ${domain}`,
+   455→          `Address: 93.184.216.34`,
+   456→        ].join('\n');
+   457→    }
+   458→
+   459→    case 'whois': {
+   460→      checkObjectives(session, trimmed);
+   461→      const domain = args[0] ?? 'example.com';
+   462→      return [
+   463→        `Domain Name: ${domain.toUpperCase()}`,
+   464→        `Registry Domain ID: ${Math.floor(Math.random() * 999999999)}`,
+   465→        `Registrar WHOIS Server: whois.registrar.com`,
+   466→        `Registrar URL: http://www.registrar.com`,
+   467→        `Updated Date: 2024-01-15T08:30:00Z`,
+   468→        `Creation Date: 1995-08-14T04:00:00Z`,
+   469→        `Registry Expiry Date: 2025-08-13T04:00:00Z`,
+   470→        `Registrar: Example Registrar, Inc.`,
+   471→        `Domain Status: clientTransferProhibited`,
+   472→        `Name Server: A.IANA-SERVERS.NET`,
+   473→        `Name Server: B.IANA-SERVERS.NET`,
+   474→        `DNSSEC: unsigned`,
+   475→      ].join('\n');
+   476→    }
+   477→
+   478→    case 'ifconfig': case 'ip': {
+   479→      return [
+   480→        `eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500`,
+   481→        `        inet 172.17.0.3  netmask 255.255.0.0  broadcast 172.17.255.255`,
+   482→        `        inet6 fe80::42:acff:fe11:3  prefixlen 64  scopeid 0x20<link>`,
+   483→        `        ether 02:42:ac:11:00:03  txqueuelen 0  (Ethernet)`,
+   484→        `        RX packets ${Math.floor(Math.random() * 100000 + 50000)}  bytes ${(Math.random() * 100000000).toFixed(0)}`,
+   485→        `        TX packets ${Math.floor(Math.random() * 50000 + 20000)}  bytes ${(Math.random() * 50000000).toFixed(0)}`,
+   486→        ``,
+   487→        `lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536`,
+   488→        `        inet 127.0.0.1  netmask 255.0.0.0`,
+   489→        `        inet6 ::1  prefixlen 128  scopeid 0x10<host>`,
+   490→        `        loop  txqueuelen 1000  (Local Loopback)`,
+   491→      ].join('\n');
+   492→    }
+   493→
+   494→    case 'python3': case 'python': {
+   495→      checkObjectives(session, trimmed);
+   496→      if (!args[0]) return 'Python 3.10.12 (main, Jun 11 2023, 05:26:28) [GCC 11.4.0] on linux';
+   497→      const filePath = resolvePath(session.cwd, args[0]);
+   498→      const script = FILE_CONTENTS[filePath];
+   499→      if (!script) return `python3: can't open file '${args[0]}': [Errno 2] No such file or directory`;
+   500→      if (args[0].includes('task2.py')) {
+   501→        return `=== Password Hash Cracking Lab ===\n\nTarget Database:\n  admin: 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8...\n  root: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855...\n  user1: ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f...\n\nHint: These are very common passwords.`;
+   502→      }
+   503→      return `[Script output for ${args[0]}]\nExecution completed successfully.`;
+   504→    }
+   505→
+   506→    case 'bash': case 'sh': {
+   507→      checkObjectives(session, trimmed);
+   508→      if (!args[0]) return '$ ';
+   509→      const filePath = resolvePath(session.cwd, args[0]);
+   510→      const script = FILE_CONTENTS[filePath];
+   511→      if (!script) return `bash: ${args[0]}: No such file or directory`;
+   512→      if (args[0].includes('task1.sh')) {
+   513→        return `=== Network Reconnaissance Exercise ===\nScanning local network segment...\n\nDiscovering hosts on 192.168.1.0/24...\n  192.168.1.1   - Gateway         (open: 53, 80, 443)\n  192.168.1.10  - Web Server      (open: 22, 80, 8080, 8443)\n  192.168.1.20  - Database        (open: 22, 3306, 5432)\n  192.168.1.30  - Mail Server     (open: 22, 25, 143, 587, 993)\n  192.168.1.40  - File Server     (open: 22, 139, 445)\n  192.168.1.50  - Dev Server      (open: 22, 3000, 8080)\n\nScan complete. 6 hosts discovered, 3 critical vulnerabilities found.`;
+   514→      }
+   515→      return script.replace(/^#!.*\n/, '').replace(/echo\s+"?([^"]*)"?/g, '$1').replace(/\\n/g, '\n');
+   516→    }
+   517→
+   518→    case 'gcc': {
+   519→      checkObjectives(session, trimmed);
+   520→      if (!args[0]) return 'gcc: fatal error: no input files';
+   521→      return `Compiling ${args[0]}...\nLinking...\nBuild successful. Output: ./a.out`;
+   522→    }
+   523→
+   524→    case 'hashcat': case 'john': {
+   525→      checkObjectives(session, trimmed);
+   526→      return [
+   527→        `${command} (v6.2.6) starting...`,
+   528→        `Hashes: 1 digest; 1 unique digests, 1 unique salts`,
+   529→        `Bitmaps: 16 bits, 65536 entries, 0x0000ffff mask`,
+   530→        ``,
+   531→        `5e884898...:password`,
+   532→        `ef92b778...:password123`,
+   533→        ``,
+   534→        `Session..........: ${command}`,
+   535→        `Status...........: Cracked`,
+   536→        `Hash.Mode........: 1400 (SHA2-256)`,
+   537→        `Time.Started.....: ${new Date().toISOString().split('T')[0]}`,
+   538→        `Time.Estimated...: 0 secs`,
+   539→        ``,
+   540→        `2 recovered from 2 input hashes`,
+   541→        `${Math.floor(Math.random() * 5000 + 1000).toLocaleString()}.00 GH/s estimated`,
+   542→      ].join('\n');
+   543→    }
+   544→
+   545→    case 'sqlmap': {
+   546→      checkObjectives(session, trimmed);
+   547→      const target = args.find(a => a.startsWith('http')) ?? 'http://target/login.php';
+   548→      return [
+   549→        `[*] starting @ ${new Date().toISOString()}`,
+   550→        `[INFO] testing connection to the target URL`,
+   551→        `[INFO] checking if the target is protected by WAF/IPS`,
+   552→        `[INFO] testing if the target URL is stable`,
+   553→        `[INFO] testing SQL injection on parameter 'username'`,
+   554→        `[INFO] confirming SQL injection on parameter 'username'`,
+   555→        `[INFO] parameter 'username' appears to be injectable`,
+   556→        `[INFO] fetching database banner`,
+   557→        `back-end DBMS: MySQL >= 5.6`,
+   558→        `[INFO] fetching database names`,
+   559→        `available databases [3]:`,
+   560→        `[*] information_schema`,
+   561→        `[*] app_db`,
+   562→        `[*] secrets`,
+   563→        `[INFO] fetching tables from database 'app_db'`,
+   564→        `Database: app_db`,
+   565→        `[3 tables]`,
+   566→        `+------------+`,
+   567→        `| users      |`,
+   568→        `| flags      |`,
+   569→        `| sessions   |`,
+   570→        `+------------+`,
+   571→        `[INFO] fetching columns for table 'flags'`,
+   572→        `+----+-------+`,
+   573→        `| id | value |`,
+   574→        `+----+-------+`,
+   575→        `| 1  | CYBER |`,
+   576→        `+----+-------+`,
+   577→      ].join('\n');
+   578→    }
+   579→
+   580→    case 'nikto': {
+   581→      checkObjectives(session, trimmed);
+   582→      return [
+   583→        `- Nikto v2.5.0`,
+   584→        `---------------------------------------------------------------------------`,
+   585→        `+ Target IP:          192.168.1.10`,
+   586→        `+ Target Hostname:    web.target.local`,
+   587→        `+ Target Port:        80`,
+   588→        `+ Start Time:         ${new Date().toISOString()}`,
+   589→        `---------------------------------------------------------------------------`,
+   590→        `+ Server: Apache/2.4.52 (Ubuntu)`,
+   591→        `+ /: The X-Content-Type-Options header is not set.`,
+   592→        `+ /: The X-XSS-Protection header is not defined.`,
+   593→        `+ /login.php: PHP page with login form found.`,
+   594→        `+ /api/debug: Admin debug endpoint exposed (403 Forbidden).`,
+   595→        `+ /admin/: Directory indexing found.`,
+   596→        `+ /phpinfo.php: PHP info page found.`,
+   597→        `+ /backups/: Directory indexing found.`,
+   598→        `+ OSVDB-3268: /admin/: Directory indexing found.`,
+   599→        `+ 7 host(s) tested`,
+   600→        `+ End Time: ${new Date().toISOString()} (${Math.floor(Math.random() * 20 + 10)} seconds)`,
+   601→        `---------------------------------------------------------------------------`,
+   602→        `+ 7 items found`,
+   603→      ].join('\n');
+   604→    }
+   605→
+   606→    case 'gobuster': case 'dirb': {
+   607→      checkObjectives(session, trimmed);
+   608→      return [
+   609→        `===============================================================`,
+   610→        `Gobuster v3.6`,
+   611→        `by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)`,
+   612→        `===============================================================`,
+   613→        `[+] Url:                     http://192.168.1.10`,
+   614→        `[+] Method:                  GET`,
+   615→        `[+] Threads:                 10`,
+   616→        `[+] Wordlist:                /usr/share/wordlists/dirb/common.txt`,
+   617→        `===============================================================`,
+   618→        `Starting gobuster in directory enumeration mode`,
+   619→        `===============================================================`,
+   620→        `/(Status: 200) [Size: 1256]`,
+   621→        `/admin      (Status: 403) [Size: 277]`,
+   622→        `/api        (Status: 301) [Size: 0] [--> /api/]`,
+   623→        `/backup     (Status: 301) [Size: 0] [--> /backup/]`,
+   624→        `/config     (Status: 403) [Size: 277]`,
+   625→        `/dashboard  (Status: 302) [Size: 0] [--> /login.php]`,
+   626→        `/images     (Status: 301) [Size: 0] [--> /images/]`,
+   627→        `/login.php  (Status: 200) [Size: 892]`,
+   628→        `/uploads    (Status: 301) [Size: 0] [--> /uploads/]`,
+   629→        `/.git       (Status: 301) [Size: 0] [--> /.git/]`,
+   630→        `===============================================================`,
+   631→        `Finished`,
+   632→        `===============================================================`,
+   633→      ].join('\n');
+   634→    }
+   635→
+   636→    case 'hydra': {
+   637→      checkObjectives(session, trimmed);
+   638→      return [
+   639→        `Hydra v9.5 (c) 2023 by van Hauser/THC`,
+   640→        `[DATA] max 16 tasks per 1 server, overall 16 tasks`,
+   641→        `[DATA] attacking ssh://192.168.1.10:22/`,
+   642→        `[STATUS] 64.00 tries/min, 64 tries in 00:01h, 256 to do in 00:04h`,
+   643→        `[22][ssh] host: 192.168.1.10  login: admin  password: admin123`,
+   644→        `[STATUS] attack finished for 192.168.1.10 (valid pair found)`,
+   645→        `1 of 1 target successfully completed, 1 valid password found`,
+   646→      ].join('\n');
+   647→    }
+   648→
+   649→    case 'openssl': {
+   650→      checkObjectives(session, trimmed);
+   651→      if (args[0] === 'enc' || args[0] === 'dgst') {
+   652→        return 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+   653→      }
+   654→      return `OpenSSL 3.0.2 15 Mar 2022 (Library: OpenSSL 3.0.2)\nBuilt with: compiler: gcc -fPIC -pthread -m64`;
+   655→    }
+   656→
+   657→    case 'file': {
+   658→      checkObjectives(session, trimmed);
+   659→      const target = args[0] ?? '';
+   660→      if (target.includes('.py')) return `${target}: Python script, ASCII text executable`;
+   661→      if (target.includes('.sh')) return `${target}: Bourne-Again shell script, ASCII text executable`;
+   662→      if (target.includes('.c')) return `${target}: C source, ASCII text`;
+   663→      if (target.includes('.pcap')) return `${target}: pcap capture file (microsecond ts)`;
+   664→      if (target.includes('.png') || target.includes('.jpg')) return `${target}: PNG image data, 800 x 600, 8-bit/color RGBA`;
+   665→      if (target.includes('.dd')) return `${target}: DOS/MBR boot sector, extended partition table`;
+   666→      if (target.includes('.db')) return `${target}: SQLite 3.x database`;
+   667→      if (target.includes('.log')) return `${target}: ASCII text`;
+   668→      return `${target}: data`;
+   669→    }
+   670→
+   671→    case 'strings': {
+   672→      checkObjectives(session, trimmed);
+   673→      if (!args[0]) return 'strings: missing operand';
+   674→      return ['/lib/x86_64-linux-gnu/libc.so.6', '__libc_start_main', 'GLIBC_2.34', '_ITM_registerTMCloneTable', '__gmon_start__', 'flag.txt', 'cat', '/bin/sh', 'CYBERSHIELD{'].join('\n');
+   675→    }
+   676→
+   677→    case 'objdump': {
+   678→      checkObjectives(session, trimmed);
+   679→      if (!args[0]) return 'objdump: missing operand';
+   680→      return [
+   681→        `\n${args[0]}:     file format elf64-x86-64`,
+   682→        `\nDisassembly of section .text:`,
+   683→        `\n0000000000001149 <main>:`,
+   684→        `    1149:    f3 0f 1e fa             endbr64`,
+   685→        `    114d:    55                      push   rbp`,
+   686→        `    114e:    48 89 e5                mov    rbp,rsp`,
+   687→        `    1151:    48 8d 3d bc 0e 00 00    lea    rdi,[rip+0xebc]`,
+   688→        `    1158:    b8 00 00 00 00          mov    eax,0x0`,
+   689→        `    115d:    e8 6e fe ff ff          call   0xf10 <printf@plt>`,
+   690→        `    1162:    b8 00 00 00 00          mov    eax,0x0`,
+   691→        `    1167:    5d                      pop    rbp`,
+   692→        `    1168:    c3                      ret`,
+   693→      ].join('\n');
+   694→    }
+   695→
+   696→    case 'gdb': {
+   697→      checkObjectives(session, trimmed);
+   698→      if (!args[0]) return 'gdb: no file specified';
+   699→      return [
+   700→        `GNU gdb (Ubuntu 12.1-0ubuntu1~22.04.2) 12.1`,
+   701→        `Reading symbols from ${args[0]}...`,
+   702→        `(gdb) disassemble main`,
+   703→        `Dump of assembler code for function main:`,
+   704→        `   0x0000000000001149 <+0>:     endbr64`,
+   705→        `   0x000000000000114d <+4>:     push   rbp`,
+   706→        `   0x000000000000114e <+5>:     mov    rbp,rsp`,
+   707→        `   0x0000000000001151 <+8>:     lea    rdi,0x2004`,
+   708→        `   0x0000000000001158 <+15>:    call   0x10f0 <gets@plt>`,
+   709→        `   0x000000000000115d <+20>:    lea    rdi,0x2004`,
+   710→        `   0x0000000000001164 <+27>:    call   0x1100 <printf@plt>`,
+   711→        `   0x0000000000001169 <+32>:    mov    eax,0x0`,
+   712→        `   0x000000000000116e <+37>:    pop    rbp`,
+   713→        `   0x000000000000116f <+38>:    ret`,
+   714→        `End of assembler dump.`,
+   715→      ].join('\n');
+   716→    }
+   717→
+   718→    case 'exiftool': {
+   719→      checkObjectives(session, trimmed);
+   720→      if (!args[0]) return 'exiftool: missing operand';
+   721→      return [
+   722→        `ExifTool Version Number         : 12.50`,
+   723→        `File Name                       : ${args[0]}`,
+   724→        `File Size                       : 245 kB`,
+   725→        `File Type                       : JPEG`,
+   726→        `MIME Type                       : image/jpeg`,
+   727→        `Image Width                     : 1920`,
+   728→        `Image Height                    : 1080`,
+   729→        `Bit Depth                       : 8`,
+   730→        `Color Components                : 3`,
+   731→        `GPS Latitude                    : 40 deg 42' 44.28" N`,
+   732→        `GPS Longitude                   : 74 deg 0' 21.72" W`,
+   733→        `GPS Position                    : 40.7123 deg N, 74.0060 deg W`,
+   734→        `Software                        : Adobe Photoshop 24.0`,
+   735→        `Comment                         : Flag location marked`,
+   736→        `Author                          : shadow_h4cker`,
+   737→      ].join('\n');
+   738→    }
+   739→
+   740→    case 'binwalk': {
+   741→      checkObjectives(session, trimmed);
+   742→      if (!args[0]) return 'binwalk: missing operand';
+   743→      return [
+   744→        `Scan Time:     ${new Date().toISOString().split('T')[1]}`,
+   745→        `Signatures:   411`,
+   746→        ``,
+   747→        `DECIMAL       HEXADECIMAL     DESCRIPTION`,
+   748→        `--------------------------------------------------------------------------------`,
+   749→        `0             0x0             JPEG image data, JFIF standard 1.01`,
+   750→        `3021          0xBCD           Zip archive data, at least v2.0 to extract`,
+   751→        `15840         0x3DF0          ELF, 64-bit LSB shared object, x86-64`,
+   752→        `28672         0x7000          PNG image, 800 x 600, 8-bit/color RGBA`,
+   753→        `45056         0xB000          SQLite format 3 database`,
+   754→        `65536         0x10000         Certificate, PEM encoded`,
+   755→        ``,
+   756→        `N.B.: Embedded files found! Use -e to extract.`,
+   757→      ].join('\n');
+   758→    }
+   759→
+   760→    case 'volatility': {
+   761→      checkObjectives(session, trimmed);
+   762→      return [
+   763→        `Volatility 3 Framework 2.7.0`,
+   764→        `INFO     : volatility3 framework running`,
+   765→        `Progress:  100.00               PDB scanning finished`,
+   766→        ``,
+   767→        `PID     Process         Create Time           PPID    Arguments`,
+   768→        `------  --------------  --------------------  ------  -----------`,
+   769→        `1       System          2026-07-22 08:00:00   0       ntoskrnl.exe`,
+   770→        `412     smss.exe        2026-07-22 08:00:05   328     \\SystemRoot\\System32\\smss.exe`,
+   771→        `524     csrss.exe       2026-07-22 08:00:08   412     \\SystemRoot\\System32\\csrss.exe`,
+   772→        `632     wininit.exe     2026-07-22 08:00:10   412     \\SystemRoot\\System32\\wininit.exe`,
+   773→        `724     services.exe    2026-07-22 08:00:12   632     \\SystemRoot\\System32\\services.exe`,
+   774→        `812     lsass.exe       2026-07-22 08:00:14   632     \\SystemRoot\\System32\\lsass.exe`,
+   775→        `1924    explorer.exe    2026-07-22 08:01:00   1892    \\Windows\\explorer.exe`,
+   776→        `2048    chrome.exe      2026-07-22 08:15:00   1924    "C:\\Program Files\\Chrome\\chrome.exe"`,
+   777→        `3072    cmd.exe         2026-07-22 09:30:00   1924    C:\\Windows\\System32\\cmd.exe`,
+   778→        `3140    powershell.exe  2026-07-22 09:31:00   3072    C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`,
+   779→        ``,
+   780→        `!malfind: Found injected code in PID 3140 (powershell.exe)`,
+   781→        `  Address: 0x00007ff608400000, Size: 4096 bytes`,
+   782→        `  Contains: shellcode payload`,
+   783→      ].join('\n');
+   784→    }
+   785→
+   786→    case 'steghide': {
+   787→      checkObjectives(session, trimmed);
+   788→      if (!args[0]) return 'steghide: missing operand';
+   789→      return [
+   790→        `steghide version 0.5.1`,
+   791→        `Enter passphrase:`,
+   792→        `extracting embedded data...`,
+   793→        `wrote extracted data to "hidden_message.txt".`,
+   794→        ``,
+   795→        `Contents of hidden_message.txt:`,
+   796→        `CYBERSHIELD{lsb_h1dd3n_msg}`,
+   797→      ].join('\n');
+   798→    }
+   799→
+   800→    case 'iptables': {
+   801→      checkObjectives(session, trimmed);
+   802→      if (args[0] === '-L' || args[0] === '--list') {
+   803→        return [
+   804→          `Chain INPUT (policy DROP)`,
+   805→          `target     prot opt source       destination`,
+   806→          `ACCEPT     tcp  --  0.0.0.0/0    0.0.0.0/0    tcp dpt:22`,
+   807→          `ACCEPT     tcp  --  0.0.0.0/0    0.0.0.0/0    tcp dpt:80`,
+   808→          `ACCEPT     tcp  --  0.0.0.0/0    0.0.0.0/0    tcp dpt:443`,
+   809→          `ACCEPT     icmp --  0.0.0.0/0    0.0.0.0/0`,
+   810→          `DROP       all  --  0.0.0.0/0    0.0.0.0/0    state INVALID`,
+   811→          `LOG        all  --  0.0.0.0/0    0.0.0.0/0    LOG flags 0 level 4 prefix "FW_DROP: "`,
+   812→          ``,
+   813→          `Chain FORWARD (policy DROP)`,
+   814→          `target     prot opt source       destination`,
+   815→          ``,
+   816→          `Chain OUTPUT (policy ACCEPT)`,
+   817→          `target     prot opt source       destination`,
+   818→        ].join('\n');
+   819→      }
+   820→      return `iptables: command executed. Rules updated.`;
+   821→    }
+   822→
+   823→    case 'status': {
+   824→      const completed = session.objectives.filter(o => o.completed).length;
+   825→      const total = session.objectives.length;
+   826→      const lines = [`\x1b[1;36m=== Lab Objectives Progress ===\x1b[0m`, `${completed}/${total} completed (${Math.round(completed / Math.max(total, 1) * 100)}%)\n`];
+   827→      for (const obj of session.objectives) {
+   828→        const icon = obj.completed ? '\x1b[32m[x]\x1b[0m' : '\x1b[31m[ ]\x1b[0m';
+   829→        lines.push(`  ${icon} ${obj.description}`);
+   830→      }
+   831→      return lines.join('\n');
+   832→    }
+   833→
+   834→    default:
+   835→      return `bash: ${command}: command not found. Type 'help' for available commands.`;
+   836→  }
+   837→}
+   838→
+   839→function checkObjectives(session: TerminalSession, command: string): void {
+   840→  const lowerCmd = command.toLowerCase();
+   841→  for (const obj of session.objectives) {
+   842→    if (obj.completed) continue;
+   843→    if (obj.verificationPattern) {
+   844→      if (new RegExp(obj.verificationPattern, 'i').test(lowerCmd)) { obj.completed = true; continue; }
+   845→    }
+   846→    for (const [keyword, regex] of Object.entries(LAB_OBJECTIVE_PATTERNS)) {
+   847→      if (obj.description.toLowerCase().includes(keyword) && regex.test(lowerCmd)) { obj.completed = true; break; }
+   848→    }
+   849→  }
+   850→  const completed = session.objectives.filter(o => o.completed).length;
+   851→  if (completed === session.objectives.length && session.objectives.length > 0) {
+   852→    io.to(session.labSessionId).emit('lab:completed', { labSessionId: session.labSessionId, message: 'All lab objectives completed! Great work.', score: 1.0 });
+   853→  }
+   854→}
+   855→
+   856→io.on('connection', (socket) => {
+   857→  console.log(`[Terminal] Client connected: ${socket.id}`);
+   858→
+   859→  socket.on('terminal:join', (data: { userId: string; labSessionId: string; containerName: string; objectives: { id: string; description: string; verificationPattern?: string }[]; labType?: string }) => {
+   860→    const { userId, labSessionId, containerName, objectives, labType } = data;
+   861→    const session: TerminalSession = {
+   862→      socketId: socket.id, userId, labSessionId, containerName,
+   863→      commandHistory: [], currentLine: '', cwd: '/home/student',
+   864→      env: { TERM: 'xterm-256color', LAB_SESSION_ID: labSessionId, LAB_USER_ID: userId, PATH: '/usr/local/bin:/usr/bin:/bin' },
+   865→      labType: labType || 'general',
+   866→      objectives: objectives.map(o => ({ ...o, completed: false })),
+   867→      startedAt: new Date(),
+   868→    };
+   869→    activeSessions.set(socket.id, session);
+   870→    socket.join(labSessionId);
+   871→
+   872→    const welcomeLines = [
+   873→      `\x1b[1;32m  ╔═══════════════════════════════════════════════════════╗\x1b[0m`,
+   874→      `\x1b[1;32m  ║                                                       ║\x1b[0m`,
+   875→      `\x1b[1;32m  ║     \x1b[1;36mCyberShield Academy\x1b[0m \x1b[1;32m- Secure Lab Environment       ║\x1b[0m`,
+   876→      `\x1b[1;32m  ║                                                       ║\x1b[0m`,
+   877→      `\x1b[1;32m  ╚═══════════════════════════════════════════════════════╝\x1b[0m`,
+   878→      ``,
+   879→      `  Container: \x1b[33m${containerName}\x1b[0m`,
+   880→      `  User:      \x1b[32mstudent\x1b[0m`,
+   881→      `  Lab Type:  \x1b[36m${session.labType}\x1b[0m`,
+   882→      `  Working:   /home/student`,
+   883→      ``,
+   884→      `  Type \x1b[1m'help'\x1b[0m for available commands.`,
+   885→      `  Type \x1b[1m'status'\x1b[0m to check lab objectives.`,
+   886→      `  Type \x1b[1m'tree'\x1b[0m to explore the filesystem.`,
+   887→      ``,
+   888→    ];
+   889→
+   890→    socket.emit('terminal:output', { data: welcomeLines.join('\r\n') + '\r\n' });
+   891→    socket.emit('terminal:prompt', { cwd: session.cwd });
+   892→    console.log(`[Terminal] Session started for user ${userId} in lab ${labSessionId}`);
+   893→  });
+   894→
+   895→  socket.on('terminal:input', (data: { input: string }) => {
+   896→    const session = activeSessions.get(socket.id);
+   897→    if (!session) { socket.emit('terminal:output', { data: 'Error: No active terminal session.\r\n' }); return; }
+   898→    const input = data.input;
+   899→    session.currentLine += input;
+   900→    if (input.includes('\r') || input.includes('\n')) {
+   901→      const cmd = session.currentLine.replace(/[\r\n]/g, '');
+   902→      session.currentLine = '';
+   903→      const prompt = `\x1b[1;32mstudent@cybershield\x1b[0m:\x1b[1;34m${session.cwd}\x1b[0m$ `;
+   904→      const output = simulateCommand(session, cmd);
+   905→      if (output === '\x1b[2J\x1b[H') { socket.emit('terminal:clear', {}); }
+   906→      else if (output) { socket.emit('terminal:output', { data: prompt + cmd + '\r\n' + output + '\r\n' }); }
+   907→      else { socket.emit('terminal:output', { data: prompt + cmd + '\r\n' }); }
+   908→      socket.emit('terminal:prompt', { cwd: session.cwd });
+   909→      socket.to(session.labSessionId).emit('terminal:command', { command: cmd, userId: session.userId, timestamp: new Date().toISOString() });
+   910→      const completed = session.objectives.filter(o => o.completed).length;
+   911→      socket.to(session.labSessionId).emit('lab:progress', { labSessionId: session.labSessionId, objectivesCompleted: session.objectives, progressRatio: completed / Math.max(session.objectives.length, 1) });
+   912→    } else { socket.emit('terminal:output', { data: input }); }
+   913→  });
+   914→
+   915→  socket.on('terminal:resize', (data: { cols: number; rows: number }) => { socket.emit('terminal:resized', { cols: data.cols, rows: data.rows }); });
+   916→
+   917→  socket.on('disconnect', () => { const session = activeSessions.get(socket.id); if (session) { console.log(`[Terminal] Session ended for user ${session.userId}`); activeSessions.delete(socket.id); } });
+   918→  socket.on('error', (error) => { console.error(`[Terminal] Socket error (${socket.id}):`, error); });
+   919→});
+   920→
+   921→const PORT = 3004;
+   922→httpServer.listen(PORT, () => { console.log(`[Terminal Service] WebSocket terminal running on port ${PORT}`); });
+   923→process.on('SIGTERM', () => { console.log('[Terminal Service] Shutting down...'); httpServer.close(() => process.exit(0)); });
+   924→process.on('SIGINT', () => { console.log('[Terminal Service] Shutting down...'); httpServer.close(() => process.exit(0)); });
