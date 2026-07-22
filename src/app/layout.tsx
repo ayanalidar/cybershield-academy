@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,18 +22,6 @@ export const metadata: Metadata = {
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
-  openGraph: {
-    title: "CyberShield Academy",
-    description: "AI-Powered Cybersecurity Learning Platform",
-    url: "https://cybershield.academy",
-    siteName: "CyberShield Academy",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "CyberShield Academy",
-    description: "AI-Powered Cybersecurity Learning Platform",
-  },
 };
 
 export default function RootLayout({
@@ -45,8 +34,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {children}
-        <Toaster />
+        <ThemeProvider>
+          {children}
+          <Toaster richColors position="top-right" />
+        </ThemeProvider>
       </body>
     </html>
   );
