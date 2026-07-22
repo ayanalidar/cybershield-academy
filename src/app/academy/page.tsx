@@ -4,11 +4,11 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, BookOpen, Brain, HelpCircle, Terminal, Trophy,
-  Gamepad2, BarChart3, Award, Shield, Lock, Eye, Users, Zap, Star,
+  Gamepad2, BarChart3, Award, Shield, Users, Zap, Star,
   Send, ChevronRight, ChevronDown, X, Mic, MicOff, Volume2, VolumeX,
-  Flag, Clock, Target, Flame, TrendingUp, AlertTriangle, CheckCircle2,
-  XCircle, Lightbulb, ArrowUpRight, Crown, Medal, Hexagon, Activity,
-  Search, Globe, Cpu, RefreshCw, Play, Pause, SkipForward,
+  Flag, Clock, Flame, TrendingUp, CheckCircle2,
+  XCircle, Lightbulb, ArrowUpRight, Medal, Activity,
+  RefreshCw, Play,
   Calendar, Download,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,7 @@ const RANKS = [
   { name: 'Cyber Legend', min: 20000, icon: '👑' },
 ];
 
-const DEMO_USER = { id: 'demo-user-1', name: 'Alex Chen', email: 'alex@cybershield.academy', xp: 1450, level: 6, streakDays: 7, role: 'student' };
+const DEMO_USER = { id: 'cmrv7wr450001smurz4vmxl7h', name: 'Alex Chen', email: 'alex@cybershield.academy', xp: 1450, level: 6, streakDays: 7, role: 'student' };
 
 const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -281,17 +281,97 @@ function DashboardTab() {
 
 function CoursesTab() {
   const [courses, setCourses] = useState(COURSES);
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [courseDetail, setCourseDetail] = useState<{ id: string; title: string; modules: { id: string; title: string; description: string | null; durationMinutes: number; orderIndex: number; contentType: string; videoUrl: string | null }[] } | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   const handleEnroll = useCallback((id: string) => {
     setCourses(prev => prev.map(c => c.id === id ? { ...c, enrolled: true, progress: 0 } : c));
   }, []);
 
+  const openCourse = useCallback(async (id: string) => {
+    setSelectedCourse(id);
+    setLoadingDetail(true);
+    setCourseDetail(null);
+    try {
+      const res = await fetch(`/api/courses/${id}?userId=${DEMO_USER.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.course) {
+          setCourseDetail({ id: data.course.id, title: data.course.title, modules: data.course.modules || [] });
+        }
+      }
+    } catch { /* fallback to no modules */ }
+    setLoadingDetail(false);
+  }, []);
+
   const diffColor = (d: string) => d === 'beginner' ? '#39ff14' : d === 'intermediate' ? '#ff6b35' : '#ff006e';
 
+  // Course detail view
+  if (selectedCourse) {
+    const course = courses.find(c => c.id === selectedCourse);
+    return (
+      <div>
+        <button onClick={() => setSelectedCourse(null)} className="flex items-center gap-1 text-sm text-[#64748b] hover:text-[#e2e8f0] mb-4 transition-colors">
+          <ChevronRight className="h-3.5 w-3.5 rotate-180" /> Back to courses
+        </button>
+        {course && (
+          <div className="holo-card holo-shimmer rounded-2xl p-6 mb-6">
+            <div className="flex items-center gap-4 mb-3">
+              <span className="text-4xl">{course.thumbnail}</span>
+              <div>
+                <h2 className="text-xl font-bold text-[#e2e8f0]">{course.title}</h2>
+                <div className="flex gap-2 mt-1">
+                  <span className="holo-badge text-xs" style={{ background: 'rgba(0,240,255,0.08)', borderColor: 'rgba(0,240,255,0.2)', color: '#00f0ff' }}>{course.category}</span>
+                  <span className="holo-badge text-xs" style={{ background: `${diffColor(course.difficulty)}15`, borderColor: `${diffColor(course.difficulty)}30`, color: diffColor(course.difficulty) }}>{course.difficulty}</span>
+                  <span className="text-xs text-[#64748b]">{course.durationHours}h • <Star className="h-3 w-3 text-yellow-400 inline mr-0.5" /> {course.rating}</span>
+                </div>
+              </div>
+            </div>
+            {course.enrolled && (
+              <div className="mt-3">
+                <div className="flex justify-between text-xs text-[#64748b] mb-1"><span>Progress</span><span>{course.progress}%</span></div>
+                <div className="holo-progress"><div className="holo-progress-bar" style={{ width: `${course.progress}%` }} /></div>
+              </div>
+            )}
+          </div>
+        )}
+
+        <h3 className="neon-text text-sm font-bold mb-4">MODULES ({courseDetail?.modules.length ?? 0})</h3>
+        {loadingDetail ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => <div key={i} className="holo-card rounded-xl p-4 animate-pulse"><div className="h-4 bg-white/5 rounded w-3/4 mb-2" /><div className="h-3 bg-white/5 rounded w-1/2" /></div>)}
+          </div>
+        ) : courseDetail && courseDetail.modules.length > 0 ? (
+          <div className="space-y-3">
+            {courseDetail.modules.map((mod, idx) => (
+              <motion.div key={mod.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }} className="holo-card rounded-xl p-4 cursor-pointer hover:border-[rgba(0,240,255,0.2)] transition-all" style={{ borderLeft: '3px solid rgba(0,240,255,0.3)' }}>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold" style={{ background: 'rgba(0,240,255,0.08)', color: '#00f0ff' }}>{idx + 1}</div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-[#e2e8f0]">{mod.title}</h4>
+                    {mod.description && <p className="text-xs text-[#64748b] mt-0.5 line-clamp-2">{mod.description}</p>}
+                  </div>
+                  <div className="text-xs text-[#64748b] shrink-0">{mod.durationMinutes}min</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="holo-card rounded-2xl p-8 text-center">
+            <BookOpen className="h-10 w-10 text-[#64748b] mx-auto mb-3" />
+            <p className="text-[#64748b] text-sm">No modules available yet for this course. Check back soon!</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Course grid view
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {courses.map(c => (
-        <motion.div key={c.id} whileHover={{ y: -4 }} className="holo-card holo-card-3d rounded-2xl p-6 flex flex-col">
+        <motion.div key={c.id} whileHover={{ y: -4 }} className="holo-card holo-card-3d rounded-2xl p-6 flex flex-col cursor-pointer" onClick={() => openCourse(c.id)}>
           <div className="flex items-start justify-between mb-3">
             <span className="text-3xl">{c.thumbnail}</span>
             <div className="flex items-center gap-1"><Star className="h-3 w-3 text-yellow-400" /><span className="text-xs text-[#94a3b8]">{c.rating}</span></div>
@@ -309,7 +389,7 @@ function CoursesTab() {
               <Button className="holo-btn holo-btn-primary w-full mt-3 holo-btn-sm">Continue <ArrowUpRight className="h-3 w-3 ml-1" /></Button>
             </div>
           ) : (
-            <Button className="holo-btn mt-auto w-full holo-btn-sm" onClick={() => handleEnroll(c.id)}>Enroll Now</Button>
+            <Button className="holo-btn mt-auto w-full holo-btn-sm" onClick={e => { e.stopPropagation(); handleEnroll(c.id); }}>Enroll Now</Button>
           )}
         </motion.div>
       ))}
@@ -339,6 +419,16 @@ function ProfessorTab() {
   const monitoringRef = useRef(false);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Refs to avoid stale closures in the monitor loop
+  const voiceStateRef = useRef<VoiceState>('standby');
+  const isProcessingRef = useRef(false);
+  const messagesRef = useRef(messages);
+  const sendMessageRef = useRef<(text: string) => Promise<void>>(() => Promise.resolve());
+
+  // Keep refs in sync
+  useEffect(() => { voiceStateRef.current = voiceState; }, [voiceState]);
+  useEffect(() => { isProcessingRef.current = isProcessing; }, [isProcessing]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   const scrollToBottom = useCallback(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, []);
   useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
@@ -346,6 +436,7 @@ function ProfessorTab() {
   const speak = useCallback(async (text: string) => {
     try {
       setVoiceState('speaking');
+      voiceStateRef.current = 'speaking';
       const res = await fetch('/api/voice/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
       if (res.ok) {
         const blob = await res.blob();
@@ -353,29 +444,32 @@ function ProfessorTab() {
         if (audioRef.current) { audioRef.current.pause(); URL.revokeObjectURL(audioRef.current.src); }
         const audio = new Audio(url);
         audioRef.current = audio;
-        audio.onended = () => { setVoiceState('listening'); URL.revokeObjectURL(url); };
-        audio.onerror = () => setVoiceState('listening');
-        audio.play().catch(() => setVoiceState('listening'));
-      } else { setVoiceState('listening'); }
-    } catch { setVoiceState('listening'); }
+        audio.onended = () => { setVoiceState('listening'); voiceStateRef.current = 'listening'; URL.revokeObjectURL(url); };
+        audio.onerror = () => { setVoiceState('listening'); voiceStateRef.current = 'listening'; };
+        audio.play().catch(() => { setVoiceState('listening'); voiceStateRef.current = 'listening'; });
+      } else { setVoiceState('listening'); voiceStateRef.current = 'listening'; }
+    } catch { setVoiceState('listening'); voiceStateRef.current = 'listening'; }
   }, []);
 
   const sendMessage = useCallback(async (text: string) => {
-    if (!text.trim() || isProcessing) return;
+    if (!text.trim() || isProcessingRef.current) return;
     const userMsg = text.trim();
     setInput('');
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
     setIsProcessing(true);
+    isProcessingRef.current = true;
 
     if (userMsg.toLowerCase() === 'standby' || userMsg.toLowerCase() === 'mute') {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Standing by. Say **"Professor"** when you need me.' }]);
       setVoiceState('muted');
+      voiceStateRef.current = 'muted';
       setIsProcessing(false);
+      isProcessingRef.current = false;
       return;
     }
 
     try {
-      const history = messages.slice(-10).map(m => ({ role: m.role, content: m.content }));
+      const history = messagesRef.current.slice(-10).map(m => ({ role: m.role, content: m.content }));
       const res = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: DEMO_USER.id, sessionId: 'academy-session', message: userMsg, history }),
@@ -394,12 +488,18 @@ function ProfessorTab() {
           }
           speak(fullText);
         }
+      } else {
+        setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I couldn\'t process that. Please try again.' }]);
       }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
     }
     setIsProcessing(false);
-  }, [messages, isProcessing, speak]);
+    isProcessingRef.current = false;
+  }, [speak]);
+
+  // Keep sendMessageRef updated
+  useEffect(() => { sendMessageRef.current = sendMessage; }, [sendMessage]);
 
   const startVoiceMonitoring = useCallback(async () => {
     try {
@@ -413,6 +513,7 @@ function ProfessorTab() {
       const source = ctx.createMediaStreamSource(stream);
       source.connect(analyser);
       setVoiceState('listening');
+      voiceStateRef.current = 'listening';
       monitoringRef.current = true;
 
       const dataArray = new Uint8Array(analyser.fftSize);
@@ -423,14 +524,15 @@ function ProfessorTab() {
         let sum = 0;
         for (let i = 0; i < dataArray.length; i++) { const v = (dataArray[i] - 128) / 128; sum += v * v; }
         const rms = Math.sqrt(sum / dataArray.length) * 100;
-        if (rms > THRESHOLD && !mediaRecorderRef.current?.state?.includes('activ') && voiceState !== 'speaking' && voiceState !== 'muted') {
+        const currentState = voiceStateRef.current;
+        if (rms > THRESHOLD && !mediaRecorderRef.current?.state?.includes('activ') && currentState !== 'speaking' && currentState !== 'muted') {
           if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
             chunksRef.current = [];
             const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
             mediaRecorderRef.current = mr;
             mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
             mr.onstop = async () => {
-              if (chunksRef.current.length > 0 && voiceState !== 'muted') {
+              if (chunksRef.current.length > 0 && voiceStateRef.current !== 'muted') {
                 const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
                 const fd = new FormData(); fd.append('audio', blob);
                 try {
@@ -440,8 +542,8 @@ function ProfessorTab() {
                     let text = asrData.text;
                     if (text.toLowerCase().includes('professor')) {
                       text = text.replace(/professor/gi, '').trim();
-                      if (text) sendMessage(text);
-                      else setVoiceState('listening');
+                      if (text) sendMessageRef.current(text);
+                      else { setVoiceState('listening'); voiceStateRef.current = 'listening'; }
                     }
                   }
                 } catch { /* silently fail */ }
@@ -456,14 +558,17 @@ function ProfessorTab() {
         requestAnimationFrame(monitor);
       };
       monitor();
-    } catch { setVoiceState('muted'); }
-  }, [voiceState, sendMessage]);
+    } catch { setVoiceState('muted'); voiceStateRef.current = 'muted'; }
+  }, []); // No deps — all state accessed via refs
 
-  useEffect(() => { startVoiceMonitoring(); return () => { monitoringRef.current = false; streamRef.current?.getTracks().forEach(t => t.stop()); audioCtxRef.current?.close(); if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current); }; }, []);
+  useEffect(() => {
+    startVoiceMonitoring();
+    return () => { monitoringRef.current = false; streamRef.current?.getTracks().forEach(t => t.stop()); audioCtxRef.current?.close(); if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current); };
+  }, [startVoiceMonitoring]);
 
   const toggleMute = useCallback(() => {
     if (voiceState === 'muted') { startVoiceMonitoring(); }
-    else { monitoringRef.current = false; streamRef.current?.getTracks().forEach(t => t.stop()); setVoiceState('muted'); }
+    else { monitoringRef.current = false; streamRef.current?.getTracks().forEach(t => t.stop()); setVoiceState('muted'); voiceStateRef.current = 'muted'; }
   }, [voiceState, startVoiceMonitoring]);
 
   const stateConfig = {
