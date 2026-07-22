@@ -1,0 +1,1961 @@
+     1→@import "tailwindcss";
+     2→@import "tw-animate-css";
+     3→
+     4→@custom-variant dark (&:is(.dark *));
+     5→
+     6→@theme inline {
+     7→  --color-background: var(--background);
+     8→  --color-foreground: var(--foreground);
+     9→  --font-sans: var(--font-geist-sans);
+    10→  --font-mono: var(--font-geist-mono);
+    11→  --color-sidebar-ring: var(--sidebar-ring);
+    12→  --color-sidebar-border: var(--sidebar-border);
+    13→  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    14→  --color-sidebar-accent: var(--sidebar-accent);
+    15→  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    16→  --color-sidebar-primary: var(--sidebar-primary);
+    17→  --color-sidebar-foreground: var(--sidebar-foreground);
+    18→  --color-sidebar: var(--sidebar);
+    19→  --color-chart-5: var(--chart-5);
+    20→  --color-chart-4: var(--chart-4);
+    21→  --color-chart-3: var(--chart-3);
+    22→  --color-chart-2: var(--chart-2);
+    23→  --color-chart-1: var(--chart-1);
+    24→  --color-ring: var(--ring);
+    25→  --color-input: var(--input);
+    26→  --color-border: var(--border);
+    27→  --color-destructive: var(--destructive);
+    28→  --color-accent-foreground: var(--accent-foreground);
+    29→  --color-accent: var(--accent);
+    30→  --color-muted-foreground: var(--muted-foreground);
+    31→  --color-muted: var(--muted);
+    32→  --color-secondary-foreground: var(--secondary-foreground);
+    33→  --color-secondary: var(--secondary);
+    34→  --color-primary-foreground: var(--primary-foreground);
+    35→  --color-primary: var(--primary);
+    36→  --color-popover-foreground: var(--popover-foreground);
+    37→  --color-popover: var(--popover);
+    38→  --color-card-foreground: var(--card-foreground);
+    39→  --color-card: var(--card);
+    40→  --color-holo: #00f0ff;
+    41→  --color-holo-dim: #00f0ff40;
+    42→  --color-holo-glow: #00f0ff15;
+    43→  --color-neon-green: #39ff14;
+    44→  --color-neon-purple: #bf00ff;
+    45→  --color-neon-pink: #ff006e;
+    46→  --color-neon-orange: #ff6b35;
+    47→  --color-surface: #0a0e1a;
+    48→  --color-surface-light: #111827;
+    49→  --radius-sm: calc(var(--radius) - 4px);
+    50→  --radius-md: calc(var(--radius) - 2px);
+    51→  --radius-lg: var(--radius);
+    52→  --radius-xl: calc(var(--radius) + 4px);
+    53→}
+    54→
+    55→:root {
+    56→  --radius: 0.75rem;
+    57→  --background: #050810;
+    58→  --foreground: #e2e8f0;
+    59→  --card: #0a0e1acc;
+    60→  --card-foreground: #e2e8f0;
+    61→  --popover: #0d1220ee;
+    62→  --popover-foreground: #e2e8f0;
+    63→  --primary: #00f0ff;
+    64→  --primary-foreground: #050810;
+    65→  --secondary: #1a1f35;
+    66→  --secondary-foreground: #cbd5e1;
+    67→  --muted: #151a2e;
+    68→  --muted-foreground: #64748b;
+    69→  --accent: #bf00ff30;
+    70→  --accent-foreground: #e2e8f0;
+    71→  --destructive: #ff006e;
+    72→  --border: #1e293b;
+    73→  --input: #1e293b;
+    74→  --ring: #00f0ff;
+    75→  --chart-1: #00f0ff;
+    76→  --chart-2: #bf00ff;
+    77→  --chart-3: #39ff14;
+    78→  --chart-4: #ff006e;
+    79→  --chart-5: #ff6b35;
+    80→  --sidebar: #0a0e1a;
+    81→  --sidebar-foreground: #e2e8f0;
+    82→  --sidebar-primary: #00f0ff;
+    83→  --sidebar-primary-foreground: #050810;
+    84→  --sidebar-accent: #1a1f35;
+    85→  --sidebar-accent-foreground: #e2e8f0;
+    86→  --sidebar-border: #1e293b;
+    87→  --sidebar-ring: #00f0ff;
+    88→}
+    89→
+    90→@layer base {
+    91→  * {
+    92→    @apply border-border outline-ring/50;
+    93→  }
+    94→  body {
+    95→    @apply bg-[#050810] text-[#e2e8f0] overflow-x-hidden;
+    96→    font-feature-settings: "rlig" 1, "calt" 1;
+    97→  }
+    98→  ::-webkit-scrollbar {
+    99→    width: 5px;
+   100→    height: 5px;
+   101→  }
+   102→  ::-webkit-scrollbar-track {
+   103→    background: transparent;
+   104→  }
+   105→  ::-webkit-scrollbar-thumb {
+   106→    background: linear-gradient(180deg, rgba(0,240,255,0.3), rgba(191,0,255,0.3));
+   107→    border-radius: 10px;
+   108→  }
+   109→  ::-webkit-scrollbar-thumb:hover {
+   110→    background: linear-gradient(180deg, rgba(0,240,255,0.5), rgba(191,0,255,0.5));
+   111→  }
+   112→}
+   113→
+   114→/* ═══════════════════════════════════════════════════════════════════
+   115→   HOLOGRAPHIC GRID BACKGROUND - Multi-layer depth
+   116→   ═══════════════════════════════════════════════════════════════════ */
+   117→.holo-bg {
+   118→  position: fixed;
+   119→  inset: 0;
+   120→  z-index: 0;
+   121→  overflow: hidden;
+   122→  pointer-events: none;
+   123→  perspective: 1000px;
+   124→}
+   125→
+   126→.holo-bg::before {
+   127→  content: '';
+   128→  position: absolute;
+   129→  inset: -50%;
+   130→  background-image:
+   131→    linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+   132→    linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+   133→  background-size: 60px 60px;
+   134→  animation: gridMove 25s linear infinite;
+   135→  transform: rotateX(60deg) translateZ(-200px);
+   136→}
+   137→
+   138→.holo-bg::after {
+   139→  content: '';
+   140→  position: absolute;
+   141→  top: -50%;
+   142→  left: -50%;
+   143→  width: 200%;
+   144→  height: 200%;
+   145→  background:
+   146→    radial-gradient(ellipse 600px 400px at 30% 20%, rgba(0, 240, 255, 0.1) 0%, transparent 70%),
+   147→    radial-gradient(ellipse 500px 500px at 70% 80%, rgba(191, 0, 255, 0.08) 0%, transparent 70%),
+   148→    radial-gradient(ellipse 400px 300px at 50% 50%, rgba(57, 255, 20, 0.04) 0%, transparent 70%),
+   149→    radial-gradient(ellipse 300px 200px at 80% 30%, rgba(255, 0, 110, 0.05) 0%, transparent 70%);
+   150→  animation: auraShift 18s ease-in-out infinite alternate;
+   151→}
+   152→
+   153→@keyframes gridMove {
+   154→  0% { transform: rotateX(60deg) translateZ(-200px) translate(0, 0); }
+   155→  100% { transform: rotateX(60deg) translateZ(-200px) translate(60px, 60px); }
+   156→}
+   157→
+   158→@keyframes auraShift {
+   159→  0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+   160→  50% { transform: translate(3%, 2%) rotate(1deg) scale(1.05); }
+   161→  100% { transform: translate(5%, 3%) rotate(2deg) scale(1); }
+   162→}
+   163→
+   164→/* ═══════════════════════════════════════════════════════════════════
+   165→   3D HOLOGRAPHIC CARD - Glassmorphism + Depth
+   166→   ═══════════════════════════════════════════════════════════════════ */
+   167→.holo-card {
+   168→  position: relative;
+   169→  background: linear-gradient(
+   170→    135deg,
+   171→    rgba(10, 14, 26, 0.88) 0%,
+   172→    rgba(15, 20, 40, 0.75) 50%,
+   173→    rgba(26, 31, 53, 0.6) 100%
+   174→  );
+   175→  backdrop-filter: blur(24px) saturate(150%);
+   176→  -webkit-backdrop-filter: blur(24px) saturate(150%);
+   177→  border: 1px solid rgba(0, 240, 255, 0.08);
+   178→  border-radius: 16px;
+   179→  overflow: hidden;
+   180→  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+   181→  transform-style: preserve-3d;
+   182→  transform: perspective(800px) rotateX(0deg) rotateY(0deg);
+   183→}
+   184→
+   185→.holo-card::before {
+   186→  content: '';
+   187→  position: absolute;
+   188→  inset: 0;
+   189→  border-radius: 16px;
+   190→  padding: 1px;
+   191→  background: linear-gradient(
+   192→    135deg,
+   193→    rgba(0, 240, 255, 0.25) 0%,
+   194→    transparent 30%,
+   195→    transparent 50%,
+   196→    rgba(191, 0, 255, 0.25) 70%,
+   197→    transparent 100%
+   198→  );
+   199→  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+   200→  -webkit-mask-composite: xor;
+   201→  mask-composite: exclude;
+   202→  pointer-events: none;
+   203→}
+   204→
+   205→.holo-card::after {
+   206→  content: '';
+   207→  position: absolute;
+   208→  top: -50%;
+   209→  left: -50%;
+   210→  width: 200%;
+   211→  height: 200%;
+   212→  background: radial-gradient(
+   213→    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+   214→    rgba(0, 240, 255, 0.06) 0%,
+   215→    transparent 50%
+   216→  );
+   217→  pointer-events: none;
+   218→  opacity: 0;
+   219→  transition: opacity 0.5s ease;
+   220→}
+   221→
+   222→.holo-card:hover {
+   223→  border-color: rgba(0, 240, 255, 0.2);
+   224→  box-shadow:
+   225→    0 0 25px rgba(0, 240, 255, 0.1),
+   226→    0 0 80px rgba(0, 240, 255, 0.04),
+   227→    0 8px 32px rgba(0, 0, 0, 0.4),
+   228→    inset 0 1px 0 rgba(0, 240, 255, 0.15),
+   229→    inset 0 -1px 0 rgba(191, 0, 255, 0.1);
+   230→  transform: perspective(800px) translateY(-4px) scale(1.01);
+   231→}
+   232→
+   233→.holo-card:hover::after {
+   234→  opacity: 1;
+   235→}
+   236→
+   237→/* 3D Tilt Card Variant */
+   238→.holo-card-3d {
+   239→  transform-style: preserve-3d;
+   240→  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.5s ease;
+   241→}
+   242→
+   243→.holo-card-3d:hover {
+   244→  transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateZ(20px);
+   245→  box-shadow:
+   246→    0 20px 60px rgba(0, 0, 0, 0.5),
+   247→    0 0 30px rgba(0, 240, 255, 0.15),
+   248→    0 0 100px rgba(0, 240, 255, 0.05);
+   249→}
+   250→
+   251→/* ═══════════════════════════════════════════════════════════════════
+   252→   NEON GLOW EFFECTS - Multi-layer glow
+   253→   ═══════════════════════════════════════════════════════════════════ */
+   254→.neon-text {
+   255→  color: #00f0ff;
+   256→  text-shadow:
+   257→    0 0 7px rgba(0, 240, 255, 0.6),
+   258→    0 0 20px rgba(0, 240, 255, 0.3),
+   259→    0 0 42px rgba(0, 240, 255, 0.15),
+   260→    0 0 80px rgba(0, 240, 255, 0.08);
+   261→}
+   262→
+   263→.neon-text-purple {
+   264→  color: #bf00ff;
+   265→  text-shadow:
+   266→    0 0 7px rgba(191, 0, 255, 0.6),
+   267→    0 0 20px rgba(191, 0, 255, 0.3),
+   268→    0 0 42px rgba(191, 0, 255, 0.12);
+   269→}
+   270→
+   271→.neon-text-green {
+   272→  color: #39ff14;
+   273→  text-shadow:
+   274→    0 0 7px rgba(57, 255, 20, 0.6),
+   275→    0 0 20px rgba(57, 255, 20, 0.3),
+   276→    0 0 42px rgba(57, 255, 20, 0.12);
+   277→}
+   278→
+   279→.neon-text-orange {
+   280→  color: #ff6b35;
+   281→  text-shadow:
+   282→    0 0 7px rgba(255, 107, 53, 0.6),
+   283→    0 0 20px rgba(255, 107, 53, 0.3);
+   284→}
+   285→
+   286→.neon-text-pink {
+   287→  color: #ff006e;
+   288→  text-shadow:
+   289→    0 0 7px rgba(255, 0, 110, 0.6),
+   290→    0 0 20px rgba(255, 0, 110, 0.3),
+   291→    0 0 42px rgba(255, 0, 110, 0.12);
+   292→}
+   293→
+   294→.neon-border {
+   295→  border: 1px solid rgba(0, 240, 255, 0.3);
+   296→  box-shadow:
+   297→    0 0 10px rgba(0, 240, 255, 0.1),
+   298→    0 0 30px rgba(0, 240, 255, 0.05),
+   299→    inset 0 0 10px rgba(0, 240, 255, 0.05);
+   300→}
+   301→
+   302→.neon-border-purple {
+   303→  border: 1px solid rgba(191, 0, 255, 0.3);
+   304→  box-shadow:
+   305→    0 0 10px rgba(191, 0, 255, 0.1),
+   306→    0 0 30px rgba(191, 0, 255, 0.05),
+   307→    inset 0 0 10px rgba(191, 0, 255, 0.05);
+   308→}
+   309→
+   310→/* ═══════════════════════════════════════════════════════════════════
+   311→   HOLOGRAPHIC BUTTON - 3D press effect
+   312→   ═══════════════════════════════════════════════════════════════════ */
+   313→.holo-btn {
+   314→  position: relative;
+   315→  background: linear-gradient(135deg, rgba(0, 240, 255, 0.12), rgba(191, 0, 255, 0.12));
+   316→  border: 1px solid rgba(0, 240, 255, 0.25);
+   317→  color: #00f0ff;
+   318→  font-weight: 600;
+   319→  padding: 10px 24px;
+   320→  border-radius: 12px;
+   321→  cursor: pointer;
+   322→  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   323→  overflow: hidden;
+   324→  transform-style: preserve-3d;
+   325→  transform: translateZ(0);
+   326→  text-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+   327→}
+   328→
+   329→.holo-btn::before {
+   330→  content: '';
+   331→  position: absolute;
+   332→  inset: 0;
+   333→  background: linear-gradient(135deg, rgba(0, 240, 255, 0.1), transparent, rgba(191, 0, 255, 0.1));
+   334→  opacity: 0;
+   335→  transition: opacity 0.3s ease;
+   336→}
+   337→
+   338→.holo-btn::after {
+   339→  content: '';
+   340→  position: absolute;
+   341→  inset: 0;
+   342→  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.15), transparent);
+   343→  transform: translateX(-100%);
+   344→  transition: transform 0.6s ease;
+   345→}
+   346→
+   347→.holo-btn:hover {
+   348→  background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(191, 0, 255, 0.2));
+   349→  box-shadow:
+   350→    0 0 20px rgba(0, 240, 255, 0.15),
+   351→    0 0 40px rgba(0, 240, 255, 0.08),
+   352→    0 4px 15px rgba(0, 0, 0, 0.3);
+   353→  transform: translateZ(0) translateY(-2px);
+   354→}
+   355→
+   356→.holo-btn:hover::before { opacity: 1; }
+   357→.holo-btn:hover::after { transform: translateX(100%); }
+   358→
+   359→.holo-btn:active {
+   360→  transform: translateZ(0) translateY(0) scale(0.98);
+   361→  box-shadow:
+   362→    0 0 10px rgba(0, 240, 255, 0.1),
+   363→    0 2px 8px rgba(0, 0, 0, 0.3);
+   364→}
+   365→
+   366→.holo-btn-primary {
+   367→  background: linear-gradient(135deg, #00f0ff, #0080ff);
+   368→  color: #050810;
+   369→  border: none;
+   370→  font-weight: 700;
+   371→  text-shadow: none;
+   372→  box-shadow: 0 2px 10px rgba(0, 240, 255, 0.2);
+   373→}
+   374→
+   375→.holo-btn-primary:hover {
+   376→  box-shadow:
+   377→    0 0 30px rgba(0, 240, 255, 0.35),
+   378→    0 0 60px rgba(0, 240, 255, 0.15),
+   379→    0 6px 20px rgba(0, 0, 0, 0.3);
+   380→}
+   381→
+   382→.holo-btn-danger {
+   383→  background: linear-gradient(135deg, rgba(255, 0, 110, 0.12), rgba(255, 107, 53, 0.12));
+   384→  border-color: rgba(255, 0, 110, 0.25);
+   385→  color: #ff006e;
+   386→  text-shadow: 0 0 8px rgba(255, 0, 110, 0.3);
+   387→}
+   388→
+   389→.holo-btn-danger:hover {
+   390→  background: linear-gradient(135deg, rgba(255, 0, 110, 0.22), rgba(255, 107, 53, 0.22));
+   391→  box-shadow: 0 0 20px rgba(255, 0, 110, 0.15), 0 0 40px rgba(255, 0, 110, 0.08);
+   392→}
+   393→
+   394→.holo-btn-sm {
+   395→  padding: 6px 14px;
+   396→  font-size: 12px;
+   397→  border-radius: 8px;
+   398→}
+   399→
+   400→.holo-btn-lg {
+   401→  padding: 14px 32px;
+   402→  font-size: 16px;
+   403→  border-radius: 14px;
+   404→}
+   405→
+   406→/* ═══════════════════════════════════════════════════════════════════
+   407→   HOLOGRAPHIC INPUT
+   408→   ═══════════════════════════════════════════════════════════════════ */
+   409→.holo-input {
+   410→  background: rgba(10, 14, 26, 0.85);
+   411→  border: 1px solid rgba(0, 240, 255, 0.12);
+   412→  border-radius: 12px;
+   413→  color: #e2e8f0;
+   414→  padding: 10px 16px;
+   415→  transition: all 0.3s ease;
+   416→  outline: none;
+   417→  backdrop-filter: blur(10px);
+   418→}
+   419→
+   420→.holo-input:focus {
+   421→  border-color: rgba(0, 240, 255, 0.4);
+   422→  box-shadow:
+   423→    0 0 15px rgba(0, 240, 255, 0.1),
+   424→    0 0 40px rgba(0, 240, 255, 0.05),
+   425→    inset 0 0 15px rgba(0, 240, 255, 0.03);
+   426→  background: rgba(10, 14, 26, 0.95);
+   427→}
+   428→
+   429→.holo-input::placeholder {
+   430→  color: #475569;
+   431→}
+   432→
+   433→/* ═══════════════════════════════════════════════════════════════════
+   434→   HOLOGRAPHIC PROGRESS BAR - Advanced shimmer
+   435→   ═══════════════════════════════════════════════════════════════════ */
+   436→.holo-progress {
+   437→  height: 8px;
+   438→  border-radius: 4px;
+   439→  background: rgba(30, 41, 59, 0.5);
+   440→  overflow: hidden;
+   441→  position: relative;
+   442→  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+   443→}
+   444→
+   445→.holo-progress-bar {
+   446→  height: 100%;
+   447→  border-radius: 4px;
+   448→  background: linear-gradient(90deg, #00f0ff, #0080ff, #bf00ff);
+   449→  background-size: 200% 100%;
+   450→  position: relative;
+   451→  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+   452→  animation: progressGradient 3s ease infinite;
+   453→}
+   454→
+   455→.holo-progress-bar::after {
+   456→  content: '';
+   457→  position: absolute;
+   458→  inset: 0;
+   459→  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.35) 50%, transparent 100%);
+   460→  animation: shimmer 2s ease-in-out infinite;
+   461→}
+   462→
+   463→.holo-progress-bar::before {
+   464→  content: '';
+   465→  position: absolute;
+   466→  right: 0;
+   467→  top: 0;
+   468→  bottom: 0;
+   469→  width: 20px;
+   470→  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2));
+   471→  border-radius: 4px;
+   472→  filter: blur(4px);
+   473→}
+   474→
+   475→@keyframes shimmer {
+   476→  0% { transform: translateX(-100%); }
+   477→  100% { transform: translateX(200%); }
+   478→}
+   479→
+   480→@keyframes progressGradient {
+   481→  0% { background-position: 0% 50%; }
+   482→  50% { background-position: 100% 50%; }
+   483→  100% { background-position: 0% 50%; }
+   484→}
+   485→
+   486→/* ═══════════════════════════════════════════════════════════════════
+   487→   FLOATING PARTICLES - Multi-color, multi-size
+   488→   ═══════════════════════════════════════════════════════════════════ */
+   489→.particle {
+   490→  position: absolute;
+   491→  border-radius: 50%;
+   492→  animation: float linear infinite;
+   493→  pointer-events: none;
+   494→}
+   495→
+   496→.particle-glow {
+   497→  box-shadow: 0 0 6px currentColor;
+   498→}
+   499→
+   500→@keyframes float {
+   501→  0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+   502→  10% { opacity: 1; scale: 1; }
+   503→  50% { transform: translateY(50vh) translateX(var(--drift, 20px)) scale(1.2); }
+   504→  90% { opacity: 0.8; }
+   505→  100% { transform: translateY(-10vh) translateX(var(--drift-end, -10px)) scale(0.5); opacity: 0; }
+   506→}
+   507→
+   508→/* ═══════════════════════════════════════════════════════════════════
+   509→   HOLOGRAPHIC BADGE / TAG
+   510→   ═══════════════════════════════════════════════════════════════════ */
+   511→.holo-badge {
+   512→  display: inline-flex;
+   513→  align-items: center;
+   514→  gap: 4px;
+   515→  padding: 4px 12px;
+   516→  border-radius: 20px;
+   517→  font-size: 12px;
+   518→  font-weight: 600;
+   519→  border: 1px solid;
+   520→  backdrop-filter: blur(8px);
+   521→  transition: all 0.3s ease;
+   522→}
+   523→
+   524→.holo-badge:hover { transform: translateY(-1px); }
+   525→
+   526→.holo-badge-cyan {
+   527→  background: rgba(0, 240, 255, 0.08);
+   528→  border-color: rgba(0, 240, 255, 0.25);
+   529→  color: #00f0ff;
+   530→}
+   531→
+   532→.holo-badge-purple {
+   533→  background: rgba(191, 0, 255, 0.08);
+   534→  border-color: rgba(191, 0, 255, 0.25);
+   535→  color: #bf00ff;
+   536→}
+   537→
+   538→.holo-badge-green {
+   539→  background: rgba(57, 255, 20, 0.08);
+   540→  border-color: rgba(57, 255, 20, 0.25);
+   541→  color: #39ff14;
+   542→}
+   543→
+   544→.holo-badge-pink {
+   545→  background: rgba(255, 0, 110, 0.08);
+   546→  border-color: rgba(255, 0, 110, 0.25);
+   547→  color: #ff006e;
+   548→}
+   549→
+   550→.holo-badge-orange {
+   551→  background: rgba(255, 107, 53, 0.08);
+   552→  border-color: rgba(255, 107, 53, 0.25);
+   553→  color: #ff6b35;
+   554→}
+   555→
+   556→/* ═══════════════════════════════════════════════════════════════════
+   557→   SCAN LINE EFFECT
+   558→   ═══════════════════════════════════════════════════════════════════ */
+   559→.scan-line {
+   560→  position: relative;
+   561→  overflow: hidden;
+   562→}
+   563→
+   564→.scan-line::after {
+   565→  content: '';
+   566→  position: absolute;
+   567→  left: 0;
+   568→  right: 0;
+   569→  height: 2px;
+   570→  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent);
+   571→  animation: scanDown 4s linear infinite;
+   572→  pointer-events: none;
+   573→}
+   574→
+   575→@keyframes scanDown {
+   576→  0% { top: -2px; }
+   577→  100% { top: 100%; }
+   578→}
+   579→
+   580→/* ═══════════════════════════════════════════════════════════════════
+   581→   PULSE RING (for voice recording)
+   582→   ═══════════════════════════════════════════════════════════════════ */
+   583→.pulse-ring {
+   584→  position: relative;
+   585→}
+   586→
+   587→.pulse-ring::before,
+   588→.pulse-ring::after {
+   589→  content: '';
+   590→  position: absolute;
+   591→  inset: -8px;
+   592→  border: 2px solid rgba(255, 0, 110, 0.4);
+   593→  border-radius: 50%;
+   594→  animation: pulseRing 1.5s ease-out infinite;
+   595→}
+   596→
+   597→.pulse-ring::after {
+   598→  animation-delay: 0.5s;
+   599→}
+   600→
+   601→@keyframes pulseRing {
+   602→  0% { transform: scale(0.8); opacity: 1; }
+   603→  100% { transform: scale(1.6); opacity: 0; }
+   604→}
+   605→
+   606→/* ═══════════════════════════════════════════════════════════════════
+   607→   HEXAGON BADGE - 3D effect
+   608→   ═══════════════════════════════════════════════════════════════════ */
+   609→.hex-badge {
+   610→  width: 52px;
+   611→  height: 56px;
+   612→  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+   613→  display: flex;
+   614→  align-items: center;
+   615→  justify-content: center;
+   616→  font-size: 22px;
+   617→  transition: all 0.3s ease;
+   618→  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+   619→}
+   620→
+   621→.hex-badge:hover {
+   622→  transform: scale(1.15) rotateZ(5deg);
+   623→  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+   624→}
+   625→
+   626→.hex-badge-legendary {
+   627→  background: linear-gradient(135deg, #ff6b35, #ff006e, #bf00ff);
+   628→  box-shadow: 0 0 15px rgba(255, 107, 53, 0.3);
+   629→}
+   630→
+   631→.hex-badge-epic {
+   632→  background: linear-gradient(135deg, #bf00ff, #7c3aed);
+   633→  box-shadow: 0 0 12px rgba(191, 0, 255, 0.3);
+   634→}
+   635→
+   636→.hex-badge-rare {
+   637→  background: linear-gradient(135deg, #00f0ff, #0080ff);
+   638→  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+   639→}
+   640→
+   641→.hex-badge-common {
+   642→  background: linear-gradient(135deg, #39ff14, #059669);
+   643→  box-shadow: 0 0 10px rgba(57, 255, 20, 0.2);
+   644→}
+   645→
+   646→/* ═══════════════════════════════════════════════════════════════════
+   647→   TYPING CURSOR
+   648→   ═══════════════════════════════════════════════════════════════════ */
+   649→.typing-cursor::after {
+   650→  content: '|';
+   651→  animation: blink 1s step-end infinite;
+   652→  color: #00f0ff;
+   653→  text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+   654→}
+   655→
+   656→@keyframes blink {
+   657→  0%, 100% { opacity: 1; }
+   658→  50% { opacity: 0; }
+   659→}
+   660→
+   661→/* ═══════════════════════════════════════════════════════════════════
+   662→   HOLOGRAPHIC TAB - 3D nav style
+   663→   ═══════════════════════════════════════════════════════════════════ */
+   664→.holo-tab {
+   665→  position: relative;
+   666→  padding: 10px 18px;
+   667→  color: #64748b;
+   668→  font-weight: 500;
+   669→  cursor: pointer;
+   670→  transition: all 0.3s ease;
+   671→  border-radius: 10px;
+   672→  font-size: 13px;
+   673→  white-space: nowrap;
+   674→}
+   675→
+   676→.holo-tab:hover {
+   677→  color: #e2e8f0;
+   678→  background: rgba(0, 240, 255, 0.05);
+   679→  transform: translateY(-1px);
+   680→}
+   681→
+   682→.holo-tab-active {
+   683→  color: #00f0ff !important;
+   684→  background: rgba(0, 240, 255, 0.08);
+   685→  box-shadow: 0 0 15px rgba(0, 240, 255, 0.08);
+   686→}
+   687→
+   688→.holo-tab-active::after {
+   689→  content: '';
+   690→  position: absolute;
+   691→  bottom: 0;
+   692→  left: 20%;
+   693→  right: 20%;
+   694→  height: 2px;
+   695→  background: linear-gradient(90deg, transparent, #00f0ff, transparent);
+   696→  border-radius: 1px;
+   697→  box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+   698→}
+   699→
+   700→/* ═══════════════════════════════════════════════════════════════════
+   701→   GLOW SEPARATOR
+   702→   ═══════════════════════════════════════════════════════════════════ */
+   703→.glow-separator {
+   704→  height: 1px;
+   705→  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.3), rgba(191, 0, 255, 0.3), transparent);
+   706→}
+   707→
+   708→/* ═══════════════════════════════════════════════════════════════════
+   709→   TERMINAL STYLING - Enhanced cyber terminal
+   710→   ═══════════════════════════════════════════════════════════════════ */
+   711→.holo-terminal {
+   712→  background: rgba(5, 8, 16, 0.95);
+   713→  border: 1px solid rgba(0, 240, 255, 0.12);
+   714→  border-radius: 14px;
+   715→  font-family: var(--font-geist-mono), 'JetBrains Mono', monospace;
+   716→  box-shadow:
+   717→    0 0 20px rgba(0, 240, 255, 0.05),
+   718→    0 8px 32px rgba(0, 0, 0, 0.4),
+   719→    inset 0 1px 0 rgba(0, 240, 255, 0.08);
+   720→  overflow: hidden;
+   721→}
+   722→
+   723→.holo-terminal-header {
+   724→  display: flex;
+   725→  align-items: center;
+   726→  gap: 8px;
+   727→  padding: 12px 16px;
+   728→  border-bottom: 1px solid rgba(0, 240, 255, 0.08);
+   729→  background: rgba(10, 14, 26, 0.9);
+   730→  border-radius: 14px 14px 0 0;
+   731→}
+   732→
+   733→.holo-terminal-dot {
+   734→  width: 10px;
+   735→  height: 10px;
+   736→  border-radius: 50%;
+   737→  transition: all 0.3s ease;
+   738→}
+   739→
+   740→.holo-terminal-dot:hover {
+   741→  transform: scale(1.2);
+   742→  box-shadow: 0 0 8px currentColor;
+   743→}
+   744→
+   745→.holo-terminal-body {
+   746→  padding: 16px;
+   747→  min-height: 300px;
+   748→  max-height: 450px;
+   749→  overflow-y: auto;
+   750→  font-size: 13px;
+   751→  line-height: 1.6;
+   752→}
+   753→
+   754→/* ═══════════════════════════════════════════════════════════════════
+   755→   RANK STYLES - Enhanced with glow
+   756→   ═══════════════════════════════════════════════════════════════════ */
+   757→.rank-1 {
+   758→  color: #ffd700;
+   759→  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.2);
+   760→}
+   761→.rank-2 {
+   762→  color: #c0c0c0;
+   763→  text-shadow: 0 0 10px rgba(192, 192, 192, 0.4), 0 0 25px rgba(192, 192, 192, 0.15);
+   764→}
+   765→.rank-3 {
+   766→  color: #cd7f32;
+   767→  text-shadow: 0 0 10px rgba(205, 127, 50, 0.4), 0 0 25px rgba(205, 127, 50, 0.15);
+   768→}
+   769→
+   770→/* ═══════════════════════════════════════════════════════════════════
+   771→   LOGIN CARD - 3D holographic entry
+   772→   ═══════════════════════════════════════════════════════════════════ */
+   773→.login-card {
+   774→  position: relative;
+   775→  background: linear-gradient(145deg, rgba(10, 14, 26, 0.97), rgba(20, 25, 45, 0.93));
+   776→  backdrop-filter: blur(40px) saturate(180%);
+   777→  -webkit-backdrop-filter: blur(40px) saturate(180%);
+   778→  border: 1px solid rgba(0, 240, 255, 0.1);
+   779→  border-radius: 24px;
+   780→  overflow: hidden;
+   781→  transform-style: preserve-3d;
+   782→  animation: loginFloat 6s ease-in-out infinite;
+   783→}
+   784→
+   785→@keyframes loginFloat {
+   786→  0%, 100% { transform: translateY(0px) perspective(1000px) rotateX(1deg); }
+   787→  50% { transform: translateY(-8px) perspective(1000px) rotateX(-1deg); }
+   788→}
+   789→
+   790→.login-card::before {
+   791→  content: '';
+   792→  position: absolute;
+   793→  top: 0;
+   794→  left: 0;
+   795→  right: 0;
+   796→  height: 3px;
+   797→  background: linear-gradient(90deg, #00f0ff, #bf00ff, #ff006e, #39ff14, #00f0ff);
+   798→  background-size: 400% 100%;
+   799→  animation: gradientFlow 4s linear infinite;
+   800→}
+   801→
+   802→.login-card::after {
+   803→  content: '';
+   804→  position: absolute;
+   805→  top: 0;
+   806→  left: -100%;
+   807→  width: 200%;
+   808→  height: 100%;
+   809→  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.03), transparent);
+   810→  animation: loginShine 5s ease-in-out infinite;
+   811→  pointer-events: none;
+   812→}
+   813→
+   814→@keyframes gradientFlow {
+   815→  0% { background-position: 0% 50%; }
+   816→  100% { background-position: 400% 50%; }
+   817→}
+   818→
+   819→@keyframes loginShine {
+   820→  0%, 100% { left: -100%; }
+   821→  50% { left: 100%; }
+   822→}
+   823→
+   824→/* ═══════════════════════════════════════════════════════════════════
+   825→   NOTIFICATION DOT
+   826→   ═══════════════════════════════════════════════════════════════════ */
+   827→.notif-dot {
+   828→  width: 8px;
+   829→  height: 8px;
+   830→  background: #ff006e;
+   831→  border-radius: 50%;
+   832→  animation: notifPulse 2s ease-in-out infinite;
+   833→  box-shadow: 0 0 6px rgba(255, 0, 110, 0.5);
+   834→}
+   835→
+   836→@keyframes notifPulse {
+   837→  0%, 100% { transform: scale(1); opacity: 1; }
+   838→  50% { transform: scale(1.4); opacity: 0.7; }
+   839→}
+   840→
+   841→/* ═══════════════════════════════════════════════════════════════════
+   842→   NEW: 3D HOLOGRAPHIC ELEMENTS
+   843→   ═══════════════════════════════════════════════════════════════════ */
+   844→
+   845→/* Floating orbit animation for decorative elements */
+   846→.holo-orbit {
+   847→  position: absolute;
+   848→  border: 1px solid rgba(0, 240, 255, 0.08);
+   849→  border-radius: 50%;
+   850→  animation: orbitSpin 20s linear infinite;
+   851→}
+   852→
+   853→@keyframes orbitSpin {
+   854→  0% { transform: rotate(0deg); }
+   855→  100% { transform: rotate(360deg); }
+   856→}
+   857→
+   858→/* 3D Dashboard stat card */
+   859→.stat-card-3d {
+   860→  position: relative;
+   861→  background: linear-gradient(
+   862→    145deg,
+   863→    rgba(10, 14, 26, 0.9) 0%,
+   864→    rgba(20, 28, 50, 0.7) 100%
+   865→  );
+   866→  backdrop-filter: blur(20px);
+   867→  border: 1px solid rgba(0, 240, 255, 0.06);
+   868→  border-radius: 16px;
+   869→  padding: 20px;
+   870→  overflow: hidden;
+   871→  transform-style: preserve-3d;
+   872→  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+   873→}
+   874→
+   875→.stat-card-3d::before {
+   876→  content: '';
+   877→  position: absolute;
+   878→  top: 0;
+   879→  left: 0;
+   880→  right: 0;
+   881→  height: 2px;
+   882→  background: linear-gradient(90deg, transparent, var(--stat-color, #00f0ff), transparent);
+   883→  opacity: 0.6;
+   884→}
+   885→
+   886→.stat-card-3d:hover {
+   887→  transform: perspective(600px) rotateY(-3deg) translateZ(10px) translateY(-3px);
+   888→  border-color: rgba(0, 240, 255, 0.15);
+   889→  box-shadow:
+   890→    0 10px 40px rgba(0, 0, 0, 0.3),
+   891→    0 0 20px rgba(0, 240, 255, 0.06);
+   892→}
+   893→
+   894→/* Holographic shield logo animation */
+   895→.holo-shield {
+   896→  position: relative;
+   897→  display: inline-flex;
+   898→  align-items: center;
+   899→  justify-content: center;
+   900→}
+   901→
+   902→.holo-shield::before {
+   903→  content: '';
+   904→  position: absolute;
+   905→  inset: -4px;
+   906→  background: conic-gradient(from 0deg, #00f0ff, #bf00ff, #ff006e, #39ff14, #00f0ff);
+   907→  border-radius: inherit;
+   908→  z-index: -1;
+   909→  animation: shieldRotate 4s linear infinite;
+   910→  filter: blur(4px);
+   911→  opacity: 0.6;
+   912→}
+   913→
+   914→@keyframes shieldRotate {
+   915→  0% { transform: rotate(0deg); }
+   916→  100% { transform: rotate(360deg); }
+   917→}
+   918→
+   919→/* Glassmorphism panel */
+   920→.glass-panel {
+   921→  background: linear-gradient(
+   922→    135deg,
+   923→    rgba(10, 14, 26, 0.7) 0%,
+   924→    rgba(20, 28, 50, 0.5) 100%
+   925→  );
+   926→  backdrop-filter: blur(20px) saturate(130%);
+   927→  -webkit-backdrop-filter: blur(20px) saturate(130%);
+   928→  border: 1px solid rgba(0, 240, 255, 0.06);
+   929→  border-radius: 16px;
+   930→}
+   931→
+   932→/* CTF difficulty badges */
+   933→.ctf-difficulty-easy {
+   934→  color: #39ff14;
+   935→  border-color: rgba(57, 255, 20, 0.3);
+   936→  background: rgba(57, 255, 20, 0.08);
+   937→}
+   938→
+   939→.ctf-difficulty-medium {
+   940→  color: #ff6b35;
+   941→  border-color: rgba(255, 107, 53, 0.3);
+   942→  background: rgba(255, 107, 53, 0.08);
+   943→}
+   944→
+   945→.ctf-difficulty-hard {
+   946→  color: #ff006e;
+   947→  border-color: rgba(255, 0, 110, 0.3);
+   948→  background: rgba(255, 0, 110, 0.08);
+   949→}
+   950→
+   951→.ctf-difficulty-insane {
+   952→  color: #bf00ff;
+   953→  border-color: rgba(191, 0, 255, 0.3);
+   954→  background: rgba(191, 0, 255, 0.08);
+   955→  animation: insanePulse 2s ease-in-out infinite;
+   956→}
+   957→
+   958→@keyframes insanePulse {
+   959→  0%, 100% { box-shadow: 0 0 5px rgba(191, 0, 255, 0.2); }
+   960→  50% { box-shadow: 0 0 15px rgba(191, 0, 255, 0.4); }
+   961→}
+   962→
+   963→/* Category icon colors */
+   964→.cat-crypto { color: #bf00ff; }
+   965→.cat-web { color: #00f0ff; }
+   966→.cat-pwn { color: #ff006e; }
+   967→.cat-forensics { color: #ff6b35; }
+   968→.cat-osint { color: #39ff14; }
+   969→.cat-reverse { color: #ffd700; }
+   970→.cat-misc { color: #64748b; }
+   971→
+   972→/* Holographic data line effect */
+   973→.data-stream {
+   974→  position: relative;
+   975→  overflow: hidden;
+   976→}
+   977→
+   978→.data-stream::before {
+   979→  content: '';
+   980→  position: absolute;
+   981→  top: 0;
+   982→  left: 0;
+   983→  width: 3px;
+   984→  height: 100%;
+   985→  background: linear-gradient(180deg, transparent, #00f0ff, transparent);
+   986→  animation: dataFlow 2s linear infinite;
+   987→  opacity: 0.4;
+   988→}
+   989→
+   990→@keyframes dataFlow {
+   991→  0% { top: -100%; }
+   992→  100% { top: 100%; }
+   993→}
+   994→
+   995→/* Challenge card 3D hover */
+   996→.challenge-card {
+   997→  position: relative;
+   998→  transform-style: preserve-3d;
+   999→  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  1000→}
+  1001→
+  1002→.challenge-card:hover {
+  1003→  transform: perspective(800px) translateZ(15px) translateY(-4px);
+  1004→}
+  1005→
+  1006→/* Lab scenario step */
+  1007→.lab-step {
+  1008→  position: relative;
+  1009→  padding-left: 24px;
+  1010→  border-left: 2px solid rgba(0, 240, 255, 0.15);
+  1011→  transition: all 0.3s ease;
+  1012→}
+  1013→
+  1014→.lab-step::before {
+  1015→  content: '';
+  1016→  position: absolute;
+  1017→  left: -6px;
+  1018→  top: 4px;
+  1019→  width: 10px;
+  1020→  height: 10px;
+  1021→  border-radius: 50%;
+  1022→  background: rgba(0, 240, 255, 0.3);
+  1023→  border: 2px solid rgba(0, 240, 255, 0.6);
+  1024→  transition: all 0.3s ease;
+  1025→}
+  1026→
+  1027→.lab-step-completed::before {
+  1028→  background: #39ff14;
+  1029→  border-color: #39ff14;
+  1030→  box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
+  1031→}
+  1032→
+  1033→.lab-step-active {
+  1034→  border-left-color: rgba(0, 240, 255, 0.5);
+  1035→}
+  1036→
+  1037→.lab-step-active::before {
+  1038→  background: #00f0ff;
+  1039→  border-color: #00f0ff;
+  1040→  box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+  1041→  animation: stepPulse 1.5s ease-in-out infinite;
+  1042→}
+  1043→
+  1044→@keyframes stepPulse {
+  1045→  0%, 100% { transform: scale(1); }
+  1046→  50% { transform: scale(1.3); }
+  1047→}
+  1048→
+  1049→/* Breathing glow for active elements */
+  1050→.breathe-glow {
+  1051→  animation: breatheGlow 3s ease-in-out infinite;
+  1052→}
+  1053→
+  1054→@keyframes breatheGlow {
+  1055→  0%, 100% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.1); }
+  1056→  50% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.2), 0 0 40px rgba(0, 240, 255, 0.05); }
+  1057→}
+  1058→
+  1059→/* Matrix rain effect for terminal background */
+  1060→.matrix-bg {
+  1061→  position: relative;
+  1062→}
+  1063→
+  1064→.matrix-bg::before {
+  1065→  content: '';
+  1066→  position: absolute;
+  1067→  inset: 0;
+  1068→  background: repeating-linear-gradient(
+  1069→    0deg,
+  1070→    transparent,
+  1071→    transparent 2px,
+  1072→    rgba(0, 240, 255, 0.015) 2px,
+  1073→    rgba(0, 240, 255, 0.015) 4px
+  1074→  );
+  1075→  pointer-events: none;
+  1076→  z-index: 0;
+  1077→}
+  1078→
+  1079→/* Holographic text gradient */
+  1080→.text-gradient-holo {
+  1081→  background: linear-gradient(135deg, #00f0ff, #bf00ff, #ff006e);
+  1082→  -webkit-background-clip: text;
+  1083→  -webkit-text-fill-color: transparent;
+  1084→  background-clip: text;
+  1085→}
+  1086→
+  1087→.text-gradient-cyan {
+  1088→  background: linear-gradient(135deg, #00f0ff, #0080ff);
+  1089→  -webkit-background-clip: text;
+  1090→  -webkit-text-fill-color: transparent;
+  1091→  background-clip: text;
+  1092→}
+  1093→
+  1094→/* 3D perspective container */
+  1095→.perspective-container {
+  1096→  perspective: 1200px;
+  1097→  transform-style: preserve-3d;
+  1098→}
+  1099→
+  1100→/* Counter animation */
+  1101→.counter-up {
+  1102→  animation: counterFadeIn 0.5s ease-out;
+  1103→}
+  1104→
+  1105→@keyframes counterFadeIn {
+  1106→  0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+  1107→  100% { opacity: 1; transform: translateY(0) scale(1); }
+  1108→}
+  1109→
+  1110→/* Leaderboard row hover */
+  1111→.leaderboard-row {
+  1112→  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  1113→  border-bottom: 1px solid rgba(30, 41, 59, 0.3);
+  1114→}
+  1115→
+  1116→.leaderboard-row:hover {
+  1117→  background: linear-gradient(90deg, rgba(0, 240, 255, 0.05), transparent);
+  1118→  transform: translateX(4px);
+  1119→  border-bottom-color: rgba(0, 240, 255, 0.1);
+  1120→}
+  1121→
+  1122→/* Tooltip holographic style */
+  1123→.holo-tooltip {
+  1124→  position: relative;
+  1125→}
+  1126→
+  1127→.holo-tooltip::after {
+  1128→  content: attr(data-tooltip);
+  1129→  position: absolute;
+  1130→  bottom: calc(100% + 8px);
+  1131→  left: 50%;
+  1132→  transform: translateX(-50%) scale(0.8);
+  1133→  background: rgba(10, 14, 26, 0.95);
+  1134→  border: 1px solid rgba(0, 240, 255, 0.2);
+  1135→  color: #e2e8f0;
+  1136→  padding: 6px 12px;
+  1137→  border-radius: 8px;
+  1138→  font-size: 12px;
+  1139→  white-space: nowrap;
+  1140→  opacity: 0;
+  1141→  pointer-events: none;
+  1142→  transition: all 0.2s ease;
+  1143→  backdrop-filter: blur(10px);
+  1144→}
+  1145→
+  1146→.holo-tooltip:hover::after {
+  1147→  opacity: 1;
+  1148→  transform: translateX(-50%) scale(1);
+  1149→}
+  1150→
+  1151→/* Certificate card 3D */
+  1152→.certificate-card {
+  1153→  position: relative;
+  1154→  background: linear-gradient(145deg, rgba(10, 14, 26, 0.9), rgba(25, 30, 55, 0.8));
+  1155→  border: 1px solid rgba(0, 240, 255, 0.1);
+  1156→  border-radius: 20px;
+  1157→  overflow: hidden;
+  1158→  transform-style: preserve-3d;
+  1159→  transition: all 0.5s ease;
+  1160→}
+  1161→
+  1162→.certificate-card::before {
+  1163→  content: '';
+  1164→  position: absolute;
+  1165→  top: 0;
+  1166→  left: 0;
+  1167→  right: 0;
+  1168→  bottom: 0;
+  1169→  background: linear-gradient(45deg, transparent 30%, rgba(0, 240, 255, 0.03) 50%, transparent 70%);
+  1170→  animation: certShine 6s ease-in-out infinite;
+  1171→}
+  1172→
+  1173→@keyframes certShine {
+  1174→  0%, 100% { transform: translateX(-100%) translateY(-100%); }
+  1175→  50% { transform: translateX(100%) translateY(100%); }
+  1176→}
+  1177→
+  1178→.certificate-card:hover {
+  1179→  transform: perspective(800px) rotateY(-5deg) translateZ(10px);
+  1180→  box-shadow:
+  1181→    0 20px 60px rgba(0, 0, 0, 0.4),
+  1182→    0 0 30px rgba(0, 240, 255, 0.1);
+  1183→}
+  1184→
+  1185→/* Waveform animation for voice */
+  1186→.voice-waveform {
+  1187→  display: flex;
+  1188→  align-items: center;
+  1189→  gap: 2px;
+  1190→  height: 24px;
+  1191→}
+  1192→
+  1193→.voice-waveform span {
+  1194→  display: block;
+  1195→  width: 3px;
+  1196→  background: #ff006e;
+  1197→  border-radius: 3px;
+  1198→  animation: waveform 0.8s ease-in-out infinite;
+  1199→}
+  1200→
+  1201→.voice-waveform span:nth-child(1) { animation-delay: 0s; height: 8px; }
+  1202→.voice-waveform span:nth-child(2) { animation-delay: 0.1s; height: 16px; }
+  1203→.voice-waveform span:nth-child(3) { animation-delay: 0.2s; height: 24px; }
+  1204→.voice-waveform span:nth-child(4) { animation-delay: 0.3s; height: 16px; }
+  1205→.voice-waveform span:nth-child(5) { animation-delay: 0.4s; height: 8px; }
+  1206→
+  1207→@keyframes waveform {
+  1208→  0%, 100% { transform: scaleY(0.4); }
+  1209→  50% { transform: scaleY(1); }
+  1210→}
+  1211→
+  1212→/* Chat message animation */
+  1213→.chat-msg-enter {
+  1214→  animation: chatMsgIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  1215→}
+  1216→
+  1217→@keyframes chatMsgIn {
+  1218→  0% { opacity: 0; transform: translateY(15px) scale(0.95); }
+  1219→  100% { opacity: 1; transform: translateY(0) scale(1); }
+  1220→}
+  1221→
+  1222→/* XP gain popup */
+  1223→.xp-popup {
+  1224→  animation: xpFloat 1.5s ease-out forwards;
+  1225→  pointer-events: none;
+  1226→}
+  1227→
+  1228→@keyframes xpFloat {
+  1229→  0% { opacity: 1; transform: translateY(0) scale(1); }
+  1230→  100% { opacity: 0; transform: translateY(-40px) scale(1.2); }
+  1231→}
+  1232→
+  1233→/* Skeleton loading */
+  1234→.holo-skeleton {
+  1235→  background: linear-gradient(90deg, rgba(30, 41, 59, 0.3) 25%, rgba(30, 41, 59, 0.6) 50%, rgba(30, 41, 59, 0.3) 75%);
+  1236→  background-size: 200% 100%;
+  1237→  animation: skeletonShimmer 1.5s infinite;
+  1238→  border-radius: 8px;
+  1239→}
+  1240→
+  1241→@keyframes skeletonShimmer {
+  1242→  0% { background-position: 200% 0; }
+  1243→  100% { background-position: -200% 0; }
+  1244→}
+  1245→
+  1246→/* ═══════════════════════════════════════════════════════════════════
+  1247→   NEW: HOLOGRAPHIC SHIMMER OVERLAY
+  1248→   ═══════════════════════════════════════════════════════════════════ */
+  1249→.holo-shimmer {
+  1250→  position: relative;
+  1251→  overflow: hidden;
+  1252→}
+  1253→
+  1254→.holo-shimmer::before {
+  1255→  content: '';
+  1256→  position: absolute;
+  1257→  top: 0;
+  1258→  left: -100%;
+  1259→  width: 50%;
+  1260→  height: 100%;
+  1261→  background: linear-gradient(
+  1262→    90deg,
+  1263→    transparent,
+  1264→    rgba(255, 255, 255, 0.04),
+  1265→    rgba(255, 255, 255, 0.08),
+  1266→    rgba(255, 255, 255, 0.04),
+  1267→    transparent
+  1268→  );
+  1269→  animation: shimmerSweep 4s ease-in-out infinite;
+  1270→  pointer-events: none;
+  1271→  z-index: 1;
+  1272→}
+  1273→
+  1274→@keyframes shimmerSweep {
+  1275→  0% { left: -100%; }
+  1276→  50% { left: 100%; }
+  1277→  100% { left: 100%; }
+  1278→}
+  1279→
+  1280→/* ═══════════════════════════════════════════════════════════════════
+  1281→   NEW: ANIMATED NEON BORDER (rotating conic gradient)
+  1282→   ═══════════════════════════════════════════════════════════════════ */
+  1283→.neon-border-animated {
+  1284→  position: relative;
+  1285→  border-radius: 16px;
+  1286→  overflow: hidden;
+  1287→}
+  1288→
+  1289→.neon-border-animated::before {
+  1290→  content: '';
+  1291→  position: absolute;
+  1292→  inset: -2px;
+  1293→  background: conic-gradient(
+  1294→    from 0deg,
+  1295→    #00f0ff,
+  1296→    #bf00ff,
+  1297→    #ff006e,
+  1298→    #39ff14,
+  1299→    #00f0ff
+  1300→  );
+  1301→  border-radius: 18px;
+  1302→  animation: borderRotate 6s linear infinite;
+  1303→  z-index: -1;
+  1304→}
+  1305→
+  1306→.neon-border-animated::after {
+  1307→  content: '';
+  1308→  position: absolute;
+  1309→  inset: 2px;
+  1310→  background: rgba(5, 8, 16, 0.95);
+  1311→  border-radius: 14px;
+  1312→  z-index: -1;
+  1313→}
+  1314→
+  1315→@keyframes borderRotate {
+  1316→  0% { transform: rotate(0deg); }
+  1317→  100% { transform: rotate(360deg); }
+  1318→}
+  1319→
+  1320→/* ═══════════════════════════════════════════════════════════════════
+  1321→   NEW: 3D BUTTON DEPRESS EFFECT
+  1322→   ═══════════════════════════════════════════════════════════════════ */
+  1323→.holo-btn-3d {
+  1324→  transform-style: preserve-3d;
+  1325→  transform: translateZ(0);
+  1326→  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  1327→  box-shadow:
+  1328→    0 4px 0 rgba(0, 0, 0, 0.4),
+  1329→    0 6px 20px rgba(0, 0, 0, 0.3),
+  1330→    0 0 15px rgba(0, 240, 255, 0.1);
+  1331→}
+  1332→
+  1333→.holo-btn-3d:active {
+  1334→  transform: translateZ(0) translateY(3px);
+  1335→  box-shadow:
+  1336→    0 1px 0 rgba(0, 0, 0, 0.4),
+  1337→    0 2px 8px rgba(0, 0, 0, 0.3),
+  1338→    0 0 8px rgba(0, 240, 255, 0.05);
+  1339→}
+  1340→
+  1341→/* ═══════════════════════════════════════════════════════════════════
+  1342→   NEW: DATA STREAM ANIMATION (vertical flowing chars)
+  1343→   ═══════════════════════════════════════════════════════════════════ */
+  1344→.data-stream-vertical {
+  1345→  position: absolute;
+  1346→  top: 0;
+  1347→  width: 1px;
+  1348→  height: 100%;
+  1349→  background: linear-gradient(
+  1350→    180deg,
+  1351→    transparent 0%,
+  1352→    rgba(0, 240, 255, 0.3) 20%,
+  1353→    rgba(0, 240, 255, 0.6) 50%,
+  1354→    rgba(0, 240, 255, 0.3) 80%,
+  1355→    transparent 100%
+  1356→  );
+  1357→  animation: dataStreamFlow 3s linear infinite;
+  1358→  pointer-events: none;
+  1359→}
+  1360→
+  1361→@keyframes dataStreamFlow {
+  1362→  0% { transform: translateY(-100%); opacity: 0; }
+  1363→  10% { opacity: 1; }
+  1364→  90% { opacity: 1; }
+  1365→  100% { transform: translateY(100%); opacity: 0; }
+  1366→}
+  1367→
+  1368→/* ═══════════════════════════════════════════════════════════════════
+  1369→   NEW: GLITCH EFFECT
+  1370→   ═══════════════════════════════════════════════════════════════════ */
+  1371→.glitch-text {
+  1372→  position: relative;
+  1373→}
+  1374→
+  1375→.glitch-text::before,
+  1376→.glitch-text::after {
+  1377→  content: attr(data-text);
+  1378→  position: absolute;
+  1379→  top: 0;
+  1380→  left: 0;
+  1381→  width: 100%;
+  1382→  height: 100%;
+  1383→  opacity: 0;
+  1384→}
+  1385→
+  1386→.glitch-text:hover::before {
+  1387→  animation: glitch1 0.3s linear;
+  1388→  color: #00f0ff;
+  1389→  opacity: 0.8;
+  1390→  clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+  1391→}
+  1392→
+  1393→.glitch-text:hover::after {
+  1394→  animation: glitch2 0.3s linear;
+  1395→  color: #ff006e;
+  1396→  opacity: 0.8;
+  1397→  clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+  1398→}
+  1399→
+  1400→@keyframes glitch1 {
+  1401→  0% { transform: translate(0); }
+  1402→  20% { transform: translate(-3px, 2px); }
+  1403→  40% { transform: translate(3px, -2px); }
+  1404→  60% { transform: translate(-2px, 1px); }
+  1405→  80% { transform: translate(2px, -1px); }
+  1406→  100% { transform: translate(0); }
+  1407→}
+  1408→
+  1409→@keyframes glitch2 {
+  1410→  0% { transform: translate(0); }
+  1411→  20% { transform: translate(3px, -2px); }
+  1412→  40% { transform: translate(-3px, 2px); }
+  1413→  60% { transform: translate(2px, -1px); }
+  1414→  80% { transform: translate(-2px, 1px); }
+  1415→  100% { transform: translate(0); }
+  1416→}
+  1417→
+  1418→/* ═══════════════════════════════════════════════════════════════════
+  1419→   NEW: PROFESSOR ORB (floating AI indicator)
+  1420→   ═══════════════════════════════════════════════════════════════════ */
+  1421→.professor-orb {
+  1422→  position: fixed;
+  1423→  bottom: 24px;
+  1424→  right: 24px;
+  1425→  width: 56px;
+  1426→  height: 56px;
+  1427→  border-radius: 50%;
+  1428→  cursor: pointer;
+  1429→  z-index: 100;
+  1430→  transition: all 0.3s ease;
+  1431→  display: flex;
+  1432→  align-items: center;
+  1433→  justify-content: center;
+  1434→}
+  1435→
+  1436→.professor-orb-listening {
+  1437→  background: radial-gradient(circle at 40% 40%, #00f0ff, #0080ff);
+  1438→  box-shadow:
+  1439→    0 0 20px rgba(0, 240, 255, 0.5),
+  1440→    0 0 60px rgba(0, 240, 255, 0.2),
+  1441→    inset 0 0 15px rgba(255, 255, 255, 0.2);
+  1442→  animation: orbPulse 2s ease-in-out infinite;
+  1443→}
+  1444→
+  1445→.professor-orb-standby {
+  1446→  background: radial-gradient(circle at 40% 40%, #1a1f35, #0a0e1a);
+  1447→  border: 2px solid rgba(0, 240, 255, 0.2);
+  1448→  box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+  1449→  animation: orbBreathe 3s ease-in-out infinite;
+  1450→}
+  1451→
+  1452→.professor-orb-speaking {
+  1453→  background: radial-gradient(circle at 40% 40%, #bf00ff, #7c3aed);
+  1454→  box-shadow:
+  1455→    0 0 25px rgba(191, 0, 255, 0.5),
+  1456→    0 0 60px rgba(191, 0, 255, 0.2),
+  1457→    inset 0 0 15px rgba(255, 255, 255, 0.15);
+  1458→  animation: orbSpeak 0.5s ease-in-out infinite alternate;
+  1459→}
+  1460→
+  1461→.professor-orb-muted {
+  1462→  background: radial-gradient(circle at 40% 40%, #1a1f35, #0a0e1a);
+  1463→  border: 2px solid rgba(100, 116, 139, 0.2);
+  1464→  opacity: 0.5;
+  1465→}
+  1466→
+  1467→@keyframes orbPulse {
+  1468→  0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(0, 240, 255, 0.5), 0 0 60px rgba(0, 240, 255, 0.2); }
+  1469→  50% { transform: scale(1.08); box-shadow: 0 0 30px rgba(0, 240, 255, 0.6), 0 0 80px rgba(0, 240, 255, 0.3); }
+  1470→}
+  1471→
+  1472→@keyframes orbBreathe {
+  1473→  0%, 100% { box-shadow: 0 0 10px rgba(0, 240, 255, 0.1); }
+  1474→  50% { box-shadow: 0 0 18px rgba(0, 240, 255, 0.15); }
+  1475→}
+  1476→
+  1477→@keyframes orbSpeak {
+  1478→  0% { transform: scale(1); }
+  1479→  100% { transform: scale(1.12); }
+  1480→}
+  1481→
+  1482→/* ═══════════════════════════════════════════════════════════════════
+  1483→   NEW: FUTURISTIC LAB HUD STYLES
+  1484→   ═══════════════════════════════════════════════════════════════════ */
+  1485→.lab-hud {
+  1486→  background: rgba(5, 8, 16, 0.92);
+  1487→  border: 1px solid rgba(0, 240, 255, 0.1);
+  1488→  border-radius: 12px;
+  1489→  backdrop-filter: blur(16px);
+  1490→  overflow: hidden;
+  1491→}
+  1492→
+  1493→.lab-hud-header {
+  1494→  background: linear-gradient(90deg, rgba(0, 240, 255, 0.08), transparent, rgba(191, 0, 255, 0.08));
+  1495→  border-bottom: 1px solid rgba(0, 240, 255, 0.08);
+  1496→  padding: 12px 16px;
+  1497→  font-weight: 700;
+  1498→  font-size: 11px;
+  1499→  text-transform: uppercase;
+  1500→  letter-spacing: 2px;
+  1501→  color: #00f0ff;
+  1502→}
+  1503→
+  1504→.lab-hud-objective {
+  1505→  position: relative;
+  1506→  padding: 8px 12px 8px 32px;
+  1507→  border-left: 2px solid rgba(0, 240, 255, 0.15);
+  1508→  transition: all 0.3s ease;
+  1509→  font-size: 13px;
+  1510→}
+  1511→
+  1512→.lab-hud-objective::before {
+  1513→  content: '';
+  1514→  position: absolute;
+  1515→  left: -5px;
+  1516→  top: 12px;
+  1517→  width: 8px;
+  1518→  height: 8px;
+  1519→  border-radius: 50%;
+  1520→  border: 2px solid rgba(0, 240, 255, 0.5);
+  1521→  background: transparent;
+  1522→  transition: all 0.3s ease;
+  1523→}
+  1524→
+  1525→.lab-hud-objective-completed {
+  1526→  border-left-color: rgba(57, 255, 20, 0.4);
+  1527→  color: rgba(57, 255, 20, 0.8);
+  1528→}
+  1529→
+  1530→.lab-hud-objective-completed::before {
+  1531→  background: #39ff14;
+  1532→  border-color: #39ff14;
+  1533→  box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
+  1534→}
+  1535→
+  1536→.lab-hud-objective-active {
+  1537→  border-left-color: rgba(0, 240, 255, 0.5);
+  1538→}
+  1539→
+  1540→.lab-hud-objective-active::before {
+  1541→  border-color: #00f0ff;
+  1542→  box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+  1543→  animation: stepPulse 1.5s ease-in-out infinite;
+  1544→}
+  1545→
+  1546→/* Mission complete overlay */
+  1547→.mission-complete-overlay {
+  1548→  position: absolute;
+  1549→  inset: 0;
+  1550→  display: flex;
+  1551→  align-items: center;
+  1552→  justify-content: center;
+  1553→  background: rgba(5, 8, 16, 0.85);
+  1554→  backdrop-filter: blur(8px);
+  1555→  z-index: 50;
+  1556→  animation: missionFadeIn 0.5s ease;
+  1557→}
+  1558→
+  1559→@keyframes missionFadeIn {
+  1560→  0% { opacity: 0; }
+  1561→  100% { opacity: 1; }
+  1562→}
+  1563→
+  1564→.mission-complete-text {
+  1565→  font-size: 48px;
+  1566→  font-weight: 900;
+  1567→  background: linear-gradient(135deg, #39ff14, #00f0ff, #bf00ff);
+  1568→  -webkit-background-clip: text;
+  1569→  -webkit-text-fill-color: transparent;
+  1570→  background-clip: text;
+  1571→  animation: missionGlow 1.5s ease-in-out infinite alternate;
+  1572→  text-align: center;
+  1573→}
+  1574→
+  1575→@keyframes missionGlow {
+  1576→  0% { filter: drop-shadow(0 0 10px rgba(57, 255, 20, 0.3)); }
+  1577→  100% { filter: drop-shadow(0 0 30px rgba(0, 240, 255, 0.5)) drop-shadow(0 0 60px rgba(191, 0, 255, 0.3)); }
+  1578→}
+  1579→
+  1580→/* Network node map styles */
+  1581→.network-node {
+  1582→  position: absolute;
+  1583→  width: 10px;
+  1584→  height: 10px;
+  1585→  border-radius: 50%;
+  1586→  background: #00f0ff;
+  1587→  box-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+  1588→  animation: nodePulse 2s ease-in-out infinite;
+  1589→  cursor: pointer;
+  1590→  transition: all 0.3s ease;
+  1591→}
+  1592→
+  1593→.network-node:hover {
+  1594→  transform: scale(1.5);
+  1595→  box-shadow: 0 0 15px rgba(0, 240, 255, 0.8);
+  1596→}
+  1597→
+  1598→.network-node-discovered {
+  1599→  background: #39ff14;
+  1600→  box-shadow: 0 0 8px rgba(57, 255, 20, 0.6);
+  1601→}
+  1602→
+  1603→.network-node-threat {
+  1604→  background: #ff006e;
+  1605→  box-shadow: 0 0 8px rgba(255, 0, 110, 0.6);
+  1606→  animation: threatPulse 1s ease-in-out infinite;
+  1607→}
+  1608→
+  1609→@keyframes nodePulse {
+  1610→  0%, 100% { opacity: 0.7; }
+  1611→  50% { opacity: 1; }
+  1612→}
+  1613→
+  1614→@keyframes threatPulse {
+  1615→  0%, 100% { opacity: 0.6; transform: scale(1); }
+  1616→  50% { opacity: 1; transform: scale(1.3); }
+  1617→}
+  1618→
+  1619→/* Threat radar sweep */
+  1620→.threat-radar {
+  1621→  position: relative;
+  1622→  width: 200px;
+  1623→  height: 200px;
+  1624→  border-radius: 50%;
+  1625→  border: 1px solid rgba(0, 240, 255, 0.15);
+  1626→  overflow: hidden;
+  1627→}
+  1628→
+  1629→.threat-radar::before {
+  1630→  content: '';
+  1631→  position: absolute;
+  1632→  top: 50%;
+  1633→  left: 50%;
+  1634→  width: 50%;
+  1635→  height: 2px;
+  1636→  background: linear-gradient(90deg, rgba(0, 240, 255, 0.6), transparent);
+  1637→  transform-origin: left center;
+  1638→  animation: radarSweep 3s linear infinite;
+  1639→}
+  1640→
+  1641→.threat-radar::after {
+  1642→  content: '';
+  1643→  position: absolute;
+  1644→  top: 50%;
+  1645→  left: 50%;
+  1646→  width: 1px;
+  1647→  height: 1px;
+  1648→  background: #00f0ff;
+  1649→  border-radius: 50%;
+  1650→  box-shadow: 0 0 4px #00f0ff;
+  1651→  transform: translate(-50%, -50%);
+  1652→}
+  1653→
+  1654→@keyframes radarSweep {
+  1655→  0% { transform: rotate(0deg); }
+  1656→  100% { transform: rotate(360deg); }
+  1657→}
+  1658→
+  1659→/* Lab system monitor gauge */
+  1660→.lab-gauge {
+  1661→  position: relative;
+  1662→  width: 60px;
+  1663→  height: 60px;
+  1664→}
+  1665→
+  1666→.lab-gauge-ring {
+  1667→  fill: none;
+  1668→  stroke: rgba(0, 240, 255, 0.1);
+  1669→  stroke-width: 4;
+  1670→}
+  1671→
+  1672→.lab-gauge-fill {
+  1673→  fill: none;
+  1674→  stroke: #00f0ff;
+  1675→  stroke-width: 4;
+  1676→  stroke-linecap: round;
+  1677→  transition: stroke-dashoffset 1s ease;
+  1678→  filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.4));
+  1679→}
+  1680→
+  1681→/* ═══════════════════════════════════════════════════════════════════
+  1682→   NEW: PARALLAX LAYERS
+  1683→   ═══════════════════════════════════════════════════════════════════ */
+  1684→.parallax-slow { animation: parallaxFloat 20s ease-in-out infinite; }
+  1685→.parallax-medium { animation: parallaxFloat 12s ease-in-out infinite; }
+  1686→.parallax-fast { animation: parallaxFloat 7s ease-in-out infinite; }
+  1687→
+  1688→@keyframes parallaxFloat {
+  1689→  0%, 100% { transform: translateY(0) translateX(0); }
+  1690→  25% { transform: translateY(-15px) translateX(8px); }
+  1691→  50% { transform: translateY(-5px) translateX(-5px); }
+  1692→  75% { transform: translateY(-20px) translateX(3px); }
+  1693→}
+  1694→
+  1695→/* ═══════════════════════════════════════════════════════════════════
+  1696→   NEW: HEXAGONAL GRID BACKGROUND
+  1697→   ═══════════════════════════════════════════════════════════════════ */
+  1698→.hex-grid-bg {
+  1699→  position: absolute;
+  1700→  inset: 0;
+  1701→  background-image:
+  1702→    linear-gradient(30deg, rgba(0, 240, 255, 0.03) 12%, transparent 12.5%, transparent 87%, rgba(0, 240, 255, 0.03) 87.5%, rgba(0, 240, 255, 0.03)),
+  1703→    linear-gradient(150deg, rgba(0, 240, 255, 0.03) 12%, transparent 12.5%, transparent 87%, rgba(0, 240, 255, 0.03) 87.5%, rgba(0, 240, 255, 0.03)),
+  1704→    linear-gradient(30deg, rgba(0, 240, 255, 0.03) 12%, transparent 12.5%, transparent 87%, rgba(0, 240, 255, 0.03) 87.5%, rgba(0, 240, 255, 0.03)),
+  1705→    linear-gradient(150deg, rgba(0, 240, 255, 0.03) 12%, transparent 12.5%, transparent 87%, rgba(0, 240, 255, 0.03) 87.5%, rgba(0, 240, 255, 0.03)),
+  1706→    linear-gradient(60deg, rgba(191, 0, 255, 0.02) 25%, transparent 25.5%, transparent 75%, rgba(191, 0, 255, 0.02) 75%, rgba(191, 0, 255, 0.02)),
+  1707→    linear-gradient(60deg, rgba(191, 0, 255, 0.02) 25%, transparent 25.5%, transparent 75%, rgba(191, 0, 255, 0.02) 75%, rgba(191, 0, 255, 0.02));
+  1708→  background-size: 80px 140px;
+  1709→  background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
+  1710→  pointer-events: none;
+  1711→  animation: hexGridShift 30s linear infinite;
+  1712→}
+  1713→
+  1714→@keyframes hexGridShift {
+  1715→  0% { opacity: 0.5; }
+  1716→  50% { opacity: 0.8; }
+  1717→  100% { opacity: 0.5; }
+  1718→}
+  1719→
+  1720→/* ═══════════════════════════════════════════════════════════════════
+  1721→   NEW: LANDING PAGE SPECIFIC
+  1722→   ═══════════════════════════════════════════════════════════════════ */
+  1723→.hero-orbit {
+  1724→  position: absolute;
+  1725→  border: 1px solid rgba(0, 240, 255, 0.06);
+  1726→  border-radius: 50%;
+  1727→  animation: heroOrbit 20s linear infinite;
+  1728→}
+  1729→
+  1730→@keyframes heroOrbit {
+  1731→  0% { transform: rotate(0deg); }
+  1732→  100% { transform: rotate(360deg); }
+  1733→}
+  1734→
+  1735→.landing-feature-card {
+  1736→  position: relative;
+  1737→  overflow: hidden;
+  1738→}
+  1739→
+  1740→.landing-feature-card::after {
+  1741→  content: '';
+  1742→  position: absolute;
+  1743→  inset: 0;
+  1744→  background: linear-gradient(
+  1745→    135deg,
+  1746→    transparent 40%,
+  1747→    rgba(0, 240, 255, 0.03) 45%,
+  1748→    rgba(0, 240, 255, 0.06) 50%,
+  1749→    rgba(0, 240, 255, 0.03) 55%,
+  1750→    transparent 60%
+  1751→  );
+  1752→  transform: translateX(-100%);
+  1753→  transition: transform 0.8s ease;
+  1754→  pointer-events: none;
+  1755→}
+  1756→
+  1757→.landing-feature-card:hover::after {
+  1758→  transform: translateX(100%);
+  1759→}
+  1760→
+  1761→/* Globe CSS */
+  1762→.css-globe {
+  1763→  width: 300px;
+  1764→  height: 300px;
+  1765→  border-radius: 50%;
+  1766→  background: radial-gradient(circle at 35% 35%, rgba(0, 240, 255, 0.15), rgba(10, 14, 26, 0.9) 70%);
+  1767→  box-shadow:
+  1768→    0 0 60px rgba(0, 240, 255, 0.1),
+  1769→    inset 0 0 60px rgba(0, 0, 0, 0.5);
+  1770→  position: relative;
+  1771→  overflow: hidden;
+  1772→  animation: globeFloat 6s ease-in-out infinite;
+  1773→}
+  1774→
+  1775→.css-globe::before {
+  1776→  content: '';
+  1777→  position: absolute;
+  1778→  inset: 0;
+  1779→  border-radius: 50%;
+  1780→  border: 1px solid rgba(0, 240, 255, 0.08);
+  1781→  box-shadow:
+  1782→    inset 0 0 30px rgba(0, 240, 255, 0.05),
+  1783→    0 0 30px rgba(0, 240, 255, 0.05);
+  1784→}
+  1785→
+  1786→.css-globe::after {
+  1787→  content: '';
+  1788→  position: absolute;
+  1789→  top: -50%;
+  1790→  left: -50%;
+  1791→  width: 200%;
+  1792→  height: 200%;
+  1793→  background: conic-gradient(
+  1794→    from 0deg,
+  1795→    transparent 0%,
+  1796→    rgba(0, 240, 255, 0.05) 10%,
+  1797→    transparent 20%,
+  1798→    transparent 100%
+  1799→  );
+  1800→  animation: globeRotate 10s linear infinite;
+  1801→}
+  1802→
+  1803→@keyframes globeFloat {
+  1804→  0%, 100% { transform: translateY(0); }
+  1805→  50% { transform: translateY(-15px); }
+  1806→}
+  1807→
+  1808→@keyframes globeRotate {
+  1809→  0% { transform: rotate(0deg); }
+  1810→  100% { transform: rotate(360deg); }
+  1811→}
+  1812→
+  1813→.globe-grid-line {
+  1814→  position: absolute;
+  1815→  border: 1px solid rgba(0, 240, 255, 0.06);
+  1816→  border-radius: 50%;
+  1817→}
+  1818→
+  1819→.globe-dot {
+  1820→  position: absolute;
+  1821→  width: 6px;
+  1822→  height: 6px;
+  1823→  border-radius: 50%;
+  1824→  background: #ff006e;
+  1825→  box-shadow: 0 0 8px rgba(255, 0, 110, 0.6);
+  1826→  animation: globeDotPulse 2s ease-in-out infinite;
+  1827→}
+  1828→
+  1829→@keyframes globeDotPulse {
+  1830→  0%, 100% { opacity: 0.5; transform: scale(0.8); }
+  1831→  50% { opacity: 1; transform: scale(1.2); }
+  1832→}
+  1833→
+  1834→/* ═══════════════════════════════════════════════════════════════════
+  1835→   NEW: KEYPRESS RIPPLE EFFECT (for terminal)
+  1836→   ═══════════════════════════════════════════════════════════════════ */
+  1837→.terminal-ripple {
+  1838→  position: absolute;
+  1839→  inset: 0;
+  1840→  border-radius: 14px;
+  1841→  pointer-events: none;
+  1842→  opacity: 0;
+  1843→  border: 1px solid rgba(0, 240, 255, 0.3);
+  1844→}
+  1845→
+  1846→.terminal-ripple-active {
+  1847→  animation: terminalRipple 0.6s ease-out;
+  1848→}
+  1849→
+  1850→@keyframes terminalRipple {
+  1851→  0% { opacity: 0.6; transform: scale(0.98); }
+  1852→  100% { opacity: 0; transform: scale(1.02); }
+  1853→}
+  1854→
+  1855→/* ═══════════════════════════════════════════════════════════════════
+  1856→   NEW: TYPING HEAT GLOW (terminal border)
+  1857→   ═══════════════════════════════════════════════════════════════════ */
+  1858→.typing-glow {
+  1859→  animation: typingGlow 0.15s ease;
+  1860→}
+  1861→
+  1862→@keyframes typingGlow {
+  1863→  0% { box-shadow: 0 0 15px rgba(0, 240, 255, 0.05); }
+  1864→  100% { box-shadow: 0 0 25px rgba(0, 240, 255, 0.15), 0 0 50px rgba(0, 240, 255, 0.05); }
+  1865→}
+  1866→
+  1867→/* ═══════════════════════════════════════════════════════════════════
+  1868→   NEW: MATRIX RAIN ENHANCED
+  1869→   ═══════════════════════════════════════════════════════════════════ */
+  1870→.matrix-rain {
+  1871→  position: absolute;
+  1872→  inset: 0;
+  1873→  overflow: hidden;
+  1874→  pointer-events: none;
+  1875→  opacity: 0.04;
+  1876→}
+  1877→
+  1878→.matrix-column {
+  1879→  position: absolute;
+  1880→  top: -100%;
+  1881→  font-family: monospace;
+  1882→  font-size: 12px;
+  1883→  color: #00f0ff;
+  1884→  writing-mode: vertical-rl;
+  1885→  animation: matrixFall linear infinite;
+  1886→  white-space: nowrap;
+  1887→}
+  1888→
+  1889→@keyframes matrixFall {
+  1890→  0% { transform: translateY(-100%); }
+  1891→  100% { transform: translateY(calc(100vh + 100%)); }
+  1892→}
+  1893→
+  1894→/* ═══════════════════════════════════════════════════════════════════
+  1895→   NEW: SKILL RADAR CHART (CSS-only)
+  1896→   ═══════════════════════════════════════════════════════════════════ */
+  1897→.skill-radar {
+  1898→  position: relative;
+  1899→  width: 250px;
+  1900→  height: 250px;
+  1901→}
+  1902→
+  1903→.skill-radar-ring {
+  1904→  position: absolute;
+  1905→  border: 1px solid rgba(0, 240, 255, 0.08);
+  1906→  border-radius: 50%;
+  1907→  top: 50%;
+  1908→  left: 50%;
+  1909→  transform: translate(-50%, -50%);
+  1910→}
+  1911→
+  1912→/* ═══════════════════════════════════════════════════════════════════
+  1913→   NEW: CTF HINT COST BADGE
+  1914→   ═══════════════════════════════════════════════════════════════════ */
+  1915→.hint-cost-badge {
+  1916→  display: inline-flex;
+  1917→  align-items: center;
+  1918→  gap: 4px;
+  1919→  padding: 2px 8px;
+  1920→  border-radius: 8px;
+  1921→  font-size: 11px;
+  1922→  font-weight: 600;
+  1923→  background: rgba(255, 107, 53, 0.1);
+  1924→  border: 1px solid rgba(255, 107, 53, 0.3);
+  1925→  color: #ff6b35;
+  1926→}
+  1927→
+  1928→/* ═══════════════════════════════════════════════════════════════════
+  1929→   NEW: CONTACT FORM
+  1930→   ═══════════════════════════════════════════════════════════════════ */
+  1931→.contact-card {
+  1932→  background: linear-gradient(145deg, rgba(10, 14, 26, 0.95), rgba(20, 28, 50, 0.85));
+  1933→  border: 1px solid rgba(0, 240, 255, 0.08);
+  1934→  border-radius: 20px;
+  1935→  backdrop-filter: blur(20px);
+  1936→}
+  1937→
+  1938→/* ═══════════════════════════════════════════════════════════════════
+  1939→   NEW: PARTNER LOGO CARD
+  1940→   ═══════════════════════════════════════════════════════════════════ */
+  1941→.partner-card {
+  1942→  background: rgba(10, 14, 26, 0.5);
+  1943→  border: 1px solid rgba(30, 41, 59, 0.3);
+  1944→  border-radius: 12px;
+  1945→  padding: 24px;
+  1946→  display: flex;
+  1947→  align-items: center;
+  1948→  justify-content: center;
+  1949→  font-size: 14px;
+  1950→  font-weight: 600;
+  1951→  color: #64748b;
+  1952→  letter-spacing: 1px;
+  1953→  transition: all 0.3s ease;
+  1954→}
+  1955→
+  1956→.partner-card:hover {
+  1957→  border-color: rgba(0, 240, 255, 0.15);
+  1958→  color: #e2e8f0;
+  1959→  transform: translateY(-2px);
+  1960→  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  1961→}

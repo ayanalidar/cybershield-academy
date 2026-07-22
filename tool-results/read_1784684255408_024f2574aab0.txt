@@ -1,0 +1,649 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import {
+     6→  LayoutDashboard, BookOpen, Brain, HelpCircle, Terminal, Trophy,
+     7→  Gamepad2, BarChart3, Award, Shield, Lock, Eye, Users, Zap, Star,
+     8→  Send, ChevronRight, ChevronDown, X, Mic, MicOff, Volume2, VolumeX,
+     9→  Flag, Clock, Target, Flame, TrendingUp, AlertTriangle, CheckCircle2,
+    10→  XCircle, Lightbulb, ArrowUpRight, Crown, Medal, Hexagon, Activity,
+    11→  Search, Globe, Cpu, RefreshCw, Play, Pause, SkipForward,
+    12→} from 'lucide-react';
+    13→import { Button } from '@/components/ui/button';
+    14→
+    15→/* ═══════════════════════════════════════════════════════════════════════
+    16→   CONSTANTS & DEMO DATA
+    17→   ═══════════════════════════════════════════════════════════════════════ */
+    18→
+    19→const RANKS = [
+    20→  { name: 'Script Kiddie', min: 0, icon: '🥉' },
+    21→  { name: 'Junior Analyst', min: 100, icon: '📋' },
+    22→  { name: 'Network Scout', min: 300, icon: '🔍' },
+    23→  { name: 'Threat Hunter', min: 600, icon: '🎯' },
+    24→  { name: 'Security Analyst', min: 1000, icon: '🛡️' },
+    25→  { name: 'Pen Tester', min: 1500, icon: '⚔️' },
+    26→  { name: 'Incident Responder', min: 2200, icon: '🚨' },
+    27→  { name: 'Malware Analyst', min: 3000, icon: '🦠' },
+    28→  { name: 'Security Engineer', min: 4000, icon: '🔧' },
+    29→  { name: 'Red Team Lead', min: 5500, icon: '🔴' },
+    30→  { name: 'Blue Team Lead', min: 7000, icon: '🔵' },
+    31→  { name: 'Security Architect', min: 9000, icon: '🏛️' },
+    32→  { name: 'Cyber Strategist', min: 12000, icon: '♟️' },
+    33→  { name: 'Zero Day Hunter', min: 16000, icon: '💀' },
+    34→  { name: 'Cyber Legend', min: 20000, icon: '👑' },
+    35→];
+    36→
+    37→const DEMO_USER = { id: 'demo-user-1', name: 'Alex Chen', email: 'alex@cybershield.academy', xp: 1450, level: 6, streakDays: 7, role: 'student' };
+    38→
+    39→const TABS = [
+    40→  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    41→  { id: 'courses', label: 'Courses', icon: BookOpen },
+    42→  { id: 'professor', label: 'Professor', icon: Brain },
+    43→  { id: 'quizzes', label: 'Quizzes', icon: HelpCircle },
+    44→  { id: 'labs', label: 'Lab Terminal', icon: Terminal },
+    45→  { id: 'ctf', label: 'CTF Arena', icon: Trophy },
+    46→  { id: 'ranks', label: 'Rank & Badges', icon: Gamepad2 },
+    47→  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    48→  { id: 'certificates', label: 'Certificates', icon: Award },
+    49→];
+    50→
+    51→const COURSES = [
+    52→  { id: 'c1', title: 'Network Security Fundamentals', category: 'Network Security', difficulty: 'beginner', durationHours: 12, modules: 6, thumbnail: '🔐', progress: 65, enrolled: true, rating: 4.8 },
+    53→  { id: 'c2', title: 'Web Application Security', category: 'Web Security', difficulty: 'intermediate', durationHours: 18, modules: 8, thumbnail: '🌐', progress: 30, enrolled: true, rating: 4.9 },
+    54→  { id: 'c3', title: 'Cryptography & PKI', category: 'Cryptography', difficulty: 'intermediate', durationHours: 15, modules: 7, thumbnail: '🔑', progress: 0, enrolled: false, rating: 4.7 },
+    55→  { id: 'c4', title: 'Penetration Testing', category: 'Offensive Security', difficulty: 'advanced', durationHours: 25, modules: 10, thumbnail: '⚔️', progress: 0, enrolled: false, rating: 4.9 },
+    56→  { id: 'c5', title: 'Incident Response', category: 'Defensive Security', difficulty: 'intermediate', durationHours: 20, modules: 8, thumbnail: '🚨', progress: 0, enrolled: false, rating: 4.6 },
+    57→  { id: 'c6', title: 'Cloud Security', category: 'Cloud', difficulty: 'advanced', durationHours: 22, modules: 9, thumbnail: '☁️', progress: 0, enrolled: false, rating: 4.8 },
+    58→];
+    59→
+    60→const CTF_CHALLENGES = [
+    61→  { id: 'ctf1', title: 'Caesar Cipher Cracker', category: 'crypto', difficulty: 'easy', points: 100, solveCount: 342, description: 'Decrypt the message encrypted with a simple Caesar cipher. The shift value is hidden in the challenge name.', hint: 'The shift is 3 (classic Caesar). ROT13 is a common variant.', flag: 'CSA{caesar_shift_revealed}', solved: false },
+    62→  { id: 'ctf2', title: 'XSS Reflected', category: 'web', difficulty: 'medium', points: 200, solveCount: 189, description: 'Find and exploit a reflected XSS vulnerability in the search parameter of the target application.', hint: 'Check the search?q= parameter. Try injecting <script> tags with event handlers.', flag: 'CSA{reflected_xss_pwned}', solved: false },
+    63→  { id: 'ctf3', title: 'Buffer Overflow 101', category: 'pwn', difficulty: 'medium', points: 250, solveCount: 156, description: 'Exploit a simple buffer overflow in a C program to redirect execution to a hidden function.', hint: 'Use GDB to find the offset to the return address. The hidden function is at 0x080491d6.', flag: 'CSA{buff3r_0v3rfl0w_b4s1cs}', solved: false },
+    64→  { id: 'ctf4', title: 'Hidden in Plain Sight', category: 'forensics', difficulty: 'easy', points: 150, solveCount: 278, description: 'An employee was suspected of data exfiltration. Analyze the provided network capture to find the flag.', hint: 'Check DNS queries for unusual patterns. Look for base64 encoded subdomains.', flag: 'CSA{dns_exfil_detected}', solved: true },
+    65→  { id: 'ctf5', title: 'OSINT Profile Hunt', category: 'osint', difficulty: 'easy', points: 100, solveCount: 412, description: 'Find information about the target persona using only open-source intelligence techniques.', hint: 'Start with the username across multiple platforms. Check GitHub, LinkedIn, and Twitter.', flag: 'CSA{osint_master_2024}', solved: true },
+    66→  { id: 'ctf6', title: 'Crack Me If You Can', category: 'reverse', difficulty: 'hard', points: 300, solveCount: 87, description: 'Reverse engineer the provided binary to find the correct license key that unlocks the flag.', hint: 'Use strings command first, then try Ghidra or IDA for deeper analysis. The validation function XORs with 0x42.', flag: 'CSA{r3v3rs3d_4nd_cr4ck3d}', solved: false },
+    67→];
+    68→
+    69→const BADGES = [
+    70→  { id: 'b1', name: 'Shield Master', description: 'Complete the Network Security course', icon: '🛡️', rarity: 'rare', xpReward: 200, earned: true },
+    71→  { id: 'b2', name: 'First Blood', description: 'Solve your first CTF challenge', icon: '🩸', rarity: 'common', xpReward: 50, earned: true },
+    72→  { id: 'b3', name: 'Quiz Ace', description: 'Score 100% on any quiz', icon: '🧠', rarity: 'epic', xpReward: 300, earned: false },
+    73→  { id: 'b4', name: 'Lab Rat', description: 'Complete 10 lab sessions', icon: '🐀', rarity: 'common', xpReward: 100, earned: true },
+    74→  { id: 'b5', name: 'CTF Champion', description: 'Solve 50 CTF challenges', icon: '🏆', rarity: 'legendary', xpReward: 500, earned: false },
+    75→  { id: 'b6', name: 'Streak Master', description: 'Maintain a 30-day streak', icon: '🔥', rarity: 'rare', xpReward: 200, earned: false },
+    76→  { id: 'b7', name: 'Network Ninja', description: 'Complete all network modules', icon: '🥷', rarity: 'epic', xpReward: 300, earned: false },
+    77→  { id: 'b8', name: 'Crypto Wizard', description: 'Master all cryptography challenges', icon: '🧙', rarity: 'legendary', xpReward: 500, earned: false },
+    78→];
+    79→
+    80→const LEADERBOARD = [
+    81→  { rank: 1, name: 'Sarah Kim', xp: 8750, level: 11 },
+    82→  { rank: 2, name: 'James Rodriguez', xp: 7200, level: 10 },
+    83→  { rank: 3, name: 'Priya Mehta', xp: 5800, level: 9 },
+    84→  { rank: 4, name: 'Marcus Johnson', xp: 4200, level: 8 },
+    85→  { rank: 5, name: 'Yuki Tanaka', xp: 3100, level: 7 },
+    86→  { rank: 6, name: 'Alex Chen', xp: 1450, level: 6 },
+    87→  { rank: 7, name: 'Emma Davis', xp: 980, level: 5 },
+    88→  { rank: 8, name: 'Raj Patel', xp: 650, level: 4 },
+    89→];
+    90→
+    91→const LAB_SCENARIOS = [
+    92→  { id: 'lab1', title: 'Network Reconnaissance', category: 'Network Security', difficulty: 'beginner', objectives: [
+    93→    { id: 'o1', description: 'Identify live hosts on the 10.0.0.0/24 network', completed: false },
+    94→    { id: 'o2', description: 'Discover open ports on target 10.0.0.50', completed: false },
+    95→    { id: 'o3', description: 'Identify running services and versions', completed: false },
+    96→    { id: 'o4', description: 'Document findings in a structured report', completed: false },
+    97→  ]},
+    98→  { id: 'lab2', title: 'SQL Injection Lab', category: 'Web Security', difficulty: 'intermediate', objectives: [
+    99→    { id: 'o1', description: 'Identify the vulnerable input parameter', completed: false },
+   100→    { id: 'o2', description: 'Extract database version information', completed: false },
+   101→    { id: 'o3', description: 'Enumerate table names from the database', completed: false },
+   102→    { id: 'o4', description: 'Extract user credentials from the users table', completed: false },
+   103→  ]},
+   104→  { id: 'lab3', title: 'Privilege Escalation', category: 'System Security', difficulty: 'advanced', objectives: [
+   105→    { id: 'o1', description: 'Gain initial access as low-privilege user', completed: false },
+   106→    { id: 'o2', description: 'Enumerate SUID binaries', completed: false },
+   107→    { id: 'o3', description: 'Exploit misconfigured SUID binary', completed: false },
+   108→    { id: 'o4', description: 'Escalate to root and read /root/flag.txt', completed: false },
+   109→  ]},
+   110→  { id: 'lab4', title: 'Cryptographic Analysis', category: 'Cryptography', difficulty: 'intermediate', objectives: [
+   111→    { id: 'o1', description: 'Identify the encryption algorithm used', completed: false },
+   112→    { id: 'o2', description: 'Analyze the key generation weakness', completed: false },
+   113→    { id: 'o3', description: 'Develop a decryption strategy', completed: false },
+   114→  ]},
+   115→  { id: 'lab5', title: 'Web Shell Upload', category: 'Web Security', difficulty: 'advanced', objectives: [
+   116→    { id: 'o1', description: 'Identify the file upload endpoint', completed: false },
+   117→    { id: 'o2', description: 'Bypass the file type validation', completed: false },
+   118→    { id: 'o3', description: 'Upload and execute a web shell', completed: false },
+   119→    { id: 'o4', description: 'Maintain persistence and cover tracks', completed: false },
+   120→  ]},
+   121→];
+   122→
+   123→const ACTIVITY_TIMELINE = [
+   124→  { time: '2 hours ago', action: 'Completed Network Security module', type: 'module', xp: 50 },
+   125→  { time: '5 hours ago', action: 'Solved CTF: Hidden in Plain Sight', type: 'ctf', xp: 150 },
+   126→  { time: '1 day ago', action: 'Earned badge: Lab Rat', type: 'badge', xp: 100 },
+   127→  { time: '1 day ago', action: 'Quiz: Web Security — Score 85%', type: 'quiz', xp: 75 },
+   128→  { time: '2 days ago', action: 'Lab Session: Network Recon (completed)', type: 'lab', xp: 100 },
+   129→  { time: '3 days ago', action: 'Enrolled in Web Application Security', type: 'enroll', xp: 0 },
+   130→  { time: '4 days ago', action: 'Solved CTF: OSINT Profile Hunt', type: 'ctf', xp: 100 },
+   131→];
+   132→
+   133→const DEMO_QUIZ = {
+   134→  id: 'q1', title: 'Network Security Fundamentals Quiz', timeLimit: 300, questions: [
+   135→    { id: 'qq1', text: 'What does the TCP three-way handshake consist of?', options: ['SYN, SYN-ACK, ACK', 'ACK, SYN, FIN', 'SYN, ACK, RST', 'HELLO, AUTH, START'], correct: 'SYN, SYN-ACK, ACK', explanation: 'The TCP three-way handshake: client sends SYN, server responds with SYN-ACK, client completes with ACK.', points: 20 },
+   136→    { id: 'qq2', text: 'Which protocol operates at Layer 4 of the OSI model?', options: ['HTTP', 'IP', 'TCP', 'Ethernet'], correct: 'TCP', explanation: 'TCP (Transmission Control Protocol) operates at the Transport Layer (Layer 4) of the OSI model.', points: 20 },
+   137→    { id: 'qq3', text: 'What is the primary purpose of a firewall?', options: ['Encrypt data', 'Filter network traffic', 'Manage passwords', 'Compress packets'], correct: 'Filter network traffic', explanation: 'A firewall monitors and filters incoming and outgoing network traffic based on predetermined security rules.', points: 20 },
+   138→    { id: 'qq4', text: 'Which port does HTTPS typically use?', options: ['80', '443', '8080', '22'], correct: '443', explanation: 'HTTPS (HTTP Secure) uses port 443 by default for encrypted web communication.', points: 20 },
+   139→    { id: 'qq5', text: 'What is a DDoS attack?', options: ['Data theft via DNS', 'Overwhelming a service with traffic', 'Decrypting intercepted data', 'Exploiting buffer overflows'], correct: 'Overwhelming a service with traffic', explanation: 'DDoS (Distributed Denial of Service) floods a target with traffic from multiple sources to make it unavailable.', points: 20 },
+   140→  ],
+   141→};
+   142→
+   143→const NETWORK_NODES = [
+   144→  { id: 'n1', label: 'Attacker', x: 10, y: 50, type: 'normal' as const },
+   145→  { id: 'n2', label: 'Firewall', x: 30, y: 30, type: 'normal' as const },
+   146→  { id: 'n3', label: 'Web Server', x: 50, y: 20, type: 'normal' as const },
+   147→  { id: 'n4', label: 'DB Server', x: 70, y: 40, type: 'discovered' as const },
+   148→  { id: 'n5', label: 'Admin Panel', x: 60, y: 70, type: 'threat' as const },
+   149→  { id: 'n6', label: 'Backup', x: 85, y: 60, type: 'normal' as const },
+   150→];
+   151→
+   152→/* ═══════════════════════════════════════════════════════════════════════
+   153→   PARTICLES (reuse from landing)
+   154→   ═══════════════════════════════════════════════════════════════════════ */
+   155→
+   156→function Particles() {
+   157→  const particles = useMemo(() =>
+   158→    Array.from({ length: 30 }, (_, i) => ({
+   159→      id: i,
+   160→      left: `${Math.random() * 100}%`,
+   161→      delay: `${Math.random() * 10}s`,
+   162→      duration: `${10 + Math.random() * 15}s`,
+   163→      size: `${1 + Math.random() * 2}px`,
+   164→      color: ['rgba(0,240,255,0.4)', 'rgba(191,0,255,0.3)', 'rgba(57,255,20,0.3)', 'rgba(255,0,110,0.2)'][i % 4],
+   165→    })), []);
+   166→  return (
+   167→    <div className="holo-bg">
+   168→      {particles.map((p) => (
+   169→        <div key={p.id} className="particle particle-glow" style={{ left: p.left, width: p.size, height: p.size, background: p.color, animationDelay: p.delay, animationDuration: p.duration }} />
+   170→      ))}
+   171→    </div>
+   172→  );
+   173→}
+   174→
+   175→/* ═══════════════════════════════════════════════════════════════════════
+   176→   DASHBOARD TAB
+   177→   ═══════════════════════════════════════════════════════════════════════ */
+   178→
+   179→function DashboardTab() {
+   180→  const user = DEMO_USER;
+   181→  const currentRank = RANKS.filter(r => r.min <= user.xp).pop()!;
+   182→  const nextRank = RANKS[RANKS.indexOf(currentRank) + 1];
+   183→  const xpProgress = nextRank ? ((user.xp - currentRank.min) / (nextRank.min - currentRank.min)) * 100 : 100;
+   184→
+   185→  return (
+   186→    <div className="space-y-6">
+   187→      {/* Welcome Banner */}
+   188→      <div className="holo-card holo-shimmer rounded-2xl p-6 sm:p-8">
+   189→        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   190→          <div>
+   191→            <h2 className="text-2xl font-bold text-[#e2e8f0] mb-1">Welcome back, <span className="text-gradient-holo">{user.name}</span></h2>
+   192→            <p className="text-[#64748b]">{currentRank.icon} {currentRank.name} — Level {user.level} — {user.streakDays}-day streak 🔥</p>
+   193→          </div>
+   194→          <div className="flex items-center gap-3">
+   195→            <div className="holo-badge holo-badge-cyan"><Zap className="h-3 w-3 mr-1" />{user.xp} XP</div>
+   196→            <div className="holo-badge holo-badge-green"><Flame className="h-3 w-3 mr-1" />{user.streakDays}d</div>
+   197→          </div>
+   198→        </div>
+   199→      </div>
+   200→
+   201→      {/* Stat Cards */}
+   202→      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+   203→        {[
+   204→          { label: 'Total XP', value: user.xp.toLocaleString(), icon: Zap, color: '#00f0ff' },
+   205→          { label: 'Courses', value: '2/6', icon: BookOpen, color: '#bf00ff' },
+   206→          { label: 'CTF Solved', value: '2/6', icon: Trophy, color: '#39ff14' },
+   207→          { label: 'Badges', value: '3/8', icon: Medal, color: '#ff6b35' },
+   208→        ].map(s => (
+   209→          <div key={s.label} className="stat-card-3d rounded-xl p-4" style={{ '--stat-color': s.color } as React.CSSProperties}>
+   210→            <div className="flex items-center gap-2 mb-2"><s.icon className="h-4 w-4" style={{ color: s.color }} /><span className="text-xs text-[#64748b]">{s.label}</span></div>
+   211→            <div className="text-xl font-bold text-[#e2e8f0]">{s.value}</div>
+   212→          </div>
+   213→        ))}
+   214→      </div>
+   215→
+   216→      <div className="grid lg:grid-cols-5 gap-6">
+   217→        {/* Rank Progress */}
+   218→        <div className="lg:col-span-2 holo-card rounded-2xl p-6">
+   219→          <h3 className="neon-text text-sm font-bold mb-4">RANK PROGRESSION</h3>
+   220→          <div className="flex items-center gap-4 mb-4">
+   221→            <div className="text-4xl">{currentRank.icon}</div>
+   222→            <div>
+   223→              <div className="text-lg font-bold text-[#e2e8f0]">{currentRank.name}</div>
+   224→              <div className="text-xs text-[#64748b]">{nextRank ? `Next: ${nextRank.name} (${nextRank.min - user.xp} XP needed)` : 'Max rank!'}</div>
+   225→            </div>
+   226→          </div>
+   227→          <div className="holo-progress"><div className="holo-progress-bar" style={{ width: `${xpProgress}%` }} /></div>
+   228→          <div className="text-xs text-[#64748b] mt-1">{user.xp} / {nextRank?.min ?? user.xp} XP</div>
+   229→        </div>
+   230→
+   231→        {/* Activity Timeline */}
+   232→        <div className="lg:col-span-3 holo-card rounded-2xl p-6">
+   233→          <h3 className="neon-text text-sm font-bold mb-4">RECENT ACTIVITY</h3>
+   234→          <div className="space-y-3">
+   235→            {ACTIVITY_TIMELINE.map((a, i) => (
+   236→              <div key={i} className="flex items-start gap-3 data-stream pl-4 py-1">
+   237→                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: 'rgba(0,240,255,0.08)' }}>
+   238→                  {a.type === 'module' && <BookOpen className="h-3.5 w-3.5 text-[#00f0ff]" />}
+   239→                  {a.type === 'ctf' && <Flag className="h-3.5 w-3.5 text-[#39ff14]" />}
+   240→                  {a.type === 'badge' && <Award className="h-3.5 w-3.5 text-[#ff6b35]" />}
+   241→                  {a.type === 'quiz' && <HelpCircle className="h-3.5 w-3.5 text-[#bf00ff]" />}
+   242→                  {a.type === 'lab' && <Terminal className="h-3.5 w-3.5 text-[#00f0ff]" />}
+   243→                  {a.type === 'enroll' && <CheckCircle2 className="h-3.5 w-3.5 text-[#39ff14]" />}
+   244→                </div>
+   245→                <div className="flex-1 min-w-0">
+   246→                  <p className="text-sm text-[#e2e8f0] truncate">{a.action}</p>
+   247→                  <p className="text-xs text-[#64748b]">{a.time}</p>
+   248→                </div>
+   249→                {a.xp > 0 && <span className="text-xs font-semibold text-[#39ff14]">+{a.xp} XP</span>}
+   250→              </div>
+   251→            ))}
+   252→          </div>
+   253→        </div>
+   254→      </div>
+   255→
+   256→      {/* Enrolled Courses Progress */}
+   257→      <div className="holo-card rounded-2xl p-6">
+   258→        <h3 className="neon-text text-sm font-bold mb-4">ENROLLED COURSES</h3>
+   259→        <div className="grid sm:grid-cols-2 gap-4">
+   260→          {COURSES.filter(c => c.enrolled).map(c => (
+   261→            <div key={c.id} className="flex items-center gap-4 p-3 rounded-xl" style={{ background: 'rgba(10,14,26,0.6)', border: '1px solid rgba(0,240,255,0.06)' }}>
+   262→              <div className="text-2xl">{c.thumbnail}</div>
+   263→              <div className="flex-1 min-w-0">
+   264→                <div className="text-sm font-semibold text-[#e2e8f0] truncate">{c.title}</div>
+   265→                <div className="text-xs text-[#64748b] mb-2">{c.modules} modules • {c.durationHours}h</div>
+   266→                <div className="holo-progress"><div className="holo-progress-bar" style={{ width: `${c.progress}%` }} /></div>
+   267→                <div className="text-xs text-[#64748b] mt-1">{c.progress}% complete</div>
+   268→              </div>
+   269→            </div>
+   270→          ))}
+   271→        </div>
+   272→      </div>
+   273→    </div>
+   274→  );
+   275→}
+   276→
+   277→/* ═══════════════════════════════════════════════════════════════════════
+   278→   COURSES TAB
+   279→   ═══════════════════════════════════════════════════════════════════════ */
+   280→
+   281→function CoursesTab() {
+   282→  const [courses, setCourses] = useState(COURSES);
+   283→
+   284→  const handleEnroll = useCallback((id: string) => {
+   285→    setCourses(prev => prev.map(c => c.id === id ? { ...c, enrolled: true, progress: 0 } : c));
+   286→  }, []);
+   287→
+   288→  const diffColor = (d: string) => d === 'beginner' ? '#39ff14' : d === 'intermediate' ? '#ff6b35' : '#ff006e';
+   289→
+   290→  return (
+   291→    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+   292→      {courses.map(c => (
+   293→        <motion.div key={c.id} whileHover={{ y: -4 }} className="holo-card holo-card-3d rounded-2xl p-6 flex flex-col">
+   294→          <div className="flex items-start justify-between mb-3">
+   295→            <span className="text-3xl">{c.thumbnail}</span>
+   296→            <div className="flex items-center gap-1"><Star className="h-3 w-3 text-yellow-400" /><span className="text-xs text-[#94a3b8]">{c.rating}</span></div>
+   297→          </div>
+   298→          <h3 className="text-base font-bold text-[#e2e8f0] mb-1">{c.title}</h3>
+   299→          <p className="text-xs text-[#64748b] mb-3">{c.modules} modules • {c.durationHours}h</p>
+   300→          <div className="flex gap-2 mb-4">
+   301→            <span className="holo-badge text-xs" style={{ background: 'rgba(0,240,255,0.08)', borderColor: 'rgba(0,240,255,0.2)', color: '#00f0ff' }}>{c.category}</span>
+   302→            <span className="holo-badge text-xs" style={{ background: `${diffColor(c.difficulty)}15`, borderColor: `${diffColor(c.difficulty)}30`, color: diffColor(c.difficulty) }}>{c.difficulty}</span>
+   303→          </div>
+   304→          {c.enrolled ? (
+   305→            <div className="mt-auto">
+   306→              <div className="flex justify-between text-xs text-[#64748b] mb-1"><span>Progress</span><span>{c.progress}%</span></div>
+   307→              <div className="holo-progress"><div className="holo-progress-bar" style={{ width: `${c.progress}%` }} /></div>
+   308→              <Button className="holo-btn holo-btn-primary w-full mt-3 holo-btn-sm">Continue <ArrowUpRight className="h-3 w-3 ml-1" /></Button>
+   309→            </div>
+   310→          ) : (
+   311→            <Button className="holo-btn mt-auto w-full holo-btn-sm" onClick={() => handleEnroll(c.id)}>Enroll Now</Button>
+   312→          )}
+   313→        </motion.div>
+   314→      ))}
+   315→    </div>
+   316→  );
+   317→}
+   318→
+   319→/* ═══════════════════════════════════════════════════════════════════════
+   320→   PROFESSOR TAB — ALWAYS-LISTENING
+   321→   ═══════════════════════════════════════════════════════════════════════ */
+   322→
+   323→type VoiceState = 'listening' | 'standby' | 'speaking' | 'muted';
+   324→
+   325→function ProfessorTab() {
+   326→  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
+   327→    { role: 'assistant', content: 'Hey there! I\'m Professor Shield, your cybersecurity mentor. I\'m always listening — just say **"Professor"** before your question and I\'ll respond. You can also type below. Try asking me about network security, or say **"standby"** to pause me.' },
+   328→  ]);
+   329→  const [input, setInput] = useState('');
+   330→  const [voiceState, setVoiceState] = useState<VoiceState>('standby');
+   331→  const [isProcessing, setIsProcessing] = useState(false);
+   332→  const chatEndRef = useRef<HTMLDivElement>(null);
+   333→  const audioCtxRef = useRef<AudioContext | null>(null);
+   334→  const analyserRef = useRef<AnalyserNode | null>(null);
+   335→  const streamRef = useRef<MediaStream | null>(null);
+   336→  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+   337→  const chunksRef = useRef<Blob[]>([]);
+   338→  const monitoringRef = useRef(false);
+   339→  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+   340→  const audioRef = useRef<HTMLAudioElement | null>(null);
+   341→
+   342→  const scrollToBottom = useCallback(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, []);
+   343→  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
+   344→
+   345→  const speak = useCallback(async (text: string) => {
+   346→    try {
+   347→      setVoiceState('speaking');
+   348→      const res = await fetch('/api/voice/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+   349→      if (res.ok) {
+   350→        const blob = await res.blob();
+   351→        const url = URL.createObjectURL(blob);
+   352→        if (audioRef.current) { audioRef.current.pause(); URL.revokeObjectURL(audioRef.current.src); }
+   353→        const audio = new Audio(url);
+   354→        audioRef.current = audio;
+   355→        audio.onended = () => { setVoiceState('listening'); URL.revokeObjectURL(url); };
+   356→        audio.onerror = () => setVoiceState('listening');
+   357→        audio.play().catch(() => setVoiceState('listening'));
+   358→      } else { setVoiceState('listening'); }
+   359→    } catch { setVoiceState('listening'); }
+   360→  }, []);
+   361→
+   362→  const sendMessage = useCallback(async (text: string) => {
+   363→    if (!text.trim() || isProcessing) return;
+   364→    const userMsg = text.trim();
+   365→    setInput('');
+   366→    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+   367→    setIsProcessing(true);
+   368→
+   369→    if (userMsg.toLowerCase() === 'standby' || userMsg.toLowerCase() === 'mute') {
+   370→      setMessages(prev => [...prev, { role: 'assistant', content: 'Standing by. Say **"Professor"** when you need me.' }]);
+   371→      setVoiceState('muted');
+   372→      setIsProcessing(false);
+   373→      return;
+   374→    }
+   375→
+   376→    try {
+   377→      const history = messages.slice(-10).map(m => ({ role: m.role, content: m.content }));
+   378→      const res = await fetch('/api/chat', {
+   379→        method: 'POST', headers: { 'Content-Type': 'application/json' },
+   380→        body: JSON.stringify({ userId: DEMO_USER.id, sessionId: 'academy-session', message: userMsg, history }),
+   381→      });
+   382→      if (res.ok) {
+   383→        const reader = res.body?.getReader();
+   384→        if (reader) {
+   385→          const decoder = new TextDecoder();
+   386→          let fullText = '';
+   387→          setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+   388→          while (true) {
+   389→            const { done, value } = await reader.read();
+   390→            if (done) break;
+   391→            fullText += decoder.decode(value, { stream: true });
+   392→            setMessages(prev => { const copy = [...prev]; copy[copy.length - 1] = { role: 'assistant', content: fullText }; return copy; });
+   393→          }
+   394→          speak(fullText);
+   395→        }
+   396→      }
+   397→    } catch {
+   398→      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
+   399→    }
+   400→    setIsProcessing(false);
+   401→  }, [messages, isProcessing, speak]);
+   402→
+   403→  const startVoiceMonitoring = useCallback(async () => {
+   404→    try {
+   405→      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+   406→      streamRef.current = stream;
+   407→      const ctx = new AudioContext();
+   408→      audioCtxRef.current = ctx;
+   409→      const analyser = ctx.createAnalyser();
+   410→      analyser.fftSize = 2048;
+   411→      analyserRef.current = analyser;
+   412→      const source = ctx.createMediaStreamSource(stream);
+   413→      source.connect(analyser);
+   414→      setVoiceState('listening');
+   415→      monitoringRef.current = true;
+   416→
+   417→      const dataArray = new Uint8Array(analyser.fftSize);
+   418→      const THRESHOLD = 15;
+   419→      const monitor = () => {
+   420→        if (!monitoringRef.current) return;
+   421→        analyser.getByteTimeDomainData(dataArray);
+   422→        let sum = 0;
+   423→        for (let i = 0; i < dataArray.length; i++) { const v = (dataArray[i] - 128) / 128; sum += v * v; }
+   424→        const rms = Math.sqrt(sum / dataArray.length) * 100;
+   425→        if (rms > THRESHOLD && !mediaRecorderRef.current?.state?.includes('activ') && voiceState !== 'speaking' && voiceState !== 'muted') {
+   426→          if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
+   427→            chunksRef.current = [];
+   428→            const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+   429→            mediaRecorderRef.current = mr;
+   430→            mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+   431→            mr.onstop = async () => {
+   432→              if (chunksRef.current.length > 0 && voiceState !== 'muted') {
+   433→                const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+   434→                const fd = new FormData(); fd.append('audio', blob);
+   435→                try {
+   436→                  const asrRes = await fetch('/api/voice/asr', { method: 'POST', body: fd });
+   437→                  const asrData = await asrRes.json();
+   438→                  if (asrData.text) {
+   439→                    let text = asrData.text;
+   440→                    if (text.toLowerCase().includes('professor')) {
+   441→                      text = text.replace(/professor/gi, '').trim();
+   442→                      if (text) sendMessage(text);
+   443→                      else setVoiceState('listening');
+   444→                    }
+   445→                  }
+   446→                } catch { /* silently fail */ }
+   447→              }
+   448→            };
+   449→            mr.start();
+   450→            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+   451→          }
+   452→          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+   453→          silenceTimerRef.current = setTimeout(() => { if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop(); }, 1500);
+   454→        }
+   455→        requestAnimationFrame(monitor);
+   456→      };
+   457→      monitor();
+   458→    } catch { setVoiceState('muted'); }
+   459→  }, [voiceState, sendMessage]);
+   460→
+   461→  useEffect(() => { startVoiceMonitoring(); return () => { monitoringRef.current = false; streamRef.current?.getTracks().forEach(t => t.stop()); audioCtxRef.current?.close(); if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current); }; }, []);
+   462→
+   463→  const toggleMute = useCallback(() => {
+   464→    if (voiceState === 'muted') { startVoiceMonitoring(); }
+   465→    else { monitoringRef.current = false; streamRef.current?.getTracks().forEach(t => t.stop()); setVoiceState('muted'); }
+   466→  }, [voiceState, startVoiceMonitoring]);
+   467→
+   468→  const stateConfig = {
+   469→    listening: { label: 'Listening', color: '#39ff14', orbClass: 'professor-orb-listening' },
+   470→    standby: { label: 'Standby', color: '#ff6b35', orbClass: 'professor-orb-standby' },
+   471→    speaking: { label: 'Speaking', color: '#bf00ff', orbClass: 'professor-orb-speaking' },
+   472→    muted: { label: 'Muted', color: '#64748b', orbClass: 'professor-orb-muted' },
+   473→  };
+   474→  const st = stateConfig[voiceState];
+   475→
+   476→  return (
+   477→    <div className="flex flex-col h-[calc(100vh-180px)]">
+   478→      <div className="holo-card rounded-2xl flex-1 flex flex-col overflow-hidden">
+   479→        {/* Header */}
+   480→        <div className="flex items-center justify-between p-4 border-b border-white/5">
+   481→          <div className="flex items-center gap-3">
+   482→            <Brain className="h-5 w-5 text-[var(--color-holo)]" />
+   483→            <h3 className="font-bold text-[#e2e8f0]">Professor Shield</h3>
+   484→            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `${st.color}20`, color: st.color, border: `1px solid ${st.color}40` }}>{st.label}</span>
+   485→          </div>
+   486→          <div className="flex items-center gap-2">
+   487→            <button onClick={toggleMute} className="flex h-8 w-8 items-center justify-center rounded-lg transition-all hover:scale-110" style={{ background: 'rgba(0,240,255,0.08)' }} aria-label="Toggle mic">
+   488→              {voiceState === 'muted' ? <MicOff className="h-4 w-4 text-[#64748b]" /> : <Mic className="h-4 w-4 text-[var(--color-holo)]" />}
+   489→            </button>
+   490→            {voiceState === 'speaking' && <button onClick={() => { audioRef.current?.pause(); setVoiceState('listening'); }} className="flex h-8 w-8 items-center justify-center rounded-lg transition-all hover:scale-110" style={{ background: 'rgba(191,0,255,0.08)' }} aria-label="Stop speaking"><VolumeX className="h-4 w-4 text-[#bf00ff]" /></button>}
+   491→          </div>
+   492→        </div>
+   493→
+   494→        {/* Messages */}
+   495→        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+   496→          <AnimatePresence>
+   497→            {messages.map((m, i) => (
+   498→              <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`chat-msg-enter flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+   499→                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${m.role === 'user' ? 'rounded-br-md' : 'rounded-bl-md'}`} style={{ background: m.role === 'user' ? 'rgba(191,0,255,0.12)' : 'rgba(0,240,255,0.06)', border: m.role === 'user' ? '1px solid rgba(191,0,255,0.15)' : '1px solid rgba(0,240,255,0.08)' }}>
+   500→                  {m.role === 'assistant' && <div className="text-xs font-bold text-[var(--color-holo)] mb-1">Professor</div>}
+   501→                  <div className="text-[#e2e8f0]" style={{ whiteSpace: 'pre-wrap' }}>{m.content || <span className="animate-pulse">▊</span>}</div>
+   502→                </div>
+   503→              </motion.div>
+   504→            ))}
+   505→          </AnimatePresence>
+   506→          <div ref={chatEndRef} />
+   507→        </div>
+   508→
+   509→        {/* Input */}
+   510→        <div className="p-4 border-t border-white/5">
+   511→          <form onSubmit={e => { e.preventDefault(); sendMessage(input); }} className="flex gap-2">
+   512→            <input value={input} onChange={e => setInput(e.target.value)} placeholder="Ask Professor anything... or say 'Professor' to use voice" className="holo-input flex-1 rounded-lg px-4 py-2.5 text-sm text-[#e2e8f0] placeholder:text-[#475569]" />
+   513→            <Button type="submit" disabled={isProcessing || !input.trim()} className="holo-btn holo-btn-primary holo-btn-sm"><Send className="h-4 w-4" /></Button>
+   514→          </form>
+   515→        </div>
+   516→      </div>
+   517→
+   518→      {/* Floating Orb */}
+   519→      <div className={`professor-orb ${st.orbClass}`} onClick={toggleMute}>
+   520→        {voiceState === 'listening' && <div className="voice-waveform"><span /><span /><span /><span /><span /></div>}
+   521→        {voiceState === 'speaking' && <Volume2 className="h-5 w-5 text-white" />}
+   522→        {voiceState === 'standby' && <Mic className="h-5 w-5 text-[#64748b]" />}
+   523→        {voiceState === 'muted' && <MicOff className="h-5 w-5 text-[#475569]" />}
+   524→      </div>
+   525→    </div>
+   526→  );
+   527→}
+   528→
+   529→/* ═══════════════════════════════════════════════════════════════════════
+   530→   QUIZZES TAB
+   531→   ═══════════════════════════════════════════════════════════════════════ */
+   532→
+   533→function QuizzesTab() {
+   534→  const [started, setStarted] = useState(false);
+   535→  const [currentQ, setCurrentQ] = useState(0);
+   536→  const [selected, setSelected] = useState<string | null>(null);
+   537→  const [answered, setAnswered] = useState(false);
+   538→  const [score, setScore] = useState(0);
+   539→  const [showHint, setShowHint] = useState(false);
+   540→  const [timeLeft, setTimeLeft] = useState(DEMO_QUIZ.timeLimit);
+   541→  const [finished, setFinished] = useState(false);
+   542→  const quiz = DEMO_QUIZ;
+   543→  const q = quiz.questions[currentQ];
+   544→
+   545→  useEffect(() => {
+   546→    if (!started || finished) return;
+   547→    const timer = setInterval(() => { setTimeLeft(t => { if (t <= 1) { clearInterval(timer); setFinished(true); return 0; } return t - 1; }); }, 1000);
+   548→    return () => clearInterval(timer);
+   549→  }, [started, finished]);
+   550→
+   551→  const handleAnswer = useCallback((option: string) => {
+   552→    if (answered) return;
+   553→    setSelected(option);
+   554→    setAnswered(true);
+   555→    if (option === q.correct) setScore(s => s + q.points);
+   556→  }, [answered, q]);
+   557→
+   558→  const nextQuestion = useCallback(() => {
+   559→    if (currentQ < quiz.questions.length - 1) { setCurrentQ(c => c + 1); setSelected(null); setAnswered(false); setShowHint(false); }
+   560→    else setFinished(true);
+   561→  }, [currentQ, quiz.questions.length]);
+   562→
+   563→  if (!started) {
+   564→    return (
+   565→      <div className="max-w-lg mx-auto">
+   566→        <div className="holo-card rounded-2xl p-8 text-center">
+   567→          <HelpCircle className="h-12 w-12 text-[var(--color-holo)] mx-auto mb-4" />
+   568→          <h3 className="text-xl font-bold text-[#e2e8f0] mb-2">{quiz.title}</h3>
+   569→          <p className="text-[#64748b] mb-1">{quiz.questions.length} questions • {quiz.timeLimit / 60} minutes</p>
+   570→          <p className="text-xs text-[#64748b] mb-6">Hints cost -25 XP each</p>
+   571→          <Button onClick={() => setStarted(true)} className="holo-btn holo-btn-primary"><Play className="h-4 w-4 mr-2" />Start Quiz</Button>
+   572→        </div>
+   573→      </div>
+   574→    );
+   575→  }
+   576→
+   577→  if (finished) {
+   578→    const pct = Math.round((score / (quiz.questions.reduce((a, q) => a + q.points, 0))) * 100);
+   579→    return (
+   580→      <div className="max-w-lg mx-auto">
+   581→        <div className="holo-card rounded-2xl p-8 text-center neon-border-animated">
+   582→          <div className="text-5xl mb-4">{pct >= 70 ? '🎉' : '💪'}</div>
+   583→          <h3 className="text-2xl font-bold text-[#e2e8f0] mb-2">{pct >= 70 ? 'Passed!' : 'Keep Practicing!'}</h3>
+   584→          <div className="text-3xl font-bold text-gradient-holo mb-1">{score} / {quiz.questions.reduce((a, q) => a + q.points, 0)}</div>
+   585→          <p className="text-[#64748b] mb-6">{pct}% accuracy</p>
+   586→          <Button onClick={() => { setStarted(false); setCurrentQ(0); setScore(0); setFinished(false); setTimeLeft(quiz.timeLimit); }} className="holo-btn holo-btn-primary"><RefreshCw className="h-4 w-4 mr-2" />Retake</Button>
+   587→        </div>
+   588→      </div>
+   589→    );
+   590→  }
+   591→
+   592→  return (
+   593→    <div className="max-w-2xl mx-auto">
+   594→      <div className="holo-card rounded-2xl p-6">
+   595→        {/* Progress bar */}
+   596→        <div className="flex items-center justify-between mb-4">
+   597→          <span className="text-xs text-[#64748b]">Question {currentQ + 1}/{quiz.questions.length}</span>
+   598→          <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-[#ff6b35]" /><span className={`text-sm font-mono ${timeLeft < 60 ? 'text-[#ff006e]' : 'text-[#e2e8f0]'}`}>{Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</span></div>
+   599→        </div>
+   600→        <div className="holo-progress mb-6"><div className="holo-progress-bar" style={{ width: `${((currentQ + 1) / quiz.questions.length) * 100}%` }} /></div>
+   601→
+   602→        {/* Question */}
+   603→        <h3 className="text-lg font-semibold text-[#e2e8f0] mb-6">{q.text}</h3>
+   604→
+   605→        {/* Options */}
+   606→        <div className="space-y-3 mb-4">
+   607→          {q.options.map(opt => {
+   608→            let cls = 'holo-card rounded-xl p-4 cursor-pointer transition-all ';
+   609→            if (answered) {
+   610→              if (opt === q.correct) cls += 'border-[#39ff14] ';
+   611→              else if (opt === selected) cls += 'border-[#ff006e] ';
+   612→            } else if (opt === selected) cls += 'border-[var(--color-holo)] ';
+   613→            return (
+   614→              <div key={opt} onClick={() => handleAnswer(opt)} className={cls}>
+   615→                <div className="flex items-center gap-3">
+   616→                  <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${answered && opt === q.correct ? 'border-[#39ff14] bg-[#39ff14]' : answered && opt === selected ? 'border-[#ff006e] bg-[#ff006e]' : 'border-[#64748b]'}`}>
+   617→                    {answered && opt === q.correct && <CheckCircle2 className="h-3 w-3 text-[#050810]" />}
+   618→                    {answered && opt === selected && opt !== q.correct && <XCircle className="h-3 w-3 text-[#050810]" />}
+   619→                  </div>
+   620→                  <span className="text-sm text-[#e2e8f0]">{opt}</span>
+   621→                </div>
+   622→              </div>
+   623→            );
+   624→          })}
+   625→        </div>
+   626→
+   627→        {/* Hint */}
+   628→        {!showHint && !answered && <button onClick={() => setShowHint(true)} className="flex items-center gap-1 text-xs text-[#ff6b35] hover:text-[#ff6b35]/80 mb-3"><Lightbulb className="h-3 w-3" />Reveal hint <span className="hint-cost-badge">-25 XP</span></button>}
+   629→        {showHint && <div className="text-sm text-[#ff6b35] bg-[rgba(255,107,53,0.08)] border border-[rgba(255,107,53,0.15)] rounded-lg p-3 mb-4">💡 {q.explanation}</div>}
+   630→
+   631→        {/* Explanation after answer */}
+   632→        {answered && <div className={`text-sm rounded-lg p-3 mb-4 ${selected === q.correct ? 'bg-[rgba(57,255,20,0.08)] border border-[rgba(57,255,20,0.15)] text-[#39ff14]' : 'bg-[rgba(255,0,110,0.08)] border border-[rgba(255,0,110,0.15)] text-[#ff006e]'}`}>
+   633→          {selected === q.correct ? '✓ Correct! ' : '✗ Incorrect. '}{q.explanation}
+   634→        </div>}
+   635→
+   636→        {/* Next button */}
+   637→        {answered && <Button onClick={nextQuestion} className="holo-btn holo-btn-primary w-full">{currentQ < quiz.questions.length - 1 ? 'Next Question' : 'See Results'} <ChevronRight className="h-4 w-4 ml-1" /></Button>}
+   638→      </div>
+   639→    </div>
+   640→  );
+   641→}
+   642→
+   643→/* ═══════════════════════════════════════════════════════════════════════
+   644→   LAB TERMINAL TAB — FUTURISTIC HACKING ENVIRONMENT
+   645→   ═══════════════════════════════════════════════════════════════════════ */
+   646→
+   647→function LabsTab() {
+   648→  const [selectedLab, setSelectedLab] = useState<typeof LAB_SCENARIOS[0] | null>(null);
+   649→  const [termLines, setTermLines] = useState<string[]>(['CyberShield Lab Terminal v3.0', 'Type 

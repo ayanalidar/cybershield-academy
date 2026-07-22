@@ -7,7 +7,7 @@ import {
   Cpu, Activity, Layers, Search, Target, Mail, MapPin,
   Github, Twitter, Linkedin, Youtube, ChevronDown, X,
   Send, Globe, Zap, Sparkles, Lock, Eye, Users, BookOpen,
-  Menu, ArrowRight, Check, Star,
+  Menu, ArrowRight, Check, Star, Mic,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
