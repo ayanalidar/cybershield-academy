@@ -26,8 +26,8 @@ async function generateAIResponse(
   messages: { role: string; content: string }[],
   systemPrompt: string
 ): Promise<ReadableStream<Uint8Array>> {
-  const sdk = await import('z-ai-web-dev-sdk');
-  const llm = new sdk.LLM();
+  const ZAI = (await import('z-ai-web-dev-sdk')).default;
+  const zai = await ZAI.create();
 
   const fullMessages = [
     { role: 'system' as const, content: systemPrompt },
@@ -37,11 +37,11 @@ async function generateAIResponse(
     })),
   ];
 
-  const stream = await llm.chat({
+  const stream = await zai.chat.completions.create({
     messages: fullMessages,
     stream: true,
     temperature: 0.7,
-    maxTokens: 2048,
+    max_tokens: 2048,
   });
 
   const encoder = new TextEncoder();
@@ -49,9 +49,26 @@ async function generateAIResponse(
     async start(controller) {
       try {
         for await (const chunk of stream) {
-          const content = chunk.choices?.[0]?.delta?.content ?? '';
-          if (content) {
-            controller.enqueue(encoder.encode(content));
+          // SDK returns raw byte objects that form SSE strings
+          const vals = Object.values(chunk);
+          const text = vals
+            .filter((v): v is number => typeof v === 'number')
+            .map((v) => String.fromCharCode(v))
+          .join('');
+          // Parse SSE lines like: data: {"choices":[{"delta":{"content":"..."}]}
+          const lines = text.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+              try {
+                const parsed = JSON.parse(line.slice(6));
+                const content = parsed.choices?.[0]?.delta?.content ?? '';
+                if (content) {
+                  controller.enqueue(encoder.encode(content));
+                }
+              } catch {
+                // skip malformed lines
+              }
+            }
           }
         }
         controller.close();
