@@ -1,0 +1,1207 @@
+     1→   100→    { id: 'o1', description: 'Identify the vulnerable input parameter', completed: false },
+     2→   101→    { id: 'o2', description: 'Extract database version information', completed: false },
+     3→   102→    { id: 'o3', description: 'Enumerate table names from the database', completed: false },
+     4→   103→    { id: 'o4', description: 'Extract user credentials from the users table', completed: false },
+     5→   104→  ]},
+     6→   105→  { id: 'lab3', title: 'Privilege Escalation', category: 'System Security', difficulty: 'advanced', objectives: [
+     7→   106→    { id: 'o1', description: 'Gain initial access as low-privilege user', completed: false },
+     8→   107→    { id: 'o2', description: 'Enumerate SUID binaries', completed: false },
+     9→   108→    { id: 'o3', description: 'Exploit misconfigured SUID binary', completed: false },
+    10→   109→    { id: 'o4', description: 'Escalate to root and read /root/flag.txt', completed: false },
+    11→   110→  ]},
+    12→   111→  { id: 'lab4', title: 'Cryptographic Analysis', category: 'Cryptography', difficulty: 'intermediate', objectives: [
+    13→   112→    { id: 'o1', description: 'Identify the encryption algorithm used', completed: false },
+    14→   113→    { id: 'o2', description: 'Analyze the key generation weakness', completed: false },
+    15→   114→    { id: 'o3', description: 'Develop a decryption strategy', completed: false },
+    16→   115→  ]},
+    17→   116→  { id: 'lab5', title: 'Web Shell Upload', category: 'Web Security', difficulty: 'advanced', objectives: [
+    18→   117→    { id: 'o1', description: 'Identify the file upload endpoint', completed: false },
+    19→   118→    { id: 'o2', description: 'Bypass the file type validation', completed: false },
+    20→   119→    { id: 'o3', description: 'Upload and execute a web shell', completed: false },
+    21→   120→    { id: 'o4', description: 'Maintain persistence and cover tracks', completed: false },
+    22→   121→  ]},
+    23→   122→];
+    24→   123→
+    25→   124→const ACTIVITY_TIMELINE = [
+    26→   125→  { time: '2 hours ago', action: 'Completed Network Security module', type: 'module', xp: 50 },
+    27→   126→  { time: '5 hours ago', action: 'Solved CTF: Hidden in Plain Sight', type: 'ctf', xp: 150 },
+    28→   127→  { time: '1 day ago', action: 'Earned badge: Lab Rat', type: 'badge', xp: 100 },
+    29→   128→  { time: '1 day ago', action: 'Quiz: Web Security — Score 85%', type: 'quiz', xp: 75 },
+    30→   129→  { time: '2 days ago', action: 'Lab Session: Network Recon (completed)', type: 'lab', xp: 100 },
+    31→   130→  { time: '3 days ago', action: 'Enrolled in Web Application Security', type: 'enroll', xp: 0 },
+    32→   131→  { time: '4 days ago', action: 'Solved CTF: OSINT Profile Hunt', type: 'ctf', xp: 100 },
+    33→   132→];
+    34→   133→
+    35→   134→const DEMO_QUIZ = {
+    36→   135→  id: 'q1', title: 'Network Security Fundamentals Quiz', timeLimit: 300, questions: [
+    37→   136→    { id: 'qq1', text: 'What does the TCP three-way handshake consist of?', options: ['SYN, SYN-ACK, ACK', 'ACK, SYN, FIN', 'SYN, ACK, RST', 'HELLO, AUTH, START'], correct: 'SYN, SYN-ACK, ACK', explanation: 'The TCP three-way handshake: client sends SYN, server responds with SYN-ACK, client completes with ACK.', points: 20 },
+    38→   137→    { id: 'qq2', text: 'Which protocol operates at Layer 4 of the OSI model?', options: ['HTTP', 'IP', 'TCP', 'Ethernet'], correct: 'TCP', explanation: 'TCP (Transmission Control Protocol) operates at the Transport Layer (Layer 4) of the OSI model.', points: 20 },
+    39→   138→    { id: 'qq3', text: 'What is the primary purpose of a firewall?', options: ['Encrypt data', 'Filter network traffic', 'Manage passwords', 'Compress packets'], correct: 'Filter network traffic', explanation: 'A firewall monitors and filters incoming and outgoing network traffic based on predetermined security rules.', points: 20 },
+    40→   139→    { id: 'qq4', text: 'Which port does HTTPS typically use?', options: ['80', '443', '8080', '22'], correct: '443', explanation: 'HTTPS (HTTP Secure) uses port 443 by default for encrypted web communication.', points: 20 },
+    41→   140→    { id: 'qq5', text: 'What is a DDoS attack?', options: ['Data theft via DNS', 'Overwhelming a service with traffic', 'Decrypting intercepted data', 'Exploiting buffer overflows'], correct: 'Overwhelming a service with traffic', explanation: 'DDoS (Distributed Denial of Service) floods a target with traffic from multiple sources to make it unavailable.', points: 20 },
+    42→   141→  ],
+    43→   142→};
+    44→   143→
+    45→   144→const NETWORK_NODES = [
+    46→   145→  { id: 'n1', label: 'Attacker', x: 10, y: 50, type: 'normal' as const },
+    47→   146→  { id: 'n2', label: 'Firewall', x: 30, y: 30, type: 'normal' as const },
+    48→   147→  { id: 'n3', label: 'Web Server', x: 50, y: 20, type: 'normal' as const },
+    49→   148→  { id: 'n4', label: 'DB Server', x: 70, y: 40, type: 'discovered' as const },
+    50→   149→  { id: 'n5', label: 'Admin Panel', x: 60, y: 70, type: 'threat' as const },
+    51→   150→  { id: 'n6', label: 'Backup', x: 85, y: 60, type: 'normal' as const },
+    52→   151→];
+    53→   152→
+    54→   153→/* ═══════════════════════════════════════════════════════════════════════
+    55→   154→   PARTICLES (reuse from landing)
+    56→   155→   ═══════════════════════════════════════════════════════════════════════ */
+    57→   156→
+    58→   157→function Particles() {
+    59→   158→  const particles = useMemo(() =>
+    60→   159→    Array.from({ length: 30 }, (_, i) => ({
+    61→   160→      id: i,
+    62→   161→      left: `${Math.random() * 100}%`,
+    63→   162→      delay: `${Math.random() * 10}s`,
+    64→   163→      duration: `${10 + Math.random() * 15}s`,
+    65→   164→      size: `${1 + Math.random() * 2}px`,
+    66→   165→      color: ['rgba(0,240,255,0.4)', 'rgba(191,0,255,0.3)', 'rgba(57,255,20,0.3)', 'rgba(255,0,110,0.2)'][i % 4],
+    67→   166→    })), []);
+    68→   167→  return (
+    69→   168→    <div className="holo-bg">
+    70→   169→      {particles.map((p) => (
+    71→   170→        <div key={p.id} className="particle particle-glow" style={{ left: p.left, width: p.size, height: p.size, background: p.color, animationDelay: p.delay, animationDuration: p.duration }} />
+    72→   171→      ))}
+    73→   172→    </div>
+    74→   173→  );
+    75→   174→}
+    76→   175→
+    77→   176→/* ═══════════════════════════════════════════════════════════════════════
+    78→   177→   DASHBOARD TAB
+    79→   178→   ═══════════════════════════════════════════════════════════════════════ */
+    80→   179→
+    81→   180→function DashboardTab() {
+    82→   181→  const user = DEMO_USER;
+    83→   182→  const currentRank = RANKS.filter(r => r.min <= user.xp).pop()!;
+    84→   183→  const nextRank = RANKS[RANKS.indexOf(currentRank) + 1];
+    85→   184→  const xpProgress = nextRank ? ((user.xp - currentRank.min) / (nextRank.min - currentRank.min)) * 100 : 100;
+    86→   185→
+    87→   186→  return (
+    88→   187→    <div className="space-y-6">
+    89→   188→      {/* Welcome Banner */}
+    90→   189→      <div className="holo-card holo-shimmer rounded-2xl p-6 sm:p-8">
+    91→   190→        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    92→   191→          <div>
+    93→   192→            <h2 className="text-2xl font-bold text-[#e2e8f0] mb-1">Welcome back, <span className="text-gradient-holo">{user.name}</span></h2>
+    94→   193→            <p className="text-[#64748b]">{currentRank.icon} {currentRank.name} — Level {user.level} — {user.streakDays}-day streak 🔥</p>
+    95→   194→          </div>
+    96→   195→          <div className="flex items-center gap-3">
+    97→   196→            <div className="holo-badge holo-badge-cyan"><Zap className="h-3 w-3 mr-1" />{user.xp} XP</div>
+    98→   197→            <div className="holo-badge holo-badge-green"><Flame className="h-3 w-3 mr-1" />{user.streakDays}d</div>
+    99→   198→          </div>
+   100→   199→        </div>
+   101→   200→      </div>
+   102→   201→
+   103→   202→      {/* Stat Cards */}
+   104→   203→      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+   105→   204→        {[
+   106→   205→          { label: 'Total XP', value: user.xp.toLocaleString(), icon: Zap, color: '#00f0ff' },
+   107→   206→          { label: 'Courses', value: '2/6', icon: BookOpen, color: '#bf00ff' },
+   108→   207→          { label: 'CTF Solved', value: '2/6', icon: Trophy, color: '#39ff14' },
+   109→   208→          { label: 'Badges', value: '3/8', icon: Medal, color: '#ff6b35' },
+   110→   209→        ].map(s => (
+   111→   210→          <div key={s.label} className="stat-card-3d rounded-xl p-4" style={{ '--stat-color': s.color } as React.CSSProperties}>
+   112→   211→            <div className="flex items-center gap-2 mb-2"><s.icon className="h-4 w-4" style={{ color: s.color }} /><span className="text-xs text-[#64748b]">{s.label}</span></div>
+   113→   212→            <div className="text-xl font-bold text-[#e2e8f0]">{s.value}</div>
+   114→   213→          </div>
+   115→   214→        ))}
+   116→   215→      </div>
+   117→   216→
+   118→   217→      <div className="grid lg:grid-cols-5 gap-6">
+   119→   218→        {/* Rank Progress */}
+   120→   219→        <div className="lg:col-span-2 holo-card rounded-2xl p-6">
+   121→   220→          <h3 className="neon-text text-sm font-bold mb-4">RANK PROGRESSION</h3>
+   122→   221→          <div className="flex items-center gap-4 mb-4">
+   123→   222→            <div className="text-4xl">{currentRank.icon}</div>
+   124→   223→            <div>
+   125→   224→              <div className="text-lg font-bold text-[#e2e8f0]">{currentRank.name}</div>
+   126→   225→              <div className="text-xs text-[#64748b]">{nextRank ? `Next: ${nextRank.name} (${nextRank.min - user.xp} XP needed)` : 'Max rank!'}</div>
+   127→   226→            </div>
+   128→   227→          </div>
+   129→   228→          <div className="holo-progress"><div className="holo-progress-bar" style={{ width: `${xpProgress}%` }} /></div>
+   130→   229→          <div className="text-xs text-[#64748b] mt-1">{user.xp} / {nextRank?.min ?? user.xp} XP</div>
+   131→   230→        </div>
+   132→   231→
+   133→   232→        {/* Activity Timeline */}
+   134→   233→        <div className="lg:col-span-3 holo-card rounded-2xl p-6">
+   135→   234→          <h3 className="neon-text text-sm font-bold mb-4">RECENT ACTIVITY</h3>
+   136→   235→          <div className="space-y-3">
+   137→   236→            {ACTIVITY_TIMELINE.map((a, i) => (
+   138→   237→              <div key={i} className="flex items-start gap-3 data-stream pl-4 py-1">
+   139→   238→                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: 'rgba(0,240,255,0.08)' }}>
+   140→   239→                  {a.type === 'module' && <BookOpen className="h-3.5 w-3.5 text-[#00f0ff]" />}
+   141→   240→                  {a.type === 'ctf' && <Flag className="h-3.5 w-3.5 text-[#39ff14]" />}
+   142→   241→                  {a.type === 'badge' && <Award className="h-3.5 w-3.5 text-[#ff6b35]" />}
+   143→   242→                  {a.type === 'quiz' && <HelpCircle className="h-3.5 w-3.5 text-[#bf00ff]" />}
+   144→   243→                  {a.type === 'lab' && <Terminal className="h-3.5 w-3.5 text-[#00f0ff]" />}
+   145→   244→                  {a.type === 'enroll' && <CheckCircle2 className="h-3.5 w-3.5 text-[#39ff14]" />}
+   146→   245→                </div>
+   147→   246→                <div className="flex-1 min-w-0">
+   148→   247→                  <p className="text-sm text-[#e2e8f0] truncate">{a.action}</p>
+   149→   248→                  <p className="text-xs text-[#64748b]">{a.time}</p>
+   150→   249→                </div>
+   151→   250→                {a.xp > 0 && <span className="text-xs font-semibold text-[#39ff14]">+{a.xp} XP</span>}
+   152→   251→              </div>
+   153→   252→            ))}
+   154→   253→          </div>
+   155→   254→        </div>
+   156→   255→      </div>
+   157→   256→
+   158→   257→      {/* Enrolled Courses Progress */}
+   159→   258→      <div className="holo-card rounded-2xl p-6">
+   160→   259→        <h3 className="neon-text text-sm font-bold mb-4">ENROLLED COURSES</h3>
+   161→   260→        <div className="grid sm:grid-cols-2 gap-4">
+   162→   261→          {COURSES.filter(c => c.enrolled).map(c => (
+   163→   262→            <div key={c.id} className="flex items-center gap-4 p-3 rounded-xl" style={{ background: 'rgba(10,14,26,0.6)', border: '1px solid rgba(0,240,255,0.06)' }}>
+   164→   263→              <div className="text-2xl">{c.thumbnail}</div>
+   165→   264→              <div className="flex-1 min-w-0">
+   166→   265→                <div className="text-sm font-semibold text-[#e2e8f0] truncate">{c.title}</div>
+   167→   266→                <div className="text-xs text-[#64748b] mb-2">{c.modules} modules • {c.durationHours}h</div>
+   168→   267→                <div className="holo-progress"><div className="holo-progress-bar" style={{ width: `${c.progress}%` }} /></div>
+   169→   268→                <div className="text-xs text-[#64748b] mt-1">{c.progress}% complete</div>
+   170→   269→              </div>
+   171→   270→            </div>
+   172→   271→          ))}
+   173→   272→        </div>
+   174→   273→      </div>
+   175→   274→    </div>
+   176→   275→  );
+   177→   276→}
+   178→   277→
+   179→   278→/* ═══════════════════════════════════════════════════════════════════════
+   180→   279→   COURSES TAB
+   181→   280→   ═══════════════════════════════════════════════════════════════════════ */
+   182→   281→
+   183→   282→function CoursesTab() {
+   184→   283→  const [courses, setCourses] = useState(COURSES);
+   185→   284→  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+   186→   285→  const [courseDetail, setCourseDetail] = useState<{ id: string; title: string; modules: { id: string; title: string; description: string | null; durationMinutes: number; orderIndex: number; contentType: string; videoUrl: string | null }[] } | null>(null);
+   187→   286→  const [loadingDetail, setLoadingDetail] = useState(false);
+   188→   287→
+   189→   288→  const handleEnroll = useCallback((id: string) => {
+   190→   289→    setCourses(prev => prev.map(c => c.id === id ? { ...c, enrolled: true, progress: 0 } : c));
+   191→   290→  }, []);
+   192→   291→
+   193→   292→  const openCourse = useCallback(async (id: string) => {
+   194→   293→    setSelectedCourse(id);
+   195→   294→    setLoadingDetail(true);
+   196→   295→    setCourseDetail(null);
+   197→   296→    try {
+   198→   297→      const res = await fetch(`/api/courses/${id}?userId=${DEMO_USER.id}`);
+   199→   298→      if (res.ok) {
+   200→   299→        const data = await res.json();
+   201→   300→        if (data.success && data.course) {
+   202→   301→          setCourseDetail({ id: data.course.id, title: data.course.title, modules: data.course.modules || [] });
+   203→   302→        }
+   204→   303→      }
+   205→   304→    } catch { /* fallback to no modules */ }
+   206→   305→    setLoadingDetail(false);
+   207→   306→  }, []);
+   208→   307→
+   209→   308→  const diffColor = (d: string) => d === 'beginner' ? '#39ff14' : d === 'intermediate' ? '#ff6b35' : '#ff006e';
+   210→   309→
+   211→   310→  // Course detail view
+   212→   311→  if (selectedCourse) {
+   213→   312→    const course = courses.find(c => c.id === selectedCourse);
+   214→   313→    return (
+   215→   314→      <div>
+   216→   315→        <button onClick={() => setSelectedCourse(null)} className="flex items-center gap-1 text-sm text-[#64748b] hover:text-[#e2e8f0] mb-4 transition-colors">
+   217→   316→          <ChevronRight className="h-3.5 w-3.5 rotate-180" /> Back to courses
+   218→   317→        </button>
+   219→   318→        {course && (
+   220→   319→          <div className="holo-card holo-shimmer rounded-2xl p-6 mb-6">
+   221→   320→            <div className="flex items-center gap-4 mb-3">
+   222→   321→              <span className="text-4xl">{course.thumbnail}</span>
+   223→   322→              <div>
+   224→   323→                <h2 className="text-xl font-bold text-[#e2e8f0]">{course.title}</h2>
+   225→   324→                <div className="flex gap-2 mt-1">
+   226→   325→                  <span className="holo-badge text-xs" style={{ background: 'rgba(0,240,255,0.08)', borderColor: 'rgba(0,240,255,0.2)', color: '#00f0ff' }}>{course.category}</span>
+   227→   326→                  <span className="holo-badge text-xs" style={{ background: `${diffColor(course.difficulty)}15`, borderColor: `${diffColor(course.difficulty)}30`, color: diffColor(course.difficulty) }}>{course.difficulty}</span>
+   228→   327→                  <span className="text-xs text-[#64748b]">{course.durationHours}h • <Star className="h-3 w-3 text-yellow-400 inline mr-0.5" /> {course.rating}</span>
+   229→   328→                </div>
+   230→   329→              </div>
+   231→   330→            </div>
+   232→   331→            {course.enrolled && (
+   233→   332→              <div className="mt-3">
+   234→   333→                <div className="flex justify-between text-xs text-[#64748b] mb-1"><span>Progress</span><span>{course.progress}%</span></div>
+   235→   334→                <div className="holo-progress"><div className="holo-progress-bar" style={{ width: `${course.progress}%` }} /></div>
+   236→   335→              </div>
+   237→   336→            )}
+   238→   337→          </div>
+   239→   338→        )}
+   240→   339→
+   241→   340→        <h3 className="neon-text text-sm font-bold mb-4">MODULES ({courseDetail?.modules.length ?? 0})</h3>
+   242→   341→        {loadingDetail ? (
+   243→   342→          <div className="space-y-3">
+   244→   343→            {[1, 2, 3].map(i => <div key={i} className="holo-card rounded-xl p-4 animate-pulse"><div className="h-4 bg-white/5 rounded w-3/4 mb-2" /><div className="h-3 bg-white/5 rounded w-1/2" /></div>)}
+   245→   344→          </div>
+   246→   345→        ) : courseDetail && courseDetail.modules.length > 0 ? (
+   247→   346→          <div className="space-y-3">
+   248→   347→            {courseDetail.modules.map((mod, idx) => (
+   249→   348→              <motion.div key={mod.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }} className="holo-card rounded-xl p-4 cursor-pointer hover:border-[rgba(0,240,255,0.2)] transition-all" style={{ borderLeft: '3px solid rgba(0,240,255,0.3)' }}>
+   250→   349→                <div className="flex items-center gap-3">
+   251→   350→                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold" style={{ background: 'rgba(0,240,255,0.08)', color: '#00f0ff' }}>{idx + 1}</div>
+   252→   351→                  <div className="flex-1 min-w-0">
+   253→   352→                    <h4 className="text-sm font-semibold text-[#e2e8f0]">{mod.title}</h4>
+   254→   353→                    {mod.description && <p className="text-xs text-[#64748b] mt-0.5 line-clamp-2">{mod.description}</p>}
+   255→   354→                  </div>
+   256→   355→                  <div className="text-xs text-[#64748b] shrink-0">{mod.durationMinutes}min</div>
+   257→   356→                </div>
+   258→   357→              </motion.div>
+   259→   358→            ))}
+   260→   359→          </div>
+   261→   360→        ) : (
+   262→   361→          <div className="holo-card rounded-2xl p-8 text-center">
+   263→   362→            <BookOpen className="h-10 w-10 text-[#64748b] mx-auto mb-3" />
+   264→   363→            <p className="text-[#64748b] text-sm">No modules available yet for this course. Check back soon!</p>
+   265→   364→          </div>
+   266→   365→        )}
+   267→   366→      </div>
+   268→   367→    );
+   269→   368→  }
+   270→   369→
+   271→   370→  // Course grid view
+   272→   371→  return (
+   273→   372→    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+   274→   373→      {courses.map(c => (
+   275→   374→        <motion.div key={c.id} whileHover={{ y: -4 }} className="holo-card holo-card-3d rounded-2xl p-6 flex flex-col cursor-pointer" onClick={() => openCourse(c.id)}>
+   276→   375→          <div className="flex items-start justify-between mb-3">
+   277→   376→            <span className="text-3xl">{c.thumbnail}</span>
+   278→   377→            <div className="flex items-center gap-1"><Star className="h-3 w-3 text-yellow-400" /><span className="text-xs text-[#94a3b8]">{c.rating}</span></div>
+   279→   378→          </div>
+   280→   379→          <h3 className="text-base font-bold text-[#e2e8f0] mb-1">{c.title}</h3>
+   281→   380→          <p className="text-xs text-[#64748b] mb-3">{c.modules} modules • {c.durationHours}h</p>
+   282→   381→          <div className="flex gap-2 mb-4">
+   283→   382→            <span className="holo-badge text-xs" style={{ background: 'rgba(0,240,255,0.08)', borderColor: 'rgba(0,240,255,0.2)', color: '#00f0ff' }}>{c.category}</span>
+   284→   383→            <span className="holo-badge text-xs" style={{ background: `${diffColor(c.difficulty)}15`, borderColor: `${diffColor(c.difficulty)}30`, color: diffColor(c.difficulty) }}>{c.difficulty}</span>
+   285→   384→          </div>
+   286→   385→          {c.enrolled ? (
+   287→   386→            <div className="mt-auto">
+   288→   387→              <div className="flex justify-between text-xs text-[#64748b] mb-1"><span>Progress</span><span>{c.progress}%</span></div>
+   289→   388→              <div className="holo-progress"><div className="holo-progress-bar" style={{ width: `${c.progress}%` }} /></div>
+   290→   389→              <Button className="holo-btn holo-btn-primary w-full mt-3 holo-btn-sm">Continue <ArrowUpRight className="h-3 w-3 ml-1" /></Button>
+   291→   390→            </div>
+   292→   391→          ) : (
+   293→   392→            <Button className="holo-btn mt-auto w-full holo-btn-sm" onClick={e => { e.stopPropagation(); handleEnroll(c.id); }}>Enroll Now</Button>
+   294→   393→          )}
+   295→   394→        </motion.div>
+   296→   395→      ))}
+   297→   396→    </div>
+   298→   397→  );
+   299→   398→}
+   300→   399→
+   301→   400→/* ═══════════════════════════════════════════════════════════════════════
+   302→   401→   PROFESSOR TAB — ALWAYS-LISTENING
+   303→   402→   ═══════════════════════════════════════════════════════════════════════ */
+   304→   403→
+   305→   404→type VoiceState = 'listening' | 'standby' | 'speaking' | 'muted';
+   306→   405→
+   307→   406→function ProfessorTab() {
+   308→   407→  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
+   309→   408→    { role: 'assistant', content: 'Hey there! I\'m Professor Shield, your cybersecurity mentor. I\'m always listening — just say **"Professor"** before your question and I\'ll respond. You can also type below. Try asking me about network security, or say **"standby"** to pause me.' },
+   310→   409→  ]);
+   311→   410→  const [input, setInput] = useState('');
+   312→   411→  const [voiceState, setVoiceState] = useState<VoiceState>('standby');
+   313→   412→  const [isProcessing, setIsProcessing] = useState(false);
+   314→   413→  const chatEndRef = useRef<HTMLDivElement>(null);
+   315→   414→  const audioCtxRef = useRef<AudioContext | null>(null);
+   316→   415→  const analyserRef = useRef<AnalyserNode | null>(null);
+   317→   416→  const streamRef = useRef<MediaStream | null>(null);
+   318→   417→  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+   319→   418→  const chunksRef = useRef<Blob[]>([]);
+   320→   419→  const monitoringRef = useRef(false);
+   321→   420→  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+   322→   421→  const audioRef = useRef<HTMLAudioElement | null>(null);
+   323→   422→  // Refs to avoid stale closures in the monitor loop
+   324→   423→  const voiceStateRef = useRef<VoiceState>('standby');
+   325→   424→  const isProcessingRef = useRef(false);
+   326→   425→  const messagesRef = useRef(messages);
+   327→   426→  const sendMessageRef = useRef<(text: string) => Promise<void>>(() => Promise.resolve());
+   328→   427→
+   329→   428→  // Keep refs in sync
+   330→   429→  useEffect(() => { voiceStateRef.current = voiceState; }, [voiceState]);
+   331→   430→  useEffect(() => { isProcessingRef.current = isProcessing; }, [isProcessing]);
+   332→   431→  useEffect(() => { messagesRef.current = messages; }, [messages]);
+   333→   432→
+   334→   433→  const scrollToBottom = useCallback(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, []);
+   335→   434→  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
+   336→   435→
+   337→   436→  const speak = useCallback(async (text: string) => {
+   338→   437→    try {
+   339→   438→      setVoiceState('speaking');
+   340→   439→      voiceStateRef.current = 'speaking';
+   341→   440→      const res = await fetch('/api/voice/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+   342→   441→      if (res.ok) {
+   343→   442→        const blob = await res.blob();
+   344→   443→        const url = URL.createObjectURL(blob);
+   345→   444→        if (audioRef.current) { audioRef.current.pause(); URL.revokeObjectURL(audioRef.current.src); }
+   346→   445→        const audio = new Audio(url);
+   347→   446→        audioRef.current = audio;
+   348→   447→        audio.onended = () => { setVoiceState('listening'); voiceStateRef.current = 'listening'; URL.revokeObjectURL(url); };
+   349→   448→        audio.onerror = () => { setVoiceState('listening'); voiceStateRef.current = 'listening'; };
+   350→   449→        audio.play().catch(() => { setVoiceState('listening'); voiceStateRef.current = 'listening'; });
+   351→   450→      } else { setVoiceState('listening'); voiceStateRef.current = 'listening'; }
+   352→   451→    } catch { setVoiceState('listening'); voiceStateRef.current = 'listening'; }
+   353→   452→  }, []);
+   354→   453→
+   355→   454→  const sendMessage = useCallback(async (text: string) => {
+   356→   455→    if (!text.trim() || isProcessingRef.current) return;
+   357→   456→    const userMsg = text.trim();
+   358→   457→    setInput('');
+   359→   458→    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+   360→   459→    setIsProcessing(true);
+   361→   460→    isProcessingRef.current = true;
+   362→   461→
+   363→   462→    if (userMsg.toLowerCase() === 'standby' || userMsg.toLowerCase() === 'mute') {
+   364→   463→      setMessages(prev => [...prev, { role: 'assistant', content: 'Standing by. Say **"Professor"** when you need me.' }]);
+   365→   464→      setVoiceState('muted');
+   366→   465→      voiceStateRef.current = 'muted';
+   367→   466→      setIsProcessing(false);
+   368→   467→      isProcessingRef.current = false;
+   369→   468→      return;
+   370→   469→    }
+   371→   470→
+   372→   471→    try {
+   373→   472→      const history = messagesRef.current.slice(-10).map(m => ({ role: m.role, content: m.content }));
+   374→   473→      const res = await fetch('/api/chat', {
+   375→   474→        method: 'POST', headers: { 'Content-Type': 'application/json' },
+   376→   475→        body: JSON.stringify({ userId: DEMO_USER.id, sessionId: 'academy-session', message: userMsg, history }),
+   377→   476→      });
+   378→   477→      if (res.ok) {
+   379→   478→        const reader = res.body?.getReader();
+   380→   479→        if (reader) {
+   381→   480→          const decoder = new TextDecoder();
+   382→   481→          let fullText = '';
+   383→   482→          setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+   384→   483→          while (true) {
+   385→   484→            const { done, value } = await reader.read();
+   386→   485→            if (done) break;
+   387→   486→            fullText += decoder.decode(value, { stream: true });
+   388→   487→            setMessages(prev => { const copy = [...prev]; copy[copy.length - 1] = { role: 'assistant', content: fullText }; return copy; });
+   389→   488→          }
+   390→   489→          speak(fullText);
+   391→   490→        }
+   392→   491→      } else {
+   393→   492→        setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I couldn\'t process that. Please try again.' }]);
+   394→   493→      }
+   395→   494→    } catch {
+   396→   495→      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
+   397→   496→    }
+   398→   497→    setIsProcessing(false);
+   399→   498→    isProcessingRef.current = false;
+   400→   499→  }, [speak]);
+   401→   500→
+   402→   501→  // Keep sendMessageRef updated
+   403→   502→  useEffect(() => { sendMessageRef.current = sendMessage; }, [sendMessage]);
+   404→   503→
+   405→   504→  const startVoiceMonitoring = useCallback(async () => {
+   406→   505→    try {
+   407→   506→      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+   408→   507→      streamRef.current = stream;
+   409→   508→      const ctx = new AudioContext();
+   410→   509→      audioCtxRef.current = ctx;
+   411→   510→      const analyser = ctx.createAnalyser();
+   412→   511→      analyser.fftSize = 2048;
+   413→   512→      analyserRef.current = analyser;
+   414→   513→      const source = ctx.createMediaStreamSource(stream);
+   415→   514→      source.connect(analyser);
+   416→   515→      setVoiceState('listening');
+   417→   516→      voiceStateRef.current = 'listening';
+   418→   517→      monitoringRef.current = true;
+   419→   518→
+   420→   519→      const dataArray = new Uint8Array(analyser.fftSize);
+   421→   520→      const THRESHOLD = 15;
+   422→   521→      const monitor = () => {
+   423→   522→        if (!monitoringRef.current) return;
+   424→   523→        analyser.getByteTimeDomainData(dataArray);
+   425→   524→        let sum = 0;
+   426→   525→        for (let i = 0; i < dataArray.length; i++) { const v = (dataArray[i] - 128) / 128; sum += v * v; }
+   427→   526→        const rms = Math.sqrt(sum / dataArray.length) * 100;
+   428→   527→        const currentState = voiceStateRef.current;
+   429→   528→        if (rms > THRESHOLD && !mediaRecorderRef.current?.state?.includes('activ') && currentState !== 'speaking' && currentState !== 'muted') {
+   430→   529→          if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
+   431→   530→            chunksRef.current = [];
+   432→   531→            const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+   433→   532→            mediaRecorderRef.current = mr;
+   434→   533→            mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+   435→   534→            mr.onstop = async () => {
+   436→   535→              if (chunksRef.current.length > 0 && voiceStateRef.current !== 'muted') {
+   437→   536→                const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+   438→   537→                const fd = new FormData(); fd.append('audio', blob);
+   439→   538→                try {
+   440→   539→                  const asrRes = await fetch('/api/voice/asr', { method: 'POST', body: fd });
+   441→   540→                  const asrData = await asrRes.json();
+   442→   541→                  if (asrData.text) {
+   443→   542→                    let text = asrData.text;
+   444→   543→                    if (text.toLowerCase().includes('professor')) {
+   445→   544→                      text = text.replace(/professor/gi, '').trim();
+   446→   545→                      if (text) sendMessageRef.current(text);
+   447→   546→                      else { setVoiceState('listening'); voiceStateRef.current = 'listening'; }
+   448→   547→                    }
+   449→   548→                  }
+   450→   549→                } catch { /* silently fail */ }
+   451→   550→              }
+   452→   551→            };
+   453→   552→            mr.start();
+   454→   553→            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+   455→   554→          }
+   456→   555→          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+   457→   556→          silenceTimerRef.current = setTimeout(() => { if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop(); }, 1500);
+   458→   557→        }
+   459→   558→        requestAnimationFrame(monitor);
+   460→   559→      };
+   461→   560→      monitor();
+   462→   561→    } catch { setVoiceState('muted'); voiceStateRef.current = 'muted'; }
+   463→   562→  }, []); // No deps — all state accessed via refs
+   464→   563→
+   465→   564→  useEffect(() => {
+   466→   565→    startVoiceMonitoring();
+   467→   566→    return () => { monitoringRef.current = false; streamRef.current?.getTracks().forEach(t => t.stop()); audioCtxRef.current?.close(); if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current); };
+   468→   567→  }, [startVoiceMonitoring]);
+   469→   568→
+   470→   569→  const toggleMute = useCallback(() => {
+   471→   570→    if (voiceState === 'muted') { startVoiceMonitoring(); }
+   472→   571→    else { monitoringRef.current = false; streamRef.current?.getTracks().forEach(t => t.stop()); setVoiceState('muted'); voiceStateRef.current = 'muted'; }
+   473→   572→  }, [voiceState, startVoiceMonitoring]);
+   474→   573→
+   475→   574→  const stateConfig = {
+   476→   575→    listening: { label: 'Listening', color: '#39ff14', orbClass: 'professor-orb-listening' },
+   477→   576→    standby: { label: 'Standby', color: '#ff6b35', orbClass: 'professor-orb-standby' },
+   478→   577→    speaking: { label: 'Speaking', color: '#bf00ff', orbClass: 'professor-orb-speaking' },
+   479→   578→    muted: { label: 'Muted', color: '#64748b', orbClass: 'professor-orb-muted' },
+   480→   579→  };
+   481→   580→  const st = stateConfig[voiceState];
+   482→   581→
+   483→   582→  return (
+   484→   583→    <div className="flex flex-col h-[calc(100vh-180px)]">
+   485→   584→      <div className="holo-card rounded-2xl flex-1 flex flex-col overflow-hidden">
+   486→   585→        {/* Header */}
+   487→   586→        <div className="flex items-center justify-between p-4 border-b border-white/5">
+   488→   587→          <div className="flex items-center gap-3">
+   489→   588→            <Brain className="h-5 w-5 text-[var(--color-holo)]" />
+   490→   589→            <h3 className="font-bold text-[#e2e8f0]">Professor Shield</h3>
+   491→   590→            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `${st.color}20`, color: st.color, border: `1px solid ${st.color}40` }}>{st.label}</span>
+   492→   591→          </div>
+   493→   592→          <div className="flex items-center gap-2">
+   494→   593→            <button onClick={toggleMute} className="flex h-8 w-8 items-center justify-center rounded-lg transition-all hover:scale-110" style={{ background: 'rgba(0,240,255,0.08)' }} aria-label="Toggle mic">
+   495→   594→              {voiceState === 'muted' ? <MicOff className="h-4 w-4 text-[#64748b]" /> : <Mic className="h-4 w-4 text-[var(--color-holo)]" />}
+   496→   595→            </button>
+   497→   596→            {voiceState === 'speaking' && <button onClick={() => { audioRef.current?.pause(); setVoiceState('listening'); }} className="flex h-8 w-8 items-center justify-center rounded-lg transition-all hover:scale-110" style={{ background: 'rgba(191,0,255,0.08)' }} aria-label="Stop speaking"><VolumeX className="h-4 w-4 text-[#bf00ff]" /></button>}
+   498→   597→          </div>
+   499→   598→        </div>
+   500→   599→
+   501→   600→        {/* Messages */}
+   502→   601→        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+   503→   602→          <AnimatePresence>
+   504→   603→            {messages.map((m, i) => (
+   505→   604→              <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`chat-msg-enter flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+   506→   605→                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${m.role === 'user' ? 'rounded-br-md' : 'rounded-bl-md'}`} style={{ background: m.role === 'user' ? 'rgba(191,0,255,0.12)' : 'rgba(0,240,255,0.06)', border: m.role === 'user' ? '1px solid rgba(191,0,255,0.15)' : '1px solid rgba(0,240,255,0.08)' }}>
+   507→   606→                  {m.role === 'assistant' && <div className="text-xs font-bold text-[var(--color-holo)] mb-1">Professor</div>}
+   508→   607→                  <div className="text-[#e2e8f0]" style={{ whiteSpace: 'pre-wrap' }}>{m.content || <span className="animate-pulse">▊</span>}</div>
+   509→   608→                </div>
+   510→   609→              </motion.div>
+   511→   610→            ))}
+   512→   611→          </AnimatePresence>
+   513→   612→          <div ref={chatEndRef} />
+   514→   613→        </div>
+   515→   614→
+   516→   615→        {/* Input */}
+   517→   616→        <div className="p-4 border-t border-white/5">
+   518→   617→          <form onSubmit={e => { e.preventDefault(); sendMessage(input); }} className="flex gap-2">
+   519→   618→            <input value={input} onChange={e => setInput(e.target.value)} placeholder="Ask Professor anything... or say 'Professor' to use voice" className="holo-input flex-1 rounded-lg px-4 py-2.5 text-sm text-[#e2e8f0] placeholder:text-[#475569]" />
+   520→   619→            <Button type="submit" disabled={isProcessing || !input.trim()} className="holo-btn holo-btn-primary holo-btn-sm"><Send className="h-4 w-4" /></Button>
+   521→   620→          </form>
+   522→   621→        </div>
+   523→   622→      </div>
+   524→   623→
+   525→   624→      {/* Floating Orb */}
+   526→   625→      <div className={`professor-orb ${st.orbClass}`} onClick={toggleMute}>
+   527→   626→        {voiceState === 'listening' && <div className="voice-waveform"><span /><span /><span /><span /><span /></div>}
+   528→   627→        {voiceState === 'speaking' && <Volume2 className="h-5 w-5 text-white" />}
+   529→   628→        {voiceState === 'standby' && <Mic className="h-5 w-5 text-[#64748b]" />}
+   530→   629→        {voiceState === 'muted' && <MicOff className="h-5 w-5 text-[#475569]" />}
+   531→   630→      </div>
+   532→   631→    </div>
+   533→   632→  );
+   534→   633→}
+   535→   634→
+   536→   635→/* ═══════════════════════════════════════════════════════════════════════
+   537→   636→   QUIZZES TAB
+   538→   637→   ═══════════════════════════════════════════════════════════════════════ */
+   539→   638→
+   540→   639→function QuizzesTab() {
+   541→   640→  const [started, setStarted] = useState(false);
+   542→   641→  const [currentQ, setCurrentQ] = useState(0);
+   543→   642→  const [selected, setSelected] = useState<string | null>(null);
+   544→   643→  const [answered, setAnswered] = useState(false);
+   545→   644→  const [score, setScore] = useState(0);
+   546→   645→  const [showHint, setShowHint] = useState(false);
+   547→   646→  const [timeLeft, setTimeLeft] = useState(DEMO_QUIZ.timeLimit);
+   548→   647→  const [finished, setFinished] = useState(false);
+   549→   648→  const quiz = DEMO_QUIZ;
+   550→   649→  const q = quiz.questions[currentQ];
+   551→   650→
+   552→   651→  useEffect(() => {
+   553→   652→    if (!started || finished) return;
+   554→   653→    const timer = setInterval(() => { setTimeLeft(t => { if (t <= 1) { clearInterval(timer); setFinished(true); return 0; } return t - 1; }); }, 1000);
+   555→   654→    return () => clearInterval(timer);
+   556→   655→  }, [started, finished]);
+   557→   656→
+   558→   657→  const handleAnswer = useCallback((option: string) => {
+   559→   658→    if (answered) return;
+   560→   659→    setSelected(option);
+   561→   660→    setAnswered(true);
+   562→   661→    if (option === q.correct) setScore(s => s + q.points);
+   563→   662→  }, [answered, q]);
+   564→   663→
+   565→   664→  const nextQuestion = useCallback(() => {
+   566→   665→    if (currentQ < quiz.questions.length - 1) { setCurrentQ(c => c + 1); setSelected(null); setAnswered(false); setShowHint(false); }
+   567→   666→    else setFinished(true);
+   568→   667→  }, [currentQ, quiz.questions.length]);
+   569→   668→
+   570→   669→  if (!started) {
+   571→   670→    return (
+   572→   671→      <div className="max-w-lg mx-auto">
+   573→   672→        <div className="holo-card rounded-2xl p-8 text-center">
+   574→   673→          <HelpCircle className="h-12 w-12 text-[var(--color-holo)] mx-auto mb-4" />
+   575→   674→          <h3 className="text-xl font-bold text-[#e2e8f0] mb-2">{quiz.title}</h3>
+   576→   675→          <p className="text-[#64748b] mb-1">{quiz.questions.length} questions • {quiz.timeLimit / 60} minutes</p>
+   577→   676→          <p className="text-xs text-[#64748b] mb-6">Hints cost -25 XP each</p>
+   578→   677→          <Button onClick={() => setStarted(true)} className="holo-btn holo-btn-primary"><Play className="h-4 w-4 mr-2" />Start Quiz</Button>
+   579→   678→        </div>
+   580→   679→      </div>
+   581→   680→    );
+   582→   681→  }
+   583→   682→
+   584→   683→  if (finished) {
+   585→   684→    const pct = Math.round((score / (quiz.questions.reduce((a, q) => a + q.points, 0))) * 100);
+   586→   685→    return (
+   587→   686→      <div className="max-w-lg mx-auto">
+   588→   687→        <div className="holo-card rounded-2xl p-8 text-center neon-border-animated">
+   589→   688→          <div className="text-5xl mb-4">{pct >= 70 ? '🎉' : '💪'}</div>
+   590→   689→          <h3 className="text-2xl font-bold text-[#e2e8f0] mb-2">{pct >= 70 ? 'Passed!' : 'Keep Practicing!'}</h3>
+   591→   690→          <div className="text-3xl font-bold text-gradient-holo mb-1">{score} / {quiz.questions.reduce((a, q) => a + q.points, 0)}</div>
+   592→   691→          <p className="text-[#64748b] mb-6">{pct}% accuracy</p>
+   593→   692→          <Button onClick={() => { setStarted(false); setCurrentQ(0); setScore(0); setFinished(false); setTimeLeft(quiz.timeLimit); }} className="holo-btn holo-btn-primary"><RefreshCw className="h-4 w-4 mr-2" />Retake</Button>
+   594→   693→        </div>
+   595→   694→      </div>
+   596→   695→    );
+   597→   696→  }
+   598→   697→
+   599→   698→  return (
+   600→   699→    <div className="max-w-2xl mx-auto">
+   601→   700→      <div className="holo-card rounded-2xl p-6">
+   602→   701→        {/* Progress bar */}
+   603→   702→        <div className="flex items-center justify-between mb-4">
+   604→   703→          <span className="text-xs text-[#64748b]">Question {currentQ + 1}/{quiz.questions.length}</span>
+   605→   704→          <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-[#ff6b35]" /><span className={`text-sm font-mono ${timeLeft < 60 ? 'text-[#ff006e]' : 'text-[#e2e8f0]'}`}>{Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</span></div>
+   606→   705→        </div>
+   607→   706→        <div className="holo-progress mb-6"><div className="holo-progress-bar" style={{ width: `${((currentQ + 1) / quiz.questions.length) * 100}%` }} /></div>
+   608→   707→
+   609→   708→        {/* Question */}
+   610→   709→        <h3 className="text-lg font-semibold text-[#e2e8f0] mb-6">{q.text}</h3>
+   611→   710→
+   612→   711→        {/* Options */}
+   613→   712→        <div className="space-y-3 mb-4">
+   614→   713→          {q.options.map(opt => {
+   615→   714→            let cls = 'holo-card rounded-xl p-4 cursor-pointer transition-all ';
+   616→   715→            if (answered) {
+   617→   716→              if (opt === q.correct) cls += 'border-[#39ff14] ';
+   618→   717→              else if (opt === selected) cls += 'border-[#ff006e] ';
+   619→   718→            } else if (opt === selected) cls += 'border-[var(--color-holo)] ';
+   620→   719→            return (
+   621→   720→              <div key={opt} onClick={() => handleAnswer(opt)} className={cls}>
+   622→   721→                <div className="flex items-center gap-3">
+   623→   722→                  <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${answered && opt === q.correct ? 'border-[#39ff14] bg-[#39ff14]' : answered && opt === selected ? 'border-[#ff006e] bg-[#ff006e]' : 'border-[#64748b]'}`}>
+   624→   723→                    {answered && opt === q.correct && <CheckCircle2 className="h-3 w-3 text-[#050810]" />}
+   625→   724→                    {answered && opt === selected && opt !== q.correct && <XCircle className="h-3 w-3 text-[#050810]" />}
+   626→   725→                  </div>
+   627→   726→                  <span className="text-sm text-[#e2e8f0]">{opt}</span>
+   628→   727→                </div>
+   629→   728→              </div>
+   630→   729→            );
+   631→   730→          })}
+   632→   731→        </div>
+   633→   732→
+   634→   733→        {/* Hint */}
+   635→   734→        {!showHint && !answered && <button onClick={() => setShowHint(true)} className="flex items-center gap-1 text-xs text-[#ff6b35] hover:text-[#ff6b35]/80 mb-3"><Lightbulb className="h-3 w-3" />Reveal hint <span className="hint-cost-badge">-25 XP</span></button>}
+   636→   735→        {showHint && <div className="text-sm text-[#ff6b35] bg-[rgba(255,107,53,0.08)] border border-[rgba(255,107,53,0.15)] rounded-lg p-3 mb-4">💡 {q.explanation}</div>}
+   637→   736→
+   638→   737→        {/* Explanation after answer */}
+   639→   738→        {answered && <div className={`text-sm rounded-lg p-3 mb-4 ${selected === q.correct ? 'bg-[rgba(57,255,20,0.08)] border border-[rgba(57,255,20,0.15)] text-[#39ff14]' : 'bg-[rgba(255,0,110,0.08)] border border-[rgba(255,0,110,0.15)] text-[#ff006e]'}`}>
+   640→   739→          {selected === q.correct ? '✓ Correct! ' : '✗ Incorrect. '}{q.explanation}
+   641→   740→        </div>}
+   642→   741→
+   643→   742→        {/* Next button */}
+   644→   743→        {answered && <Button onClick={nextQuestion} className="holo-btn holo-btn-primary w-full">{currentQ < quiz.questions.length - 1 ? 'Next Question' : 'See Results'} <ChevronRight className="h-4 w-4 ml-1" /></Button>}
+   645→   744→      </div>
+   646→   745→    </div>
+   647→   746→  );
+   648→   747→}
+   649→   748→
+   650→   749→/* ═══════════════════════════════════════════════════════════════════════
+   651→   750→   LAB TERMINAL TAB — FUTURISTIC HACKING ENVIRONMENT
+   652→   751→   ═══════════════════════════════════════════════════════════════════════ */
+   653→   752→
+   654→   753→function LabsTab() {
+   655→   754→  const [selectedLab, setSelectedLab] = useState<typeof LAB_SCENARIOS[0] | null>(null);
+   656→   755→  const [termLines, setTermLines] = useState<string[]>(['<span class="text-[#39ff14]">CyberShield Lab Terminal v3.0</span>', '<span class="text-[#64748b]">Type \'help\' for available commands. Select a lab scenario to begin.</span>', '']);
+   657→   756→  const [cmdInput, setCmdInput] = useState('');
+   658→   757→  const [objectives, setObjectives] = useState(selectedLab?.objectives ?? []);
+   659→   758→  const [labDone, setLabDone] = useState(false);
+   660→   759→  const [agentMsg, setAgentMsg] = useState('Select a lab scenario and start typing commands. The AI Lab Agent will assist you.');
+   661→   760→  const [gauges, setGauges] = useState({ cpu: 23, mem: 41, net: 67 });
+   662→   761→  const [typing, setTyping] = useState(false);
+   663→   762→  const termRef = useRef<HTMLDivElement>(null);
+   664→   763→  const [termRipple, setTermRipple] = useState(false);
+   665→   764→
+   666→   765→  useEffect(() => { if (selectedLab) { setObjectives(selectedLab.objectives.map(o => ({ ...o, completed: false }))); setLabDone(false); setAgentMsg('Lab started! Begin by running reconnaissance commands.'); setTermLines(['<span class="text-[#39ff14]">CyberShield Lab Terminal v3.0</span>', `<span class="text-[var(--color-holo)]">╔════════════════════════════════════════════════════╗</span>`, `<span class="text-[var(--color-holo)]">║  LAB: ${selectedLab.title}</span>`, `<span class="text-[var(--color-holo)]">║  DIFFICULTY: ${selectedLab.difficulty.toUpperCase()}</span>`, `<span class="text-[var(--color-holo)]">╚════════════════════════════════════════════════════╝</span>`, '']); } }, [selectedLab]);
+   667→   766→  useEffect(() => { termRef.current?.scrollTo(0, termRef.current.scrollHeight); }, [termLines]);
+   668→   767→  useEffect(() => { const iv = setInterval(() => { setGauges(g => ({ cpu: Math.max(5, Math.min(95, g.cpu + (Math.random() - 0.5) * 10)), mem: Math.max(10, Math.min(90, g.mem + (Math.random() - 0.5) * 6)), net: Math.max(5, Math.min(99, g.net + (Math.random() - 0.5) * 15)) })); }, 2000); return () => clearInterval(iv); }, []);
+   669→   768→
+   670→   769→  const handleCmd = useCallback((e: React.FormEvent) => {
+   671→   770→    e.preventDefault();
+   672→   771→    if (!cmdInput.trim()) return;
+   673→   772→    const cmd = cmdInput.trim();
+   674→   773→    setCmdInput('');
+   675→   774→    setTyping(false);
+   676→   775→    setTermRipple(true);
+   677→   776→    setTimeout(() => setTermRipple(false), 600);
+   678→   777→    const prompt = '<span class="text-[#39ff14]">root@cybershield</span>:<span class="text-[#0080ff]">~</span># ';
+   679→   778→    let output = '';
+   680→   779→    if (cmd === 'help') { output = 'Available: ls, cd, cat, pwd, whoami, id, ifconfig, nmap, ping, curl, netstat, ss, ps, uname, clear, help'; }
+   681→   780→    else if (cmd === 'clear') { setTermLines([]); return; }
+   682→   781→    else if (cmd === 'whoami' || cmd === 'id') { output = cmd === 'whoami' ? 'root' : 'uid=0(root) gid=0(root) groups=0(root)'; }
+   683→   782→    else if (cmd === 'pwd') { output = '/root'; }
+   684→   783→    else if (cmd === 'uname -a') { output = 'Linux cybershield-lab 5.15.0-csa #1 SMP x86_64 GNU/Linux'; }
+   685→   784→    else if (cmd === 'ifconfig' || cmd === 'ip addr') { output = 'eth0: 10.0.0.1/24  <span class="text-[#39ff14]">UP</span>\nlo: 127.0.0.1/8  <span class="text-[#39ff14]">UP</span>'; }
+   686→   785→    else if (cmd.startsWith('nmap')) { output = '<span class="text-[#ff6b35]">Starting Nmap 7.94...</span>\nDiscovered open port 22/tcp on 10.0.0.50\nDiscovered open port 80/tcp on 10.0.0.50\nDiscovered open port 3306/tcp on 10.0.0.50\n<span class="text-[#39ff14]">Nmap done: 1 IP address (1 host up) scanned</span>'; if (objectives.length > 0) { setObjectives(prev => { const n = [...prev]; if (n[0]) n[0] = { ...n[0], completed: true }; return n; }); } }
+   687→   786→    else if (cmd.startsWith('ping')) { output = 'PING 10.0.0.50 (10.0.0.50): 56 data bytes\n64 bytes from 10.0.0.50: icmp_seq=0 ttl=64 time=0.5ms\n64 bytes from 10.0.0.50: icmp_seq=1 ttl=64 time=0.3ms'; }
+   688→   787→    else if (cmd === 'ls') { output = 'desktop.txt  notes.md  targets.conf  exploits/  tools/  flag.txt'; }
+   689→   788→    else if (cmd === 'cat flag.txt') { output = '<span class="text-[#39ff14]">CSA{lab_objective_complete}</span>'; }
+   690→   789→    else { output = `<span class="text-[#ff006e]">bash: ${cmd}: command not found (simulated environment)</span>`; }
+   691→   790→    setTermLines(prev => [...prev, prompt + escapeHtml(cmd), ...output.split('\n')]);
+   692→   791→    // Check all objectives
+   693→   792→    setTimeout(() => {
+   694→   793→      setObjectives(prev => {
+   695→   794→        if (prev.every(o => o.completed) && !labDone) { setLabDone(true); return prev; }
+   696→   795→        return prev;
+   697→   796→      });
+   698→   797→    }, 100);
+   699→   798→  }, [cmdInput, objectives, labDone]);
+   700→   799→
+   701→   800→  const askAgent = useCallback(async () => {
+   702→   801→    if (!selectedLab) return;
+   703→   802→    try {
+   704→   803→      const res = await fetch('/api/labs/agent', {
+   705→   804→        method: 'POST', headers: { 'Content-Type': 'application/json' },
+   706→   805→        body: JSON.stringify({ labTitle: selectedLab.title, labCategory: selectedLab.category, labDifficulty: selectedLab.difficulty, currentObjectives: objectives, terminalHistory: termLines.slice(-10), labSteps: selectedLab.objectives.map(o => o.description), userLevel: DEMO_USER.level, userXp: DEMO_USER.xp }),
+   707→   806→      });
+   708→   807→      if (res.ok) { const data = await res.json(); setAgentMsg(data.guidance || data.hint || 'Analyze your terminal output and try different approaches.'); }
+   709→   808→    } catch { setAgentMsg('Lab agent encountered an error. Try again.'); }
+   710→   809→  }, [selectedLab, objectives, termLines]);
+   711→   810→
+   712→   811→  const Gauge = ({ value, label, color }: { value: number; label: string; color: string }) => {
+   713→   812→    const r = 24; const c = 2 * Math.PI * r; const offset = c - (value / 100) * c;
+   714→   813→    return (
+   715→   814→      <div className="lab-gauge flex flex-col items-center">
+   716→   815→        <svg viewBox="0 0 60 60" className="w-full h-full -rotate-90">
+   717→   816→          <circle cx="30" cy="30" r={r} className="lab-gauge-ring" /><circle cx="30" cy="30" r={r} className="lab-gauge-fill" style={{ strokeDasharray: c, strokeDashoffset: offset, stroke: color }} />
+   718→   817→        </svg>
+   719→   818→        <span className="absolute text-xs font-bold text-[#e2e8f0]" style={{ top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}>{Math.round(value)}%</span>
+   720→   819→      </div>
+   721→   820→    );
+   722→   821→  };
+   723→   822→
+   724→   823→  return (
+   725→   824→    <div className="grid lg:grid-cols-3 gap-4 h-[calc(100vh-180px)]">
+   726→   825→      {/* Terminal (2/3) */}
+   727→   826→      <div className="lg:col-span-2 flex flex-col">
+   728→   827→        <div className={`holo-terminal flex-1 flex flex-col ${termRipple ? 'terminal-ripple-active' : ''} ${typing ? 'typing-glow' : ''}`}>
+   729→   828→          <div className="holo-terminal-header">
+   730→   829→            <div className="holo-terminal-dot" style={{ background: '#ff5f57' }} /><div className="holo-terminal-dot" style={{ background: '#ffbd2e' }} /><div className="holo-terminal-dot" style={{ background: '#28c840' }} />
+   731→   830→            <span className="ml-3 text-xs text-[#64748b]">root@cybershield-lab</span>
+   732→   831→            <div className="flex-1" />
+   733→   832→            <div className="matrix-rain w-32 h-5 rounded overflow-hidden relative"><div className="matrix-column" style={{ left: '10%', animationDuration: '3s', fontSize: '8px', opacity: 0.6 }}>01A0F</div><div className="matrix-column" style={{ left: '40%', animationDuration: '4s', fontSize: '8px', opacity: 0.4, animationDelay: '1s' }}>FF00</div></div>
+   734→   833→          </div>
+   735→   834→          <div ref={termRef} className="holo-terminal-body matrix-bg flex-1 relative">
+   736→   835→            {termLines.map((line, i) => <div key={i} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: line || '&nbsp;' }} />)}
+   737→   836→            {/* Input line */}
+   738→   837→            <form onSubmit={handleCmd} className="flex items-center gap-2 mt-1">
+   739→   838→              <span><span className="text-[#39ff14]">root@cybershield</span>:<span className="text-[#0080ff]">~</span># </span>
+   740→   839→              <input value={cmdInput} onChange={e => { setCmdInput(e.target.value); setTyping(true); }} onKeyDown={() => setTyping(false)} className="flex-1 bg-transparent border-none outline-none text-[#e2e8f0] text-sm font-mono caret-[#00f0ff]" autoFocus spellCheck={false} />
+   741→   840→            </form>
+   742→   841→            {/* Mission complete overlay */}
+   743→   842→            <AnimatePresence>{labDone && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mission-complete-overlay"><div className="text-center"><div className="mission-complete-text">MISSION COMPLETE</div><p className="text-[#94a3b8] mt-3">All objectives completed! +200 XP earned</p><Button onClick={() => setLabDone(false)} className="holo-btn holo-btn-primary mt-4 holo-btn-sm">Continue</Button></div></motion.div>)}</AnimatePresence>
+   744→   843→          </div>
+   745→   844→        </div>
+   746→   845→      </div>
+   747→   846→
+   748→   847→      {/* HUD Panel (1/3) */}
+   749→   848→      <div className="flex flex-col gap-4 overflow-y-auto">
+   750→   849→        {/* Scenario Selector */}
+   751→   850→        <div className="lab-hud">
+   752→   851→          <div className="lab-hud-header">SELECT SCENARIO</div>
+   753→   852→          <div className="p-3">
+   754→   853→            <select value={selectedLab?.id ?? ''} onChange={e => setSelectedLab(LAB_SCENARIOS.find(l => l.id === e.target.value) ?? null)} className="holo-input w-full rounded-lg px-3 py-2 text-xs text-[#e2e8f0] appearance-none" style={{ background: 'rgba(5,8,16,0.8)' }}>
+   755→   854→              <option value="">-- Choose Lab --</option>
+   756→   855→              {LAB_SCENARIOS.map(l => <option key={l.id} value={l.id}>{l.title} ({l.difficulty})</option>)}
+   757→   856→            </select>
+   758→   857→          </div>
+   759→   858→        </div>
+   760→   859→
+   761→   860→        {/* System Monitors */}
+   762→   861→        <div className="lab-hud">
+   763→   862→          <div className="lab-hud-header">SYSTEM MONITORS</div>
+   764→   863→          <div className="p-3 grid grid-cols-3 gap-2">
+   765→   864→            <div className="relative"><Gauge value={gauges.cpu} label="CPU" color="#00f0ff" /><div className="text-center text-[10px] text-[#64748b] mt-1">CPU</div></div>
+   766→   865→            <div className="relative"><Gauge value={gauges.mem} label="MEM" color="#bf00ff" /><div className="text-center text-[10px] text-[#64748b] mt-1">MEM</div></div>
+   767→   866→            <div className="relative"><Gauge value={gauges.net} label="NET" color="#39ff14" /><div className="text-center text-[10px] text-[#64748b] mt-1">NET</div></div>
+   768→   867→          </div>
+   769→   868→        </div>
+   770→   869→
+   771→   870→        {/* Objectives */}
+   772→   871→        {selectedLab && (
+   773→   872→          <div className="lab-hud">
+   774→   873→            <div className="lab-hud-header">OBJECTIVES ({objectives.filter(o => o.completed).length}/{objectives.length})</div>
+   775→   874→            <div className="p-2 space-y-1">
+   776→   875→              {objectives.map((o, i) => (
+   777→   876→                <div key={o.id} className={`lab-hud-objective ${o.completed ? 'lab-hud-objective-completed' : i === objectives.findIndex(x => !x.completed) ? 'lab-hud-objective-active' : ''} text-xs text-[#94a3b8]`}>                {o.completed ? '✓ ' : '○ '}{o.description}</div>
+   778→   877→              ))}
+   779→   878→            </div>
+   780→   879→          </div>
+   781→   880→        )}
+   782→   881→
+   783→   882→        {/* Network Map */}
+   784→   883→        <div className="lab-hud">
+   785→   884→          <div className="lab-hud-header">NETWORK MAP</div>
+   786→   885→          <div className="p-3 relative" style={{ height: '160px' }}>
+   787→   886→            {/* Connection lines (SVG) */}
+   788→   887→            <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }}>
+   789→   888→              <line x1="10%" y1="50%" x2="30%" y2="30%" stroke="rgba(0,240,255,0.15)" strokeWidth="1" />
+   790→   889→              <line x1="30%" y1="30%" x2="50%" y2="20%" stroke="rgba(0,240,255,0.15)" strokeWidth="1" />
+   791→   890→              <line x1="50%" y1="20%" x2="70%" y2="40%" stroke="rgba(0,240,255,0.15)" strokeWidth="1" />
+   792→   891→              <line x1="50%" y1="20%" x2="60%" y2="70%" stroke="rgba(255,0,110,0.2)" strokeWidth="1" strokeDasharray="4" />
+   793→   892→              <line x1="70%" y1="40%" x2="85%" y2="60%" stroke="rgba(0,240,255,0.15)" strokeWidth="1" />
+   794→   893→            </svg>
+   795→   894→            {NETWORK_NODES.map(n => (
+   796→   895→              <div key={n.id} className={`network-node network-node-${n.type}`} style={{ left: `${n.x}%`, top: `${n.y}%`, transform: 'translate(-50%,-50%)' }}>
+   797→   896→                <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[8px] text-[#64748b] whitespace-nowrap">{n.label}</span>
+   798→   897→              </div>
+   799→   898→            ))}
+   800→   899→          </div>
+   801→   900→        </div>
+   802→   901→
+   803→   902→        {/* AI Agent */}
+   804→   903→        <div className="lab-hud">
+   805→   904→          <div className="lab-hud-header">AI LAB AGENT</div>
+   806→   905→          <div className="p-3">
+   807→   906→            <p className="text-xs text-[#94a3b8] leading-relaxed mb-3">{agentMsg}</p>
+   808→   907→            <Button onClick={askAgent} className="holo-btn holo-btn-sm w-full"><Brain className="h-3 w-3 mr-1" />Ask Lab Agent</Button>
+   809→   908→          </div>
+   810→   909→        </div>
+   811→   910→      </div>
+   812→   911→    </div>
+   813→   912→  );
+   814→   913→}
+   815→   914→
+   816→   915→function escapeHtml(s: string) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+   817→   916→
+   818→   917→/* ═══════════════════════════════════════════════════════════════════════
+   819→   918→   CTF ARENA TAB
+   820→   919→   ═══════════════════════════════════════════════════════════════════════ */
+   821→   920→
+   822→   921→function CtfTab() {
+   823→   922→  const [filter, setFilter] = useState('all');
+   824→   923→  const [expanded, setExpanded] = useState<string | null>(null);
+   825→   924→  const [flagInput, setFlagInput] = useState('');
+   826→   925→  const [hintShown, setHintShown] = useState<Set<string>>(new Set());
+   827→   926→  const [results, setResults] = useState<Record<string, 'correct' | 'wrong' | null>>({});
+   828→   927→
+   829→   928→  const categories = ['all', 'crypto', 'web', 'pwn', 'forensics', 'osint', 'reverse'];
+   830→   929→  const filtered = filter === 'all' ? CTF_CHALLENGES : CTF_CHALLENGES.filter(c => c.category === filter);
+   831→   930→  const catIcons: Record<string, string> = { crypto: 'cat-crypto', web: 'cat-web', pwn: 'cat-pwn', forensics: 'cat-forensics', osint: 'cat-osint', reverse: 'cat-reverse' };
+   832→   931→
+   833→   932→  const submitFlag = useCallback((challenge: typeof CTF_CHALLENGES[0]) => {
+   834→   933→    if (!flagInput.trim()) return;
+   835→   934→    setResults(prev => ({ ...prev, [challenge.id]: flagInput.trim() === challenge.flag ? 'correct' : 'wrong' }));
+   836→   935→  }, [flagInput]);
+   837→   936→
+   838→   937→  return (
+   839→   938→    <div className="space-y-4">
+   840→   939→      {/* Category filter */}
+   841→   940→      <div className="flex gap-2 flex-wrap">
+   842→   941→        {categories.map(cat => (
+   843→   942→          <button key={cat} onClick={() => setFilter(cat)} className={`holo-btn holo-btn-sm ${filter === cat ? 'holo-btn-primary' : ''}`}>{cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}</button>
+   844→   943→        ))}
+   845→   944→      </div>
+   846→   945→
+   847→   946→      {/* Challenge grid */}
+   848→   947→      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+   849→   948→        {filtered.map(ch => {
+   850→   949→          const isOpen = expanded === ch.id;
+   851→   950→          const result = results[ch.id];
+   852→   951→          return (
+   853→   952→            <motion.div key={ch.id} layout className={`challenge-card holo-card rounded-2xl p-5 ${ch.solved ? 'border-[rgba(57,255,20,0.2)]' : ''}`}>
+   854→   953→              <div className="flex items-start justify-between mb-3">
+   855→   954→                <div className={`text-xs font-bold uppercase ${catIcons[ch.category] || ''}`}>{ch.category}</div>
+   856→   955→                <span className={`holo-badge text-[10px] ctf-difficulty-${ch.difficulty}`}>{ch.difficulty}</span>
+   857→   956→              </div>
+   858→   957→              <h4 className={`font-bold text-[#e2e8f0] mb-2 ${ch.solved ? 'line-through opacity-60' : ''}`}>{ch.title}</h4>
+   859→   958→              <div className="flex items-center gap-3 text-xs text-[#64748b] mb-3">
+   860→   959→                <span className="flex items-center gap-1"><Flag className="h-3 w-3" />{ch.points} pts</span>
+   861→   960→                <span className="flex items-center gap-1"><Users className="h-3 w-3" />{ch.solveCount} solves</span>
+   862→   961→              </div>
+   863→   962→
+   864→   963→              <button onClick={() => setExpanded(isOpen ? null : ch.id)} className="text-xs text-[var(--color-holo)] hover:underline flex items-center gap-1">
+   865→   964→                {isOpen ? 'Hide' : 'View Details'} <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+   866→   965→              </button>
+   867→   966→
+   868→   967→              <AnimatePresence>
+   869→   968→                {isOpen && (
+   870→   969→                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+   871→   970→                    <div className="pt-3 mt-3 border-t border-white/5">
+   872→   971→                      <p className="text-xs text-[#94a3b8] leading-relaxed mb-3">{ch.description}</p>
+   873→   972→
+   874→   973→                      {/* Hint */}
+   875→   974→                      {!hintShown.has(ch.id) && <button onClick={() => setHintShown(prev => new Set(prev).add(ch.id))} className="flex items-center gap-1 text-xs text-[#ff6b35] hover:text-[#ff6b35]/80 mb-3"><Lightbulb className="h-3 w-3" />Show Hint <span className="hint-cost-badge">-50 XP</span></button>}
+   876→   975→                      {hintShown.has(ch.id) && <div className="text-xs text-[#ff6b35] bg-[rgba(255,107,53,0.08)] border border-[rgba(255,107,53,0.15)] rounded-lg p-2 mb-3">💡 {ch.hint}</div>}
+   877→   976→
+   878→   977→                      {/* Flag submission */}
+   879→   978→                      {result === 'correct' ? (
+   880→   979→                        <div className="text-sm font-bold text-[#39ff14] flex items-center gap-2"><CheckCircle2 className="h-4 w-4" />Correct! +{ch.points} XP</div>
+   881→   980→                      ) : (
+   882→   981→                        <div className="flex gap-2">
+   883→   982→                          <input value={flagInput} onChange={e => setFlagInput(e.target.value)} placeholder="CSA{...}" className="holo-input flex-1 rounded-lg px-3 py-1.5 text-xs text-[#e2e8f0] font-mono placeholder:text-[#475569]" onKeyDown={e => { if (e.key === 'Enter') submitFlag(ch); }} />
+   884→   983→                          <Button onClick={() => submitFlag(ch)} className="holo-btn holo-btn-primary holo-btn-sm">Submit</Button>
+   885→   984→                        </div>
+   886→   985→                      )}
+   887→   986→                      {result === 'wrong' && <p className="text-xs text-[#ff006e] mt-2">Incorrect flag. Try again!</p>}
+   888→   987→                    </div>
+   889→   988→                  </motion.div>
+   890→   989→                )}
+   891→   990→              </AnimatePresence>
+   892→   991→
+   893→   992→              {ch.solved && <div className="absolute top-3 right-3 holo-badge holo-badge-green text-[10px]">Solved ✓</div>}
+   894→   993→            </motion.div>
+   895→   994→          );
+   896→   995→        })}
+   897→   996→      </div>
+   898→   997→    </div>
+   899→   998→  );
+   900→   999→}
+   901→  1000→
+   902→  1001→/* ═══════════════════════════════════════════════════════════════════════
+   903→  1002→   RANK & BADGES TAB
+   904→  1003→   ═══════════════════════════════════════════════════════════════════════ */
+   905→  1004→
+   906→  1005→function RanksTab() {
+   907→  1006→  const user = DEMO_USER;
+   908→  1007→  const currentRank = RANKS.filter(r => r.min <= user.xp).pop()!;
+   909→  1008→  const nextRank = RANKS[RANKS.indexOf(currentRank) + 1];
+   910→  1009→  const xpProgress = nextRank ? ((user.xp - currentRank.min) / (nextRank.min - currentRank.min)) * 100 : 100;
+   911→  1010→
+   912→  1011→  return (
+   913→  1012→    <div className="space-y-6">
+   914→  1013→      {/* Current Rank Card */}
+   915→  1014→      <div className="holo-card holo-shimmer rounded-2xl p-6 sm:p-8 neon-border-animated">
+   916→  1015→        <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6">
+   917→  1016→          <div className="text-6xl">{currentRank.icon}</div>
+   918→  1017→          <div className="flex-1 text-center sm:text-left">
+   919→  1018→            <h3 className="text-2xl font-bold text-[#e2e8f0] mb-1">{currentRank.name}</h3>
+   920→  1019→            <p className="text-[#64748b] mb-3">Level {user.level} • {user.xp.toLocaleString()} XP • {user.streakDays}-day streak</p>
+   921→  1020→            <div className="max-w-md">
+   922→  1021→              <div className="flex justify-between text-xs text-[#64748b] mb-1"><span>{user.xp} XP</span><span>{nextRank ? `${nextRank.min} XP — ${nextRank.name}` : 'MAX RANK'}</span></div>
+   923→  1022→              <div className="holo-progress"><div className="holo-progress-bar" style={{ width: `${xpProgress}%` }} /></div>
+   924→  1023→            </div>
+   925→  1024→          </div>
+   926→  1025→        </div>
+   927→  1026→      </div>
+   928→  1027→
+   929→  1028→      {/* Badges */}
+   930→  1029→      <div>
+   931→  1030→        <h3 className="neon-text text-sm font-bold mb-4">BADGE COLLECTION ({BADGES.filter(b => b.earned).length}/{BADGES.length})</h3>
+   932→  1031→        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+   933→  1032→          {BADGES.map(b => {
+   934→  1033→            const rarityClass = b.rarity === 'legendary' ? 'hex-badge-legendary' : b.rarity === 'epic' ? 'hex-badge-epic' : b.rarity === 'rare' ? 'hex-badge-rare' : 'hex-badge-common';
+   935→  1034→            return (
+   936→  1035→              <div key={b.id} className={`flex flex-col items-center gap-2 ${!b.earned ? 'opacity-40' : ''}`}>
+   937→  1036→                <div className={`hex-badge ${rarityClass} ${b.earned ? '' : 'grayscale'}`}>{b.icon}</div>
+   938→  1037→                <div className="text-center">
+   939→  1038→                  <div className="text-xs font-semibold text-[#e2e8f0]">{b.name}</div>
+   940→  1039→                  <div className="text-[10px] text-[#64748b]">{b.rarity} • +{b.xpReward} XP</div>
+   941→  1040→                </div>
+   942→  1041→              </div>
+   943→  1042→            );
+   944→  1043→          })}
+   945→  1044→        </div>
+   946→  1045→      </div>
+   947→  1046→
+   948→  1047→      {/* Leaderboard */}
+   949→  1048→      <div className="holo-card rounded-2xl p-6">
+   950→  1049→        <h3 className="neon-text text-sm font-bold mb-4">LEADERBOARD</h3>
+   951→  1050→        <div className="space-y-1">
+   952→  1051→          {LEADERBOARD.map(entry => (
+   953→  1052→            <div key={entry.rank} className={`leaderboard-row flex items-center gap-4 px-4 py-3 rounded-lg ${entry.name === user.name ? 'bg-[rgba(0,240,255,0.05)]' : ''}`}>
+   954→  1053→              <div className={`w-8 text-center font-bold text-sm ${entry.rank <= 3 ? `rank-${entry.rank}` : 'text-[#64748b]'}`}>{entry.rank}</div>
+   955→  1054→              <div className="flex-1 text-sm text-[#e2e8f0]">{entry.name} {entry.name === user.name && <span className="text-xs text-[var(--color-holo)]">(you)</span>}</div>
+   956→  1055→              <div className="text-xs text-[#64748b]">Lv.{entry.level}</div>
+   957→  1056→              <div className="text-sm font-semibold text-[var(--color-holo)]">{entry.xp.toLocaleString()}</div>
+   958→  1057→            </div>
+   959→  1058→          ))}
+   960→  1059→        </div>
+   961→  1060→      </div>
+   962→  1061→    </div>
+   963→  1062→  );
+   964→  1063→}
+   965→  1064→
+   966→  1065→/* ═══════════════════════════════════════════════════════════════════════
+   967→  1066→   ANALYTICS TAB
+   968→  1067→   ═══════════════════════════════════════════════════════════════════════ */
+   969→  1068→
+   970→  1069→function AnalyticsTab() {
+   971→  1070→  const skills = [
+   972→  1071→    { name: 'Network', value: 75 }, { name: 'Crypto', value: 45 },
+   973→  1072→    { name: 'Web Sec', value: 60 }, { name: 'Pen Test', value: 30 },
+   974→  1073→    { name: 'Forensics', value: 55 }, { name: 'Cloud', value: 20 },
+   975→  1074→  ];
+   976→  1075→
+   977→  1076→  // Heatmap data: 7 days × 6 time slots
+   978→  1077→  const heatmap = useMemo(() => {
+   979→  1078→    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+   980→  1079→    const slots = ['Morning', 'Afternoon', 'Evening', 'Night', 'Late Night', 'Dawn'];
+   981→  1080→    return days.map(day => ({ day, slots: slots.map(() => Math.random()) }));
+   982→  1081→  }, []);
+   983→  1082→
+   984→  1083→  const xpData = useMemo(() => [120, 85, 200, 150, 300, 175, 250], []);
+   985→  1084→  const maxXP = Math.max(...xpData);
+   986→  1085→
+   987→  1086→  // SVG radar chart
+   988→  1087→  const radarSize = 220;
+   989→  1088→  const radarCx = radarSize / 2;
+   990→  1089→  const radarCy = radarSize / 2;
+   991→  1090→  const radarR = 90;
+   992→  1091→  const angleStep = (2 * Math.PI) / skills.length;
+   993→  1092→  const radarPoints = skills.map((s, i) => {
+   994→  1093→    const angle = angleStep * i - Math.PI / 2;
+   995→  1094→    const r = (s.value / 100) * radarR;
+   996→  1095→    return { x: radarCx + r * Math.cos(angle), y: radarCy + r * Math.sin(angle) };
+   997→  1096→  });
+   998→  1097→  const radarPath = radarPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ') + ' Z';
+   999→  1098→
+  1000→  1099→  return (
+  1001→  1100→    <div className="space-y-6">
+  1002→  1101→      <div className="grid lg:grid-cols-2 gap-6">
+  1003→  1102→        {/* Skill Radar */}
+  1004→  1103→        <div className="holo-card rounded-2xl p-6">
+  1005→  1104→          <h3 className="neon-text text-sm font-bold mb-4">SKILL RADAR</h3>
+  1006→  1105→          <div className="flex justify-center">
+  1007→  1106→            <svg width={radarSize} height={radarSize} viewBox={`0 0 ${radarSize} ${radarSize}`}>
+  1008→  1107→              {/* Grid rings */}
+  1009→  1108→              {[0.25, 0.5, 0.75, 1].map(r => {
+  1010→  1109→                const pts = skills.map((_, i) => {
+  1011→  1110→                  const a = angleStep * i - Math.PI / 2;
+  1012→  1111→                  return { x: radarCx + radarR * r * Math.cos(a), y: radarCy + radarR * r * Math.sin(a) };
+  1013→  1112→                });
+  1014→  1113→                return <polygon key={r} points={pts.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(0,240,255,0.08)" strokeWidth="1" />;
+  1015→  1114→              })}
+  1016→  1115→              {/* Axes */}
+  1017→  1116→              {skills.map((_, i) => {
+  1018→  1117→                const a = angleStep * i - Math.PI / 2;
+  1019→  1118→                return <line key={i} x1={radarCx} y1={radarCy} x2={radarCx + radarR * Math.cos(a)} y2={radarCy + radarR * Math.sin(a)} stroke="rgba(0,240,255,0.06)" strokeWidth="1" />;
+  1020→  1119→              })}
+  1021→  1120→              {/* Data polygon */}
+  1022→  1121→              <polygon points={radarPath} fill="rgba(0,240,255,0.1)" stroke="#00f0ff" strokeWidth="2" />
+  1023→  1122→              {/* Data points & labels */}
+  1024→  1123→              {skills.map((s, i) => {
+  1025→  1124→                const a = angleStep * i - Math.PI / 2;
+  1026→  1125→                const lx = radarCx + (radarR + 18) * Math.cos(a);
+  1027→  1126→                const ly = radarCy + (radarR + 18) * Math.sin(a);
+  1028→  1127→                return (<g key={i}><circle cx={radarPoints[i].x} cy={radarPoints[i].y} r="4" fill="#00f0ff" filter="url(#glow)" /><text x={lx} y={ly} textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontSize="10">{s.name} {s.value}%</text></g>);
+  1029→  1128→              })}
+  1030→  1129→              <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+  1031→  1130→            </svg>
+  1032→  1131→          </div>
+  1033→  1132→        </div>
+  1034→  1133→
+  1035→  1134→        {/* XP Over Time */}
+  1036→  1135→        <div className="holo-card rounded-2xl p-6">
+  1037→  1136→          <h3 className="neon-text text-sm font-bold mb-4">XP EARNED (LAST 7 DAYS)</h3>
+  1038→  1137→          <div className="flex items-end gap-3 h-48">
+  1039→  1138→            {xpData.map((v, i) => (
+  1040→  1139→              <div key={i} className="flex-1 flex flex-col items-center gap-2">
+  1041→  1140→                <div className="text-xs font-bold text-[var(--color-holo)]">{v}</div>
+  1042→  1141→                <div className="w-full rounded-t-md transition-all duration-500" style={{ height: `${(v / maxXP) * 160}px`, background: 'linear-gradient(180deg, #00f0ff, #0080ff)', borderRadius: '4px 4px 0 0', boxShadow: '0 0 15px rgba(0,240,255,0.2)' }} />
+  1043→  1142→                <div className="text-[10px] text-[#64748b]">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}</div>
+  1044→  1143→              </div>
+  1045→  1144→            ))}
+  1046→  1145→          </div>
+  1047→  1146→        </div>
+  1048→  1147→      </div>
+  1049→  1148→
+  1050→  1149→      {/* Study Heatmap */}
+  1051→  1150→      <div className="holo-card rounded-2xl p-6">
+  1052→  1151→        <h3 className="neon-text text-sm font-bold mb-4">STUDY HEATMAP</h3>
+  1053→  1152→        <div className="overflow-x-auto">
+  1054→  1153→          <div className="grid gap-1" style={{ gridTemplateColumns: '60px repeat(6, 1fr)' }}>
+  1055→  1154→            <div /> {/* header spacer */}
+  1056→  1155→            {['Morning', 'Afternoon', 'Evening', 'Night', 'Late', 'Dawn'].map(s => <div key={s} className="text-[10px] text-[#64748b] text-center">{s}</div>)}
+  1057→  1156→            {heatmap.map(row => (
+  1058→  1157→              <React.Fragment key={row.day}>
+  1059→  1158→                <div className="text-xs text-[#94a3b8] flex items-center">{row.day}</div>
+  1060→  1159→                {row.slots.map((v, si) => (
+  1061→  1160→                  <div key={si} className="h-8 rounded" style={{ background: `rgba(0,240,255,${v * 0.8 + 0.05})`, border: '1px solid rgba(0,240,255,0.05)' }} title={`${Math.round(v * 100)}% activity`} />
+  1062→  1161→                ))}
+  1063→  1162→              </React.Fragment>
+  1064→  1163→            ))}
+  1065→  1164→          </div>
+  1066→  1165→        </div>
+  1067→  1166→        <div className="flex items-center gap-2 mt-3 text-[10px] text-[#64748b]"><span>Less</span><div className="flex gap-1">{[0.05, 0.25, 0.45, 0.65, 0.85].map(v => <div key={v} className="w-4 h-4 rounded" style={{ background: `rgba(0,240,255,${v})` }} />)}</div><span>More</span></div>
+  1068→  1167→      </div>
+  1069→  1168→
+  1070→  1169→      {/* Quick Stats */}
+  1071→  1170→      <div className="grid sm:grid-cols-3 gap-4">
+  1072→  1171→        <div className="stat-card-3d rounded-xl p-4" style={{ '--stat-color': '#39ff14' } as React.CSSProperties}><div className="text-xs text-[#64748b] mb-1">Quiz Accuracy</div><div className="text-2xl font-bold text-[#39ff14]">85%</div><TrendingUp className="h-4 w-4 text-[#39ff14] mt-1" /></div>
+  1073→  1172→        <div className="stat-card-3d rounded-xl p-4" style={{ '--stat-color': '#00f0ff' } as React.CSSProperties}><div className="text-xs text-[#64748b] mb-1">Time Spent</div><div className="text-2xl font-bold text-[var(--color-holo)]">42h</div><Clock className="h-4 w-4 text-[var(--color-holo)] mt-1" /></div>
+  1074→  1173→        <div className="stat-card-3d rounded-xl p-4" style={{ '--stat-color': '#ff6b35' } as React.CSSProperties}><div className="text-xs text-[#64748b] mb-1">Focus Score</div><div className="text-2xl font-bold text-[#ff6b35]">78%</div><Activity className="h-4 w-4 text-[#ff6b35] mt-1" /></div>
+  1075→  1174→      </div>
+  1076→  1175→    </div>
+  1077→  1176→  );
+  1078→  1177→}
+  1079→  1178→
+  1080→  1179→/* ═══════════════════════════════════════════════════════════════════════
+  1081→  1180→   CERTIFICATES TAB
+  1082→  1181→   ═══════════════════════════════════════════════════════════════════════ */
+  1083→  1182→
+  1084→  1183→function CertificatesTab() {
+  1085→  1184→  const certs = [
+  1086→  1185→    { id: 'cert1', courseName: 'Network Security Fundamentals', issuedAt: '2026-06-15', hash: 'SHA256:a4f3b2c1...', status: 'active' as const },
+  1087→  1186→  ];
+  1088→  1187→  const completedCourses = COURSES.filter(c => c.enrolled && c.progress >= 100);
+  1089→  1188→
+  1090→  1189→  return (
+  1091→  1190→    <div className="space-y-6">
+  1092→  1191→      {certs.length > 0 && (
+  1093→  1192→        <div>
+  1094→  1193→          <h3 className="neon-text text-sm font-bold mb-4">YOUR CERTIFICATES</h3>
+  1095→  1194→          <div className="grid sm:grid-cols-2 gap-6">
+  1096→  1195→            {certs.map(cert => (
+  1097→  1196→              <div key={cert.id} className="certificate-card p-6">
+  1098→  1197→                <div className="relative z-10">
+  1099→  1198→                  <div className="flex items-center gap-2 mb-4"><Award className="h-5 w-5 text-[var(--color-holo)]" /><span className="text-xs holo-badge holo-badge-cyan">Verified</span></div>
+  1100→  1199→                  <h4 className="text-lg font-bold text-[#e2e8f0] mb-2">{cert.courseName}</h4>
+  1101→  1200→                  <div className="space-y-1 text-xs text-[#64748b]">
+  1102→  1201→                    <div className="flex items-center gap-2"><Calendar className="h-3 w-3" />Issued: {cert.issuedAt}</div>
+  1103→  1202→                    <div className="flex items-center gap-2"><Shield className="h-3 w-3" />Hash: <code className="text-[#94a3b8] font-mono text-[10px]">{cert.hash}</code></div>
+  1104→  1203→                  </div>
+  1105→  1204→                  <Button className="holo-btn holo-btn-sm mt-4"><Download className="h-3 w-3 mr-1" />Download PDF</Button>
+  1106→  1205→                </div>
+  1107→  1206→              </div>
+  1108→  1207→            ))}
+  1109→  1208→          </div>
+  1110→  1209→        </div>
+  1111→  1210→      )}
+  1112→  1211→
+  1113→  1212→      <div>
+  1114→  1213→        <h3 className="neon-text text-sm font-bold mb-4">AVAILABLE CERTIFICATES</h3>
+  1115→  1214→        {completedCourses.length === 0 ? (
+  1116→  1215→          <div className="holo-card rounded-2xl p-8 text-center">
+  1117→  1216→            <Award className="h-10 w-10 text-[#64748b] mx-auto mb-3" />
+  1118→  1217→            <p className="text-[#64748b] text-sm">Complete a course to earn your certificate. Keep learning!</p>
+  1119→  1218→          </div>
+  1120→  1219→        ) : (
+  1121→  1220→          <div className="grid sm:grid-cols-2 gap-4">
+  1122→  1221→            {completedCourses.map(c => (
+  1123→  1222→              <div key={c.id} className="holo-card rounded-xl p-4 flex items-center justify-between">
+  1124→  1223→                <div><div className="text-sm font-semibold text-[#e2e8f0]">{c.title}</div><div className="text-xs text-[#64748b]">Course completed</div></div>
+  1125→  1224→                <Button className="holo-btn holo-btn-primary holo-btn-sm">Generate</Button>
+  1126→  1225→              </div>
+  1127→  1226→            ))}
+  1128→  1227→          </div>
+  1129→  1228→        )}
+  1130→  1229→      </div>
+  1131→  1230→    </div>
+  1132→  1231→  );
+  1133→  1232→}
+  1134→  1233→
+  1135→  1234→/* ═══════════════════════════════════════════════════════════════════════
+  1136→  1235→   MAIN ACADEMY PAGE
+  1137→  1236→   ═══════════════════════════════════════════════════════════════════════ */
+  1138→  1237→
+  1139→  1238→export default function AcademyPage() {
+  1140→  1239→  const [activeTab, setActiveTab] = useState('dashboard');
+  1141→  1240→  const tabsRef = useRef<HTMLDivElement>(null);
+  1142→  1241→
+  1143→  1242→  const renderTab = () => {
+  1144→  1243→    switch (activeTab) {
+  1145→  1244→      case 'dashboard': return <DashboardTab />;
+  1146→  1245→      case 'courses': return <CoursesTab />;
+  1147→  1246→      case 'professor': return <ProfessorTab />;
+  1148→  1247→      case 'quizzes': return <QuizzesTab />;
+  1149→  1248→      case 'labs': return <LabsTab />;
+  1150→  1249→      case 'ctf': return <CtfTab />;
+  1151→  1250→      case 'ranks': return <RanksTab />;
+  1152→  1251→      case 'analytics': return <AnalyticsTab />;
+  1153→  1252→      case 'certificates': return <CertificatesTab />;
+  1154→  1253→      default: return <DashboardTab />;
+  1155→  1254→    }
+  1156→  1255→  };
+  1157→  1256→
+  1158→  1257→  return (
+  1159→  1258→    <main className="relative min-h-screen overflow-x-hidden" style={{ background: '#050810', color: '#e2e8f0' }}>
+  1160→  1259→      <Particles />
+  1161→  1260→      <div className="scan-line pointer-events-none fixed inset-0 z-40" />
+  1162→  1261→
+  1163→  1262→      {/* Top Nav */}
+  1164→  1263→      <nav className="fixed top-0 left-0 right-0 z-50 glass-panel">
+  1165→  1264→        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6">
+  1166→  1265→          <div className="flex items-center gap-3">
+  1167→  1266→            <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+  1168→  1267→              <div className="holo-shield flex h-7 w-7 items-center justify-center rounded-full"><Shield className="h-4 w-4 text-[var(--color-holo)]" /></div>
+  1169→  1268→              <span className="text-gradient-holo text-sm font-bold hidden sm:inline">CyberShield</span>
+  1170→  1269→            </a>
+  1171→  1270→            <div className="h-4 w-px bg-white/10" />
+  1172→  1271→            <div className="flex items-center gap-2 holo-badge holo-badge-cyan text-[10px] py-0.5">
+  1173→  1272→              <Zap className="h-2.5 w-2.5" />{DEMO_USER.xp} XP
+  1174→  1273→            </div>
+  1175→  1274→          </div>
+  1176→  1275→
+  1177→  1276→          <div className="flex items-center gap-3">
+  1178→  1277→            <span className="text-xs text-[#94a3b8] hidden sm:inline">{DEMO_USER.name}</span>
+  1179→  1278→            <div className="h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'linear-gradient(135deg, #00f0ff, #bf00ff)' }}>
+  1180→  1279→              {DEMO_USER.name.charAt(0)}
+  1181→  1280→            </div>
+  1182→  1281→          </div>
+  1183→  1282→        </div>
+  1184→  1283→      </nav>
+  1185→  1284→
+  1186→  1285→      {/* Tab Navigation */}
+  1187→  1286→      <div className="fixed top-12 left-0 right-0 z-40 glass-panel border-t border-white/5">
+  1188→  1287→        <div ref={tabsRef} className="mx-auto max-w-7xl flex gap-1 px-4 overflow-x-auto py-1.5 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+  1189→  1288→          {TABS.map(tab => (
+  1190→  1289→            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`holo-tab flex items-center gap-1.5 ${activeTab === tab.id ? 'holo-tab-active' : ''}`}>
+  1191→  1290→              <tab.icon className="h-3.5 w-3.5" /><span className="hidden sm:inline">{tab.label}</span>
+  1192→  1291→            </button>
+  1193→  1292→          ))}
+  1194→  1293→        </div>
+  1195→  1294→      </div>
+  1196→  1295→
+  1197→  1296→      {/* Tab Content */}
+  1198→  1297→      <div className="pt-28 pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+  1199→  1298→        <AnimatePresence mode="wait">
+  1200→  1299→          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+  1201→  1300→            {renderTab()}
+  1202→  1301→          </motion.div>
+  1203→  1302→        </AnimatePresence>
+  1204→  1303→      </div>
+  1205→  1304→    </main>
+  1206→  1305→  );
+  1207→  1306→}
