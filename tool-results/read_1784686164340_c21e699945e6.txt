@@ -1,0 +1,402 @@
+   350→   350→   350→      if (res.ok) {
+   351→   351→   351→        const blob = await res.blob();
+   352→   352→   352→        const url = URL.createObjectURL(blob);
+   353→   353→   353→        if (audioRef.current) { audioRef.current.pause(); URL.revokeObjectURL(audioRef.current.src); }
+   354→   354→   354→        const audio = new Audio(url);
+   355→   355→   355→        audioRef.current = audio;
+   356→   356→   356→        audio.onended = () => { setVoiceState('listening'); URL.revokeObjectURL(url); };
+   357→   357→   357→        audio.onerror = () => setVoiceState('listening');
+   358→   358→   358→        audio.play().catch(() => setVoiceState('listening'));
+   359→   359→   359→      } else { setVoiceState('listening'); }
+   360→   360→   360→    } catch { setVoiceState('listening'); }
+   361→   361→   361→  }, []);
+   362→   362→   362→
+   363→   363→   363→  const sendMessage = useCallback(async (text: string) => {
+   364→   364→   364→    if (!text.trim() || isProcessing) return;
+   365→   365→   365→    const userMsg = text.trim();
+   366→   366→   366→    setInput('');
+   367→   367→   367→    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+   368→   368→   368→    setIsProcessing(true);
+   369→   369→   369→
+   370→   370→   370→    if (userMsg.toLowerCase() === 'standby' || userMsg.toLowerCase() === 'mute') {
+   371→   371→   371→      setMessages(prev => [...prev, { role: 'assistant', content: 'Standing by. Say **"Professor"** when you need me.' }]);
+   372→   372→   372→      setVoiceState('muted');
+   373→   373→   373→      setIsProcessing(false);
+   374→   374→   374→      return;
+   375→   375→   375→    }
+   376→   376→   376→
+   377→   377→   377→    try {
+   378→   378→   378→      const history = messages.slice(-10).map(m => ({ role: m.role, content: m.content }));
+   379→   379→   379→      const res = await fetch('/api/chat', {
+   380→   380→   380→        method: 'POST', headers: { 'Content-Type': 'application/json' },
+   381→   381→   381→        body: JSON.stringify({ userId: DEMO_USER.id, sessionId: 'academy-session', message: userMsg, history }),
+   382→   382→   382→      });
+   383→   383→   383→      if (res.ok) {
+   384→   384→   384→        const reader = res.body?.getReader();
+   385→   385→   385→        if (reader) {
+   386→   386→   386→          const decoder = new TextDecoder();
+   387→   387→   387→          let fullText = '';
+   388→   388→   388→          setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+   389→   389→   389→          while (true) {
+   390→   390→   390→            const { done, value } = await reader.read();
+   391→   391→   391→            if (done) break;
+   392→   392→   392→            fullText += decoder.decode(value, { stream: true });
+   393→   393→   393→            setMessages(prev => { const copy = [...prev]; copy[copy.length - 1] = { role: 'assistant', content: fullText }; return copy; });
+   394→   394→   394→          }
+   395→   395→   395→          speak(fullText);
+   396→   396→   396→        }
+   397→   397→   397→      }
+   398→   398→   398→    } catch {
+   399→   399→   399→      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
+   400→   400→   400→    }
+   401→   401→   401→    setIsProcessing(false);
+   402→   402→   402→  }, [messages, isProcessing, speak]);
+   403→   403→   403→
+   404→   404→   404→  const startVoiceMonitoring = useCallback(async () => {
+   405→   405→   405→    try {
+   406→   406→   406→      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+   407→   407→   407→      streamRef.current = stream;
+   408→   408→   408→      const ctx = new AudioContext();
+   409→   409→   409→      audioCtxRef.current = ctx;
+   410→   410→   410→      const analyser = ctx.createAnalyser();
+   411→   411→   411→      analyser.fftSize = 2048;
+   412→   412→   412→      analyserRef.current = analyser;
+   413→   413→   413→      const source = ctx.createMediaStreamSource(stream);
+   414→   414→   414→      source.connect(analyser);
+   415→   415→   415→      setVoiceState('listening');
+   416→   416→   416→      monitoringRef.current = true;
+   417→   417→   417→
+   418→   418→   418→      const dataArray = new Uint8Array(analyser.fftSize);
+   419→   419→   419→      const THRESHOLD = 15;
+   420→   420→   420→      const monitor = () => {
+   421→   421→   421→        if (!monitoringRef.current) return;
+   422→   422→   422→        analyser.getByteTimeDomainData(dataArray);
+   423→   423→   423→        let sum = 0;
+   424→   424→   424→        for (let i = 0; i < dataArray.length; i++) { const v = (dataArray[i] - 128) / 128; sum += v * v; }
+   425→   425→   425→        const rms = Math.sqrt(sum / dataArray.length) * 100;
+   426→   426→   426→        if (rms > THRESHOLD && !mediaRecorderRef.current?.state?.includes('activ') && voiceState !== 'speaking' && voiceState !== 'muted') {
+   427→   427→   427→          if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
+   428→   428→   428→            chunksRef.current = [];
+   429→   429→   429→            const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+   430→   430→   430→            mediaRecorderRef.current = mr;
+   431→   431→   431→            mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+   432→   432→   432→            mr.onstop = async () => {
+   433→   433→   433→              if (chunksRef.current.length > 0 && voiceState !== 'muted') {
+   434→   434→   434→                const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+   435→   435→   435→                const fd = new FormData(); fd.append('audio', blob);
+   436→   436→   436→                try {
+   437→   437→   437→                  const asrRes = await fetch('/api/voice/asr', { method: 'POST', body: fd });
+   438→   438→   438→                  const asrData = await asrRes.json();
+   439→   439→   439→                  if (asrData.text) {
+   440→   440→   440→                    let text = asrData.text;
+   441→   441→   441→                    if (text.toLowerCase().includes('professor')) {
+   442→   442→   442→                      text = text.replace(/professor/gi, '').trim();
+   443→   443→   443→                      if (text) sendMessage(text);
+   444→   444→   444→                      else setVoiceState('listening');
+   445→   445→   445→                    }
+   446→   446→   446→                  }
+   447→   447→   447→                } catch { /* silently fail */ }
+   448→   448→   448→              }
+   449→   449→   449→            };
+   450→   450→   450→            mr.start();
+   451→   451→   451→            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+   452→   452→   452→          }
+   453→   453→   453→          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+   454→   454→   454→          silenceTimerRef.current = setTimeout(() => { if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop(); }, 1500);
+   455→   455→   455→        }
+   456→   456→   456→        requestAnimationFrame(monitor);
+   457→   457→   457→      };
+   458→   458→   458→      monitor();
+   459→   459→   459→    } catch { setVoiceState('muted'); }
+   460→   460→   460→  }, [voiceState, sendMessage]);
+   461→   461→   461→
+   462→   462→   462→  useEffect(() => { startVoiceMonitoring(); return () => { monitoringRef.current = false; streamRef.current?.getTracks().forEach(t => t.stop()); audioCtxRef.current?.close(); if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current); }; }, []);
+   463→   463→   463→
+   464→   464→   464→  const toggleMute = useCallback(() => {
+   465→   465→   465→    if (voiceState === 'muted') { startVoiceMonitoring(); }
+   466→   466→   466→    else { monitoringRef.current = false; streamRef.current?.getTracks().forEach(t => t.stop()); setVoiceState('muted'); }
+   467→   467→   467→  }, [voiceState, startVoiceMonitoring]);
+   468→   468→   468→
+   469→   469→   469→  const stateConfig = {
+   470→   470→   470→    listening: { label: 'Listening', color: '#39ff14', orbClass: 'professor-orb-listening' },
+   471→   471→   471→    standby: { label: 'Standby', color: '#ff6b35', orbClass: 'professor-orb-standby' },
+   472→   472→   472→    speaking: { label: 'Speaking', color: '#bf00ff', orbClass: 'professor-orb-speaking' },
+   473→   473→   473→    muted: { label: 'Muted', color: '#64748b', orbClass: 'professor-orb-muted' },
+   474→   474→   474→  };
+   475→   475→   475→  const st = stateConfig[voiceState];
+   476→   476→   476→
+   477→   477→   477→  return (
+   478→   478→   478→    <div className="flex flex-col h-[calc(100vh-180px)]">
+   479→   479→   479→      <div className="holo-card rounded-2xl flex-1 flex flex-col overflow-hidden">
+   480→   480→   480→        {/* Header */}
+   481→   481→   481→        <div className="flex items-center justify-between p-4 border-b border-white/5">
+   482→   482→   482→          <div className="flex items-center gap-3">
+   483→   483→   483→            <Brain className="h-5 w-5 text-[var(--color-holo)]" />
+   484→   484→   484→            <h3 className="font-bold text-[#e2e8f0]">Professor Shield</h3>
+   485→   485→   485→            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `${st.color}20`, color: st.color, border: `1px solid ${st.color}40` }}>{st.label}</span>
+   486→   486→   486→          </div>
+   487→   487→   487→          <div className="flex items-center gap-2">
+   488→   488→   488→            <button onClick={toggleMute} className="flex h-8 w-8 items-center justify-center rounded-lg transition-all hover:scale-110" style={{ background: 'rgba(0,240,255,0.08)' }} aria-label="Toggle mic">
+   489→   489→   489→              {voiceState === 'muted' ? <MicOff className="h-4 w-4 text-[#64748b]" /> : <Mic className="h-4 w-4 text-[var(--color-holo)]" />}
+   490→   490→   490→            </button>
+   491→   491→   491→            {voiceState === 'speaking' && <button onClick={() => { audioRef.current?.pause(); setVoiceState('listening'); }} className="flex h-8 w-8 items-center justify-center rounded-lg transition-all hover:scale-110" style={{ background: 'rgba(191,0,255,0.08)' }} aria-label="Stop speaking"><VolumeX className="h-4 w-4 text-[#bf00ff]" /></button>}
+   492→   492→   492→          </div>
+   493→   493→   493→        </div>
+   494→   494→   494→
+   495→   495→   495→        {/* Messages */}
+   496→   496→   496→        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+   497→   497→   497→          <AnimatePresence>
+   498→   498→   498→            {messages.map((m, i) => (
+   499→   499→   499→              <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`chat-msg-enter flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+   500→   500→   500→                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${m.role === 'user' ? 'rounded-br-md' : 'rounded-bl-md'}`} style={{ background: m.role === 'user' ? 'rgba(191,0,255,0.12)' : 'rgba(0,240,255,0.06)', border: m.role === 'user' ? '1px solid rgba(191,0,255,0.15)' : '1px solid rgba(0,240,255,0.08)' }}>
+   501→   501→   501→                  {m.role === 'assistant' && <div className="text-xs font-bold text-[var(--color-holo)] mb-1">Professor</div>}
+   502→   502→   502→                  <div className="text-[#e2e8f0]" style={{ whiteSpace: 'pre-wrap' }}>{m.content || <span className="animate-pulse">▊</span>}</div>
+   503→   503→   503→                </div>
+   504→   504→   504→              </motion.div>
+   505→   505→   505→            ))}
+   506→   506→   506→          </AnimatePresence>
+   507→   507→   507→          <div ref={chatEndRef} />
+   508→   508→   508→        </div>
+   509→   509→   509→
+   510→   510→   510→        {/* Input */}
+   511→   511→   511→        <div className="p-4 border-t border-white/5">
+   512→   512→   512→          <form onSubmit={e => { e.preventDefault(); sendMessage(input); }} className="flex gap-2">
+   513→   513→   513→            <input value={input} onChange={e => setInput(e.target.value)} placeholder="Ask Professor anything... or say 'Professor' to use voice" className="holo-input flex-1 rounded-lg px-4 py-2.5 text-sm text-[#e2e8f0] placeholder:text-[#475569]" />
+   514→   514→   514→            <Button type="submit" disabled={isProcessing || !input.trim()} className="holo-btn holo-btn-primary holo-btn-sm"><Send className="h-4 w-4" /></Button>
+   515→   515→   515→          </form>
+   516→   516→   516→        </div>
+   517→   517→   517→      </div>
+   518→   518→   518→
+   519→   519→   519→      {/* Floating Orb */}
+   520→   520→   520→      <div className={`professor-orb ${st.orbClass}`} onClick={toggleMute}>
+   521→   521→   521→        {voiceState === 'listening' && <div className="voice-waveform"><span /><span /><span /><span /><span /></div>}
+   522→   522→   522→        {voiceState === 'speaking' && <Volume2 className="h-5 w-5 text-white" />}
+   523→   523→   523→        {voiceState === 'standby' && <Mic className="h-5 w-5 text-[#64748b]" />}
+   524→   524→   524→        {voiceState === 'muted' && <MicOff className="h-5 w-5 text-[#475569]" />}
+   525→   525→   525→      </div>
+   526→   526→   526→    </div>
+   527→   527→   527→  );
+   528→   528→   528→}
+   529→   529→   529→
+   530→   530→   530→/* ═══════════════════════════════════════════════════════════════════════
+   531→   531→   531→   QUIZZES TAB
+   532→   532→   532→   ═══════════════════════════════════════════════════════════════════════ */
+   533→   533→   533→
+   534→   534→   534→function QuizzesTab() {
+   535→   535→   535→  const [started, setStarted] = useState(false);
+   536→   536→   536→  const [currentQ, setCurrentQ] = useState(0);
+   537→   537→   537→  const [selected, setSelected] = useState<string | null>(null);
+   538→   538→   538→  const [answered, setAnswered] = useState(false);
+   539→   539→   539→  const [score, setScore] = useState(0);
+   540→   540→   540→  const [showHint, setShowHint] = useState(false);
+   541→   541→   541→  const [timeLeft, setTimeLeft] = useState(DEMO_QUIZ.timeLimit);
+   542→   542→   542→  const [finished, setFinished] = useState(false);
+   543→   543→   543→  const quiz = DEMO_QUIZ;
+   544→   544→   544→  const q = quiz.questions[currentQ];
+   545→   545→   545→
+   546→   546→   546→  useEffect(() => {
+   547→   547→   547→    if (!started || finished) return;
+   548→   548→   548→    const timer = setInterval(() => { setTimeLeft(t => { if (t <= 1) { clearInterval(timer); setFinished(true); return 0; } return t - 1; }); }, 1000);
+   549→   549→   549→    return () => clearInterval(timer);
+   550→   550→   550→  }, [started, finished]);
+   551→   551→   551→
+   552→   552→   552→  const handleAnswer = useCallback((option: string) => {
+   553→   553→   553→    if (answered) return;
+   554→   554→   554→    setSelected(option);
+   555→   555→   555→    setAnswered(true);
+   556→   556→   556→    if (option === q.correct) setScore(s => s + q.points);
+   557→   557→   557→  }, [answered, q]);
+   558→   558→   558→
+   559→   559→   559→  const nextQuestion = useCallback(() => {
+   560→   560→   560→    if (currentQ < quiz.questions.length - 1) { setCurrentQ(c => c + 1); setSelected(null); setAnswered(false); setShowHint(false); }
+   561→   561→   561→    else setFinished(true);
+   562→   562→   562→  }, [currentQ, quiz.questions.length]);
+   563→   563→   563→
+   564→   564→   564→  if (!started) {
+   565→   565→   565→    return (
+   566→   566→   566→      <div className="max-w-lg mx-auto">
+   567→   567→   567→        <div className="holo-card rounded-2xl p-8 text-center">
+   568→   568→   568→          <HelpCircle className="h-12 w-12 text-[var(--color-holo)] mx-auto mb-4" />
+   569→   569→   569→          <h3 className="text-xl font-bold text-[#e2e8f0] mb-2">{quiz.title}</h3>
+   570→   570→   570→          <p className="text-[#64748b] mb-1">{quiz.questions.length} questions • {quiz.timeLimit / 60} minutes</p>
+   571→   571→   571→          <p className="text-xs text-[#64748b] mb-6">Hints cost -25 XP each</p>
+   572→   572→   572→          <Button onClick={() => setStarted(true)} className="holo-btn holo-btn-primary"><Play className="h-4 w-4 mr-2" />Start Quiz</Button>
+   573→   573→   573→        </div>
+   574→   574→   574→      </div>
+   575→   575→   575→    );
+   576→   576→   576→  }
+   577→   577→   577→
+   578→   578→   578→  if (finished) {
+   579→   579→   579→    const pct = Math.round((score / (quiz.questions.reduce((a, q) => a + q.points, 0))) * 100);
+   580→   580→   580→    return (
+   581→   581→   581→      <div className="max-w-lg mx-auto">
+   582→   582→   582→        <div className="holo-card rounded-2xl p-8 text-center neon-border-animated">
+   583→   583→   583→          <div className="text-5xl mb-4">{pct >= 70 ? '🎉' : '💪'}</div>
+   584→   584→   584→          <h3 className="text-2xl font-bold text-[#e2e8f0] mb-2">{pct >= 70 ? 'Passed!' : 'Keep Practicing!'}</h3>
+   585→   585→   585→          <div className="text-3xl font-bold text-gradient-holo mb-1">{score} / {quiz.questions.reduce((a, q) => a + q.points, 0)}</div>
+   586→   586→   586→          <p className="text-[#64748b] mb-6">{pct}% accuracy</p>
+   587→   587→   587→          <Button onClick={() => { setStarted(false); setCurrentQ(0); setScore(0); setFinished(false); setTimeLeft(quiz.timeLimit); }} className="holo-btn holo-btn-primary"><RefreshCw className="h-4 w-4 mr-2" />Retake</Button>
+   588→   588→   588→        </div>
+   589→   589→   589→      </div>
+   590→   590→   590→    );
+   591→   591→   591→  }
+   592→   592→   592→
+   593→   593→   593→  return (
+   594→   594→   594→    <div className="max-w-2xl mx-auto">
+   595→   595→   595→      <div className="holo-card rounded-2xl p-6">
+   596→   596→   596→        {/* Progress bar */}
+   597→   597→   597→        <div className="flex items-center justify-between mb-4">
+   598→   598→   598→          <span className="text-xs text-[#64748b]">Question {currentQ + 1}/{quiz.questions.length}</span>
+   599→   599→   599→          <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-[#ff6b35]" /><span className={`text-sm font-mono ${timeLeft < 60 ? 'text-[#ff006e]' : 'text-[#e2e8f0]'}`}>{Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</span></div>
+   600→   600→   600→        </div>
+   601→   601→   601→        <div className="holo-progress mb-6"><div className="holo-progress-bar" style={{ width: `${((currentQ + 1) / quiz.questions.length) * 100}%` }} /></div>
+   602→   602→   602→
+   603→   603→   603→        {/* Question */}
+   604→   604→   604→        <h3 className="text-lg font-semibold text-[#e2e8f0] mb-6">{q.text}</h3>
+   605→   605→   605→
+   606→   606→   606→        {/* Options */}
+   607→   607→   607→        <div className="space-y-3 mb-4">
+   608→   608→   608→          {q.options.map(opt => {
+   609→   609→   609→            let cls = 'holo-card rounded-xl p-4 cursor-pointer transition-all ';
+   610→   610→   610→            if (answered) {
+   611→   611→   611→              if (opt === q.correct) cls += 'border-[#39ff14] ';
+   612→   612→   612→              else if (opt === selected) cls += 'border-[#ff006e] ';
+   613→   613→   613→            } else if (opt === selected) cls += 'border-[var(--color-holo)] ';
+   614→   614→   614→            return (
+   615→   615→   615→              <div key={opt} onClick={() => handleAnswer(opt)} className={cls}>
+   616→   616→   616→                <div className="flex items-center gap-3">
+   617→   617→   617→                  <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${answered && opt === q.correct ? 'border-[#39ff14] bg-[#39ff14]' : answered && opt === selected ? 'border-[#ff006e] bg-[#ff006e]' : 'border-[#64748b]'}`}>
+   618→   618→   618→                    {answered && opt === q.correct && <CheckCircle2 className="h-3 w-3 text-[#050810]" />}
+   619→   619→   619→                    {answered && opt === selected && opt !== q.correct && <XCircle className="h-3 w-3 text-[#050810]" />}
+   620→   620→   620→                  </div>
+   621→   621→   621→                  <span className="text-sm text-[#e2e8f0]">{opt}</span>
+   622→   622→   622→                </div>
+   623→   623→   623→              </div>
+   624→   624→   624→            );
+   625→   625→   625→          })}
+   626→   626→   626→        </div>
+   627→   627→   627→
+   628→   628→   628→        {/* Hint */}
+   629→   629→   629→        {!showHint && !answered && <button onClick={() => setShowHint(true)} className="flex items-center gap-1 text-xs text-[#ff6b35] hover:text-[#ff6b35]/80 mb-3"><Lightbulb className="h-3 w-3" />Reveal hint <span className="hint-cost-badge">-25 XP</span></button>}
+   630→   630→   630→        {showHint && <div className="text-sm text-[#ff6b35] bg-[rgba(255,107,53,0.08)] border border-[rgba(255,107,53,0.15)] rounded-lg p-3 mb-4">💡 {q.explanation}</div>}
+   631→   631→   631→
+   632→   632→   632→        {/* Explanation after answer */}
+   633→   633→   633→        {answered && <div className={`text-sm rounded-lg p-3 mb-4 ${selected === q.correct ? 'bg-[rgba(57,255,20,0.08)] border border-[rgba(57,255,20,0.15)] text-[#39ff14]' : 'bg-[rgba(255,0,110,0.08)] border border-[rgba(255,0,110,0.15)] text-[#ff006e]'}`}>
+   634→   634→   634→          {selected === q.correct ? '✓ Correct! ' : '✗ Incorrect. '}{q.explanation}
+   635→   635→   635→        </div>}
+   636→   636→   636→
+   637→   637→   637→        {/* Next button */}
+   638→   638→   638→        {answered && <Button onClick={nextQuestion} className="holo-btn holo-btn-primary w-full">{currentQ < quiz.questions.length - 1 ? 'Next Question' : 'See Results'} <ChevronRight className="h-4 w-4 ml-1" /></Button>}
+   639→   639→   639→      </div>
+   640→   640→   640→    </div>
+   641→   641→   641→  );
+   642→   642→   642→}
+   643→   643→   643→
+   644→   644→   644→/* ═══════════════════════════════════════════════════════════════════════
+   645→   645→   645→   LAB TERMINAL TAB — FUTURISTIC HACKING ENVIRONMENT
+   646→   646→   646→   ═══════════════════════════════════════════════════════════════════════ */
+   647→   647→   647→
+   648→   648→   648→function LabsTab() {
+   649→   649→   649→  const [selectedLab, setSelectedLab] = useState<typeof LAB_SCENARIOS[0] | null>(null);
+   650→   650→   650→  const [termLines, setTermLines] = useState<string[]>(['<span class="text-[#39ff14]">CyberShield Lab Terminal v3.0</span>', '<span class="text-[#64748b]">Type \'help\' for available commands. Select a lab scenario to begin.</span>', '']);
+   651→   651→   651→  const [cmdInput, setCmdInput] = useState('');
+   652→   652→   652→  const [objectives, setObjectives] = useState(selectedLab?.objectives ?? []);
+   653→   653→   653→  const [labDone, setLabDone] = useState(false);
+   654→   654→   654→  const [agentMsg, setAgentMsg] = useState('Select a lab scenario and start typing commands. The AI Lab Agent will assist you.');
+   655→   655→   655→  const [gauges, setGauges] = useState({ cpu: 23, mem: 41, net: 67 });
+   656→   656→   656→  const [typing, setTyping] = useState(false);
+   657→   657→   657→  const termRef = useRef<HTMLDivElement>(null);
+   658→   658→   658→  const [termRipple, setTermRipple] = useState(false);
+   659→   659→   659→
+   660→   660→   660→  useEffect(() => { if (selectedLab) { setObjectives(selectedLab.objectives.map(o => ({ ...o, completed: false }))); setLabDone(false); setAgentMsg('Lab started! Begin by running reconnaissance commands.'); setTermLines(['<span class="text-[#39ff14]">CyberShield Lab Terminal v3.0</span>', `<span class="text-[var(--color-holo)]">╔════════════════════════════════════════════════════╗</span>`, `<span class="text-[var(--color-holo)]">║  LAB: ${selectedLab.title}</span>`, `<span class="text-[var(--color-holo)]">║  DIFFICULTY: ${selectedLab.difficulty.toUpperCase()}</span>`, `<span class="text-[var(--color-holo)]">╚════════════════════════════════════════════════════╝</span>`, '']); } }, [selectedLab]);
+   661→   661→   661→  useEffect(() => { termRef.current?.scrollTo(0, termRef.current.scrollHeight); }, [termLines]);
+   662→   662→   662→  useEffect(() => { const iv = setInterval(() => { setGauges(g => ({ cpu: Math.max(5, Math.min(95, g.cpu + (Math.random() - 0.5) * 10)), mem: Math.max(10, Math.min(90, g.mem + (Math.random() - 0.5) * 6)), net: Math.max(5, Math.min(99, g.net + (Math.random() - 0.5) * 15)) })); }, 2000); return () => clearInterval(iv); }, []);
+   663→   663→   663→
+   664→   664→   664→  const handleCmd = useCallback((e: React.FormEvent) => {
+   665→   665→   665→    e.preventDefault();
+   666→   666→   666→    if (!cmdInput.trim()) return;
+   667→   667→   667→    const cmd = cmdInput.trim();
+   668→   668→   668→    setCmdInput('');
+   669→   669→   669→    setTyping(false);
+   670→   670→   670→    setTermRipple(true);
+   671→   671→   671→    setTimeout(() => setTermRipple(false), 600);
+   672→   672→   672→    const prompt = '<span class="text-[#39ff14]">root@cybershield</span>:<span class="text-[#0080ff]">~</span># ';
+   673→   673→   673→    let output = '';
+   674→   674→   674→    if (cmd === 'help') { output = 'Available: ls, cd, cat, pwd, whoami, id, ifconfig, nmap, ping, curl, netstat, ss, ps, uname, clear, help'; }
+   675→   675→   675→    else if (cmd === 'clear') { setTermLines([]); return; }
+   676→   676→   676→    else if (cmd === 'whoami' || cmd === 'id') { output = cmd === 'whoami' ? 'root' : 'uid=0(root) gid=0(root) groups=0(root)'; }
+   677→   677→   677→    else if (cmd === 'pwd') { output = '/root'; }
+   678→   678→   678→    else if (cmd === 'uname -a') { output = 'Linux cybershield-lab 5.15.0-csa #1 SMP x86_64 GNU/Linux'; }
+   679→   679→   679→    else if (cmd === 'ifconfig' || cmd === 'ip addr') { output = 'eth0: 10.0.0.1/24  <span class="text-[#39ff14]">UP</span>\nlo: 127.0.0.1/8  <span class="text-[#39ff14]">UP</span>'; }
+   680→   680→   680→    else if (cmd.startsWith('nmap')) { output = '<span class="text-[#ff6b35]">Starting Nmap 7.94...</span>\nDiscovered open port 22/tcp on 10.0.0.50\nDiscovered open port 80/tcp on 10.0.0.50\nDiscovered open port 3306/tcp on 10.0.0.50\n<span class="text-[#39ff14]">Nmap done: 1 IP address (1 host up) scanned</span>'; if (objectives.length > 0) { setObjectives(prev => { const n = [...prev]; if (n[0]) n[0] = { ...n[0], completed: true }; return n; }); } }
+   681→   681→   681→    else if (cmd.startsWith('ping')) { output = 'PING 10.0.0.50 (10.0.0.50): 56 data bytes\n64 bytes from 10.0.0.50: icmp_seq=0 ttl=64 time=0.5ms\n64 bytes from 10.0.0.50: icmp_seq=1 ttl=64 time=0.3ms'; }
+   682→   682→   682→    else if (cmd === 'ls') { output = 'desktop.txt  notes.md  targets.conf  exploits/  tools/  flag.txt'; }
+   683→   683→   683→    else if (cmd === 'cat flag.txt') { output = '<span class="text-[#39ff14]">CSA{lab_objective_complete}</span>'; }
+   684→   684→   684→    else { output = `<span class="text-[#ff006e]">bash: ${cmd}: command not found (simulated environment)</span>`; }
+   685→   685→   685→    setTermLines(prev => [...prev, prompt + escapeHtml(cmd), ...output.split('\n')]);
+   686→   686→   686→    // Check all objectives
+   687→   687→   687→    setTimeout(() => {
+   688→   688→   688→      setObjectives(prev => {
+   689→   689→   689→        if (prev.every(o => o.completed) && !labDone) { setLabDone(true); return prev; }
+   690→   690→   690→        return prev;
+   691→   691→   691→      });
+   692→   692→   692→    }, 100);
+   693→   693→   693→  }, [cmdInput, objectives, labDone]);
+   694→   694→   694→
+   695→   695→   695→  const askAgent = useCallback(async () => {
+   696→   696→   696→    if (!selectedLab) return;
+   697→   697→   697→    try {
+   698→   698→   698→      const res = await fetch('/api/labs/agent', {
+   699→   699→   699→        method: 'POST', headers: { 'Content-Type': 'application/json' },
+   700→   700→   700→        body: JSON.stringify({ labTitle: selectedLab.title, labCategory: selectedLab.category, labDifficulty: selectedLab.difficulty, currentObjectives: objectives, terminalHistory: termLines.slice(-10), labSteps: selectedLab.objectives.map(o => o.description), userLevel: DEMO_USER.level, userXp: DEMO_USER.xp }),
+   701→   701→   701→      });
+   702→   702→   702→      if (res.ok) { const data = await res.json(); setAgentMsg(data.guidance || data.hint || 'Analyze your terminal output and try different approaches.'); }
+   703→   703→   703→    } catch { setAgentMsg('Lab agent encountered an error. Try again.'); }
+   704→   704→   704→  }, [selectedLab, objectives, termLines]);
+   705→   705→   705→
+   706→   706→   706→  const Gauge = ({ value, label, color }: { value: number; label: string; color: string }) => {
+   707→   707→   707→    const r = 24; const c = 2 * Math.PI * r; const offset = c - (value / 100) * c;
+   708→   708→   708→    return (
+   709→   709→   709→      <div className="lab-gauge flex flex-col items-center">
+   710→   710→   710→        <svg viewBox="0 0 60 60" className="w-full h-full -rotate-90">
+   711→   711→   711→          <circle cx="30" cy="30" r={r} className="lab-gauge-ring" /><circle cx="30" cy="30" r={r} className="lab-gauge-fill" style={{ strokeDasharray: c, strokeDashoffset: offset, stroke: color }} />
+   712→   712→   712→        </svg>
+   713→   713→   713→        <span className="absolute text-xs font-bold text-[#e2e8f0]" style={{ top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}>{Math.round(value)}%</span>
+   714→   714→   714→      </div>
+   715→   715→   715→    );
+   716→   716→   716→  };
+   717→   717→   717→
+   718→   718→   718→  return (
+   719→   719→   719→    <div className="grid lg:grid-cols-3 gap-4 h-[calc(100vh-180px)]">
+   720→   720→   720→      {/* Terminal (2/3) */}
+   721→   721→   721→      <div className="lg:col-span-2 flex flex-col">
+   722→   722→   722→        <div className={`holo-terminal flex-1 flex flex-col ${termRipple ? 'terminal-ripple-active' : ''} ${typing ? 'typing-glow' : ''}`}>
+   723→   723→   723→          <div className="holo-terminal-header">
+   724→   724→   724→            <div className="holo-terminal-dot" style={{ background: '#ff5f57' }} /><div className="holo-terminal-dot" style={{ background: '#ffbd2e' }} /><div className="holo-terminal-dot" style={{ background: '#28c840' }} />
+   725→   725→   725→            <span className="ml-3 text-xs text-[#64748b]">root@cybershield-lab</span>
+   726→   726→   726→            <div className="flex-1" />
+   727→   727→   727→            <div className="matrix-rain w-32 h-5 rounded overflow-hidden relative"><div className="matrix-column" style={{ left: '10%', animationDuration: '3s', fontSize: '8px', opacity: 0.6 }}>01A0F</div><div className="matrix-column" style={{ left: '40%', animationDuration: '4s', fontSize: '8px', opacity: 0.4, animationDelay: '1s' }}>FF00</div></div>
+   728→   728→   728→          </div>
+   729→   729→   729→          <div ref={termRef} className="holo-terminal-body matrix-bg flex-1 relative">
+   730→   730→   730→            {termLines.map((line, i) => <div key={i} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: line || '&nbsp;' }} />)}
+   731→   731→   731→            {/* Input line */}
+   732→   732→   732→            <form onSubmit={handleCmd} className="flex items-center gap-2 mt-1">
+   733→   733→   733→              <span><span className="text-[#39ff14]">root@cybershield</span>:<span className="text-[#0080ff]">~</span># </span>
+   734→   734→   734→              <input value={cmdInput} onChange={e => { setCmdInput(e.target.value); setTyping(true); }} onKeyDown={() => setTyping(false)} className="flex-1 bg-transparent border-none outline-none text-[#e2e8f0] text-sm font-mono caret-[#00f0ff]" autoFocus spellCheck={false} />
+   735→   735→   735→            </form>
+   736→   736→   736→            {/* Mission complete overlay */}
+   737→   737→   737→            <AnimatePresence>{labDone && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mission-complete-overlay"><div className="text-center"><div className="mission-complete-text">MISSION COMPLETE</div><p className="text-[#94a3b8] mt-3">All objectives completed! +200 XP earned</p><Button onClick={() => setLabDone(false)} className="holo-btn holo-btn-primary mt-4 holo-btn-sm">Continue</Button></div></motion.div>)}</AnimatePresence>
+   738→   738→   738→          </div>
+   739→   739→   739→        </div>
+   740→   740→   740→      </div>
+   741→   741→   741→
+   742→   742→   742→      {/* HUD Panel (1/3) */}
+   743→   743→   743→      <div className="flex flex-col gap-4 overflow-y-auto">
+   744→   744→   744→        {/* Scenario Selector */}
+   745→   745→   745→        <div className="lab-hud">
+   746→   746→   746→          <div className="lab-hud-header">SELECT SCENARIO</div>
+   747→   747→   747→          <div className="p-3">
+   748→   748→   748→            <select value={selectedLab?.id ?? ''} onChange={e => setSelectedLab(LAB_SCENARIOS.find(l => l.id === e.target.value) ?? null)} className="holo-input w-full rounded-lg px-3 py-2 text-xs text-[#e2e8f0] appearance-none" style={{ background: 'rgba(5,8,16,0.8)' }}>
+   749→   749→   749→              <option value="">-- Choose Lab --</option>
+
+[showing lines 350-749 of 1201; use offset=750 with limit to continue reading]
