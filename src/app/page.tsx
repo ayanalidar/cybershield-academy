@@ -260,7 +260,10 @@ function Header() {
   const navLinks = [
     { label: 'Features', href: '#features' },
     { label: 'Courses', href: '#courses' },
-    { label: 'Testimonials', href: '#testimonials' },
+    { label: 'About', href: '/about' },
+    { label: 'Pricing', href: '/pricing' },
+    { label: 'Partners', href: '/partners' },
+    { label: 'Testimonials', href: '/testimonials' },
   ];
 
   return (
@@ -277,9 +280,7 @@ function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="relative">
-              <Shield className="h-7 w-7 text-[#00ff88] transition-transform group-hover:scale-110 drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]" />
-            </div>
+            <img src="/logo.png" alt="CyberShield" className="h-8 w-8 object-contain transition-transform group-hover:scale-110" />
             <span className="text-lg font-bold tracking-tight">
               Cyber<span className="v-text-mint">Shield</span>
             </span>
@@ -390,13 +391,13 @@ function Hero() {
             </motion.div>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-6">
-              <span className="glitch-text" data-text="Master">
+              <span className="color-shift-text">
                 Master
               </span>
               {' '}
               <span className="v-text-cyber">Cyber</span>
               <br />
-              <span className="glitch-text" data-text="Security">
+              <span className="color-shift-text">
                 Security
               </span>
               {' '}Like{' '}
@@ -738,7 +739,7 @@ function Footer() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Shield className="h-6 w-6 text-[#00ff88] drop-shadow-[0_0_6px_rgba(0,255,136,0.4)]" />
+              <img src="/logo.png" alt="CyberShield" className="h-6 w-6 object-contain" />
               <span className="font-bold">
                 Cyber<span className="v-text-mint">Shield</span>
               </span>
@@ -753,6 +754,7 @@ function Footer() {
               <li><Link href="/academy" className="hover:text-[#00ff88] transition-colors">Academy</Link></li>
               <li><a href="#features" className="hover:text-[#00ff88] transition-colors">Features</a></li>
               <li><a href="#courses" className="hover:text-[#00ff88] transition-colors">Courses</a></li>
+              <li><Link href="/pricing" className="hover:text-[#00ff88] transition-colors">Pricing</Link></li>
             </ul>
           </div>
           <div>
@@ -766,9 +768,9 @@ function Footer() {
           <div>
             <h4 className="font-bold mb-3 text-sm text-[#fbbf24] uppercase tracking-wider text-xs">Company</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><span className="hover:text-[#00ff88] transition-colors cursor-default">About</span></li>
-              <li><span className="hover:text-[#00ff88] transition-colors cursor-default">Careers</span></li>
-              <li><span className="hover:text-[#00ff88] transition-colors cursor-default">Contact</span></li>
+              <li><Link href="/about" className="hover:text-[#00ff88] transition-colors">About</Link></li>
+              <li><Link href="/partners" className="hover:text-[#00ff88] transition-colors">Partners</Link></li>
+              <li><Link href="/testimonials" className="hover:text-[#00ff88] transition-colors">Testimonials</Link></li>
             </ul>
           </div>
         </div>
