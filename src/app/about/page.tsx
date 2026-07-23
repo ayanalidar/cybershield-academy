@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Scene3D } from '@/components/scene3d';
 
 const TEAM = [
   { name: 'Alex Rivera', role: 'CEO & Co-Founder', bio: 'Former Red Team lead at CrowdStrike. 15+ years in offensive security. Built the initial vision for CyberShield after seeing the gap between academia and real-world cyber ops.', avatar: 'AR', color: '#00ff88' },
@@ -134,7 +135,8 @@ export default function AboutPage() {
       <PageHeader />
       <main className="flex-1 pt-16">
         {/* Hero */}
-        <section className="relative py-24 sm:py-32 overflow-hidden scanline-overlay">
+        <section className="relative py-24 sm:py-32 overflow-hidden scanline-overlay thunderstorm">
+          <Scene3D variant="medium" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none z-0" style={{ background: 'radial-gradient(ellipse at center, rgba(0,229,255,0.08) 0%, rgba(168,85,247,0.04) 30%, transparent 70%)' }} />
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#00e5ff]/20 bg-[#00e5ff]/5 text-xs font-semibold text-[#00e5ff] uppercase tracking-widest mb-6">
@@ -203,7 +205,7 @@ export default function AboutPage() {
               {VALUES.map((v, i) => {
                 const Icon = v.icon;
                 return (
-                  <motion.div key={v.title} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="holo-card rounded-xl p-6 hud-corners">
+                  <motion.div key={v.title} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="holo-card rounded-xl p-6 hud-corners tilt-3d">
                     <div className="relative z-10">
                       <div className={`inline-flex p-3 rounded-lg bg-gradient-to-br ${v.gradient} mb-4 shadow-lg`} style={{ boxShadow: `0 0 20px ${v.color}40` }}>
                         <Icon className="h-5 w-5 text-white" />
@@ -228,7 +230,7 @@ export default function AboutPage() {
             </motion.div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {TEAM.map((m, i) => (
-                <motion.div key={m.name} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="holo-card rounded-xl p-6 hud-corners">
+                <motion.div key={m.name} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="holo-card rounded-xl p-6 hud-corners tilt-3d">
                   <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${m.color}, ${m.color}99)`, boxShadow: `0 0 15px ${m.color}40` }}>

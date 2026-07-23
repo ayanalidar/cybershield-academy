@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Scene3D } from '@/components/scene3d';
 
 const ALL_TESTIMONIALS = [
   { name: 'Sarah Kim', role: 'Security Analyst at CrowdStrike', text: 'CyberShield\'s AI Professor helped me bridge the gap between theory and practice. The labs are incredibly realistic \u2014 I felt like I was in a real SOC environment. Within 3 months of completing the incident response track, I landed my current role at CrowdStrike.', avatar: 'SK', rating: 5, color: '#00ff88', badge: 'Hired at Partner' },
@@ -124,7 +125,8 @@ export default function TestimonialsPage() {
       <PageHeader />
       <main className="flex-1 pt-16">
         {/* Hero */}
-        <section className="relative py-24 sm:py-32 overflow-hidden scanline-overlay">
+        <section className="relative py-24 sm:py-32 overflow-hidden scanline-overlay thunderstorm">
+          <Scene3D variant="medium" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none z-0" style={{ background: 'radial-gradient(ellipse at center, rgba(255,0,64,0.08) 0%, rgba(251,191,36,0.04) 30%, transparent 70%)' }} />
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#fbbf24]/20 bg-[#fbbf24]/5 text-xs font-semibold text-[#fbbf24] uppercase tracking-widest mb-6">
@@ -146,7 +148,7 @@ export default function TestimonialsPage() {
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {STATS.map((s) => (
-                <motion.div key={s.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="holo-card rounded-xl p-5 text-center hud-corners">
+                <motion.div key={s.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="holo-card rounded-xl p-5 text-center hud-corners tilt-3d">
                   <div className="relative z-10">
                     <div className={`text-2xl sm:text-3xl font-black bg-gradient-to-r ${s.color} bg-clip-text text-transparent`}>{s.value}</div>
                     <div className="text-xs text-muted-foreground mt-1 font-medium tracking-wide uppercase">{s.label}</div>
@@ -167,7 +169,7 @@ export default function TestimonialsPage() {
             </motion.div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
               {ALL_TESTIMONIALS.map((t, i) => (
-                <motion.div key={t.name} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }} className="holo-card rounded-xl p-6 hud-corners">
+                <motion.div key={t.name} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }} className="holo-card rounded-xl p-6 hud-corners tilt-3d">
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-1">

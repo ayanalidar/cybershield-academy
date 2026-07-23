@@ -715,3 +715,272 @@ html {
 :root .orbit-dot-3 { background: #e11d48; box-shadow: 0 0 10px #e11d48; }
 :root .cyber-grid { background-image: linear-gradient(rgba(5,150,105,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(5,150,105,0.06) 1px, transparent 1px), linear-gradient(45deg, rgba(6,182,212,0.03) 1px, transparent 1px), linear-gradient(-45deg, rgba(6,182,212,0.03) 1px, transparent 1px); }
 :root .terminal-cursor::after { color: #059669; }
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHTNING / THUNDER TEXT EFFECT
+   ═══════════════════════════════════════════════════════════════ */
+
+.lightning-text {
+  position: relative;
+  color: #ffffff;
+  text-shadow:
+    0 0 4px #ffffff,
+    0 0 11px #ffffff,
+    0 0 19px #ffffff,
+    0 0 40px #00e5ff,
+    0 0 80px #00e5ff,
+    0 0 90px #00e5ff,
+    0 0 100px #00e5ff,
+    0 0 150px #a855f7;
+  animation: lightning-strike 4s infinite;
+}
+
+@keyframes lightning-strike {
+  0%, 100% { text-shadow: 0 0 4px #ffffff, 0 0 11px #ffffff, 0 0 19px #ffffff, 0 0 40px #00e5ff, 0 0 80px #00e5ff, 0 0 90px #00e5ff, 0 0 100px #00e5ff, 0 0 150px #a855f7; }
+  2% { text-shadow: 0 0 4px #fff, 0 0 20px #fff, 0 0 40px #fff, 0 0 80px #fff, 0 0 120px #00e5ff, 0 0 200px #00e5ff, 0 0 300px #a855f7, 0 0 400px #ff0040; color: #ffffff; }
+  4% { text-shadow: 0 0 2px #ffffff, 0 0 5px #00e5ff, 0 0 10px #00e5ff; opacity: 0.6; }
+  6% { text-shadow: 0 0 4px #ffffff, 0 0 15px #ffffff, 0 0 30px #00e5ff, 0 0 60px #00e5ff, 0 0 100px #a855f7, 0 0 160px #a855f7; }
+  8% { text-shadow: 0 0 2px #ffffff, 0 0 5px #00e5ff; opacity: 0.5; }
+  10% { text-shadow: 0 0 4px #fff, 0 0 20px #fff, 0 0 40px #fff, 0 0 80px #fff, 0 0 120px #00e5ff, 0 0 200px #00e5ff, 0 0 300px #a855f7; color: #ffffff; }
+  12%, 100% { text-shadow: 0 0 4px #ffffff, 0 0 11px #ffffff, 0 0 19px #ffffff, 0 0 40px #00e5ff, 0 0 80px #00e5ff, 0 0 90px #00e5ff, 0 0 100px #00e5ff, 0 0 150px #a855f7; }
+  40% { text-shadow: 0 0 4px #fff, 0 0 25px #fff, 0 0 50px #fff, 0 0 100px #00e5ff, 0 0 200px #00e5ff, 0 0 300px #ff0040; color: #fff; }
+  42% { text-shadow: 0 0 2px #00e5ff; opacity: 0.4; }
+  44% { text-shadow: 0 0 4px #fff, 0 0 15px #fff, 0 0 30px #fff, 0 0 60px #00e5ff, 0 0 120px #a855f7; }
+  46%, 100% { text-shadow: 0 0 4px #ffffff, 0 0 11px #ffffff, 0 0 19px #ffffff, 0 0 40px #00e5ff, 0 0 80px #00e5ff, 0 0 90px #00e5ff, 0 0 100px #00e5ff, 0 0 150px #a855f7; }
+  72% { text-shadow: 0 0 4px #fff, 0 0 20px #fff, 0 0 40px #fff, 0 0 80px #fff, 0 0 120px #ff0040, 0 0 200px #ff0040, 0 0 300px #fbbf24; color: #fff; }
+  74% { text-shadow: 0 0 2px #00e5ff; opacity: 0.5; }
+  76% { text-shadow: 0 0 4px #fff, 0 0 30px #fff, 0 0 60px #00e5ff, 0 0 100px #a855f7, 0 0 200px #a855f7; }
+  78%, 100% { text-shadow: 0 0 4px #ffffff, 0 0 11px #ffffff, 0 0 19px #ffffff, 0 0 40px #00e5ff, 0 0 80px #00e5ff, 0 0 90px #00e5ff, 0 0 100px #00e5ff, 0 0 150px #a855f7; }
+}
+
+:root .lightning-text {
+  color: #0c4a6e;
+  text-shadow: 0 0 4px #ffffff, 0 0 8px #0ea5e9, 0 0 20px #0ea5e9;
+  animation: lightning-strike-light 4s infinite;
+}
+
+@keyframes lightning-strike-light {
+  0%, 100% { text-shadow: 0 0 4px #0ea5e9, 0 0 8px #0ea5e9; }
+  2% { text-shadow: 0 0 4px #fff, 0 0 10px #fff, 0 0 20px #fff, 0 0 40px #0ea5e9; }
+  4% { text-shadow: 0 0 2px #0ea5e9; }
+  6% { text-shadow: 0 0 4px #fff, 0 0 10px #0ea5e9, 0 0 20px #0ea5e9; }
+  8% { text-shadow: 0 0 2px #0ea5e9; }
+  10% { text-shadow: 0 0 4px #fff, 0 0 15px #fff, 0 0 30px #0ea5e9; }
+  12%, 100% { text-shadow: 0 0 4px #0ea5e9, 0 0 8px #0ea5e9; }
+  40% { text-shadow: 0 0 4px #fff, 0 0 12px #fff, 0 0 25px #0ea5e9; }
+  42% { text-shadow: 0 0 2px #0ea5e9; }
+  44% { text-shadow: 0 0 4px #fff, 0 0 10px #0ea5e9, 0 0 20px #0ea5e9; }
+  46%, 100% { text-shadow: 0 0 4px #0ea5e9, 0 0 8px #0ea5e9; }
+  72% { text-shadow: 0 0 4px #fff, 0 0 15px #fff, 0 0 30px #0ea5e9; }
+  74% { text-shadow: 0 0 2px #0ea5e9; }
+  76% { text-shadow: 0 0 4px #fff, 0 0 10px #0ea5e9; }
+  78%, 100% { text-shadow: 0 0 4px #0ea5e9, 0 0 8px #0ea5e9; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   3D SCENE — THUNDERSTORM / ELECTRIC EFFECTS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Thunderstorm flash overlay */
+.thunderstorm {
+  position: relative;
+  overflow: hidden;
+}
+
+.thunderstorm::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 20%, rgba(0,229,255,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 60%, rgba(168,85,247,0.04) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 80%, rgba(255,0,64,0.03) 0%, transparent 40%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.thunderstorm::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  animation: thunder-flash 8s ease-in-out infinite;
+}
+
+@keyframes thunder-flash {
+  0%, 100% { background: transparent; }
+  3% { background: radial-gradient(ellipse at 25% 15%, rgba(255,255,255,0.15) 0%, rgba(0,229,255,0.08) 30%, transparent 60%); }
+  5% { background: transparent; }
+  7% { background: radial-gradient(ellipse at 60% 25%, rgba(255,255,255,0.1) 0%, rgba(168,85,247,0.06) 25%, transparent 50%); }
+  9% { background: transparent; }
+  38% { background: radial-gradient(ellipse at 75% 10%, rgba(255,255,255,0.2) 0%, rgba(255,0,64,0.08) 20%, transparent 55%); }
+  40% { background: transparent; }
+  42% { background: radial-gradient(ellipse at 40% 30%, rgba(255,255,255,0.12) 0%, rgba(0,229,255,0.06) 30%, transparent 60%); }
+  44% { background: transparent; }
+  70% { background: radial-gradient(ellipse at 15% 40%, rgba(255,255,255,0.18) 0%, rgba(251,191,36,0.06) 20%, transparent 50%); }
+  72% { background: transparent; }
+  74% { background: radial-gradient(ellipse at 55% 15%, rgba(255,255,255,0.1) 0%, rgba(0,229,255,0.08) 25%, transparent 55%); }
+  76% { background: transparent; }
+}
+
+:root .thunderstorm::after {
+  animation: thunder-flash-light 8s ease-in-out infinite;
+}
+
+@keyframes thunder-flash-light {
+  0%, 100% { background: transparent; }
+  3% { background: radial-gradient(ellipse at 25% 15%, rgba(14,165,233,0.06) 0%, transparent 40%); }
+  5% { background: transparent; }
+  7% { background: radial-gradient(ellipse at 60% 25%, rgba(124,58,237,0.04) 0%, transparent 35%); }
+  9% { background: transparent; }
+  38% { background: radial-gradient(ellipse at 75% 10%, rgba(14,165,233,0.05) 0%, transparent 40%); }
+  40% { background: transparent; }
+  42% { background: radial-gradient(ellipse at 40% 30%, rgba(14,165,233,0.04) 0%, transparent 35%); }
+  44% { background: transparent; }
+  70% { background: radial-gradient(ellipse at 15% 40%, rgba(14,165,233,0.05) 0%, transparent 40%); }
+  72% { background: transparent; }
+  74% { background: radial-gradient(ellipse at 55% 15%, rgba(14,165,233,0.04) 0%, transparent 35%); }
+  76% { background: transparent; }
+}
+
+/* 3D floating cube */
+.cube-3d {
+  width: var(--cube-size, 60px);
+  height: var(--cube-size, 60px);
+  position: absolute;
+  transform-style: preserve-3d;
+  animation: cube-rotate var(--cube-speed, 20s) linear infinite;
+  pointer-events: none;
+}
+
+.cube-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 1px solid;
+  border-radius: 4px;
+  backdrop-filter: blur(2px);
+}
+
+.cube-face-front  { transform: translateZ(calc(var(--cube-size, 60px) / 2)); }
+.cube-face-back   { transform: rotateY(180deg) translateZ(calc(var(--cube-size, 60px) / 2)); }
+.cube-face-right  { transform: rotateY(90deg) translateZ(calc(var(--cube-size, 60px) / 2)); }
+.cube-face-left   { transform: rotateY(-90deg) translateZ(calc(var(--cube-size, 60px) / 2)); }
+.cube-face-top    { transform: rotateX(90deg) translateZ(calc(var(--cube-size, 60px) / 2)); }
+.cube-face-bottom { transform: rotateX(-90deg) translateZ(calc(var(--cube-size, 60px) / 2)); }
+
+@keyframes cube-rotate {
+  0%   { transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); }
+  100% { transform: rotateX(calc(var(--rx, 0deg) + 360deg)) rotateY(calc(var(--ry, 0deg) + 360deg)); }
+}
+
+/* 3D floating octahedron (diamond shape) */
+.octa-3d {
+  width: var(--octa-size, 50px);
+  height: var(--octa-size, 50px);
+  position: absolute;
+  transform-style: preserve-3d;
+  animation: octa-float var(--octa-speed, 15s) ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes octa-float {
+  0%, 100% { transform: rotateX(0deg) rotateY(0deg) translateY(0px); }
+  25% { transform: rotateX(90deg) rotateY(90deg) translateY(-20px); }
+  50% { transform: rotateX(180deg) rotateY(180deg) translateY(0px); }
+  75% { transform: rotateX(270deg) rotateY(90deg) translateY(20px); }
+}
+
+/* Lightning bolt SVG decoration */
+.lightning-bolt {
+  position: absolute;
+  pointer-events: none;
+  animation: bolt-flicker var(--bolt-speed, 6s) ease-in-out infinite;
+  filter: drop-shadow(0 0 6px var(--bolt-color, #00e5ff)) drop-shadow(0 0 12px var(--bolt-color, #00e5ff));
+}
+
+@keyframes bolt-flicker {
+  0%, 100% { opacity: 0.15; }
+  2% { opacity: 1; filter: drop-shadow(0 0 10px var(--bolt-color, #00e5ff)) drop-shadow(0 0 25px var(--bolt-color, #00e5ff)) drop-shadow(0 0 50px var(--bolt-color, #00e5ff)); }
+  4% { opacity: 0.1; }
+  6% { opacity: 0.8; filter: drop-shadow(0 0 8px var(--bolt-color, #00e5ff)) drop-shadow(0 0 20px var(--bolt-color, #00e5ff)); }
+  8% { opacity: 0.05; }
+  10% { opacity: 0.6; filter: drop-shadow(0 0 6px var(--bolt-color, #00e5ff)); }
+  12%, 100% { opacity: 0.15; }
+  35% { opacity: 0.9; filter: drop-shadow(0 0 12px var(--bolt-color, #00e5ff)) drop-shadow(0 0 30px var(--bolt-color, #00e5ff)) drop-shadow(0 0 60px var(--bolt-color, #00e5ff)); }
+  37% { opacity: 0.05; }
+  39% { opacity: 0.7; filter: drop-shadow(0 0 8px var(--bolt-color, #00e5ff)) drop-shadow(0 0 15px var(--bolt-color, #00e5ff)); }
+  41% { opacity: 0.1; }
+  43%, 100% { opacity: 0.15; }
+  68% { opacity: 1; filter: drop-shadow(0 0 15px var(--bolt-color, #00e5ff)) drop-shadow(0 0 40px var(--bolt-color, #00e5ff)) drop-shadow(0 0 80px var(--bolt-color, #00e5ff)); }
+  70% { opacity: 0.05; }
+  72% { opacity: 0.5; filter: drop-shadow(0 0 6px var(--bolt-color, #00e5ff)); }
+  74%, 100% { opacity: 0.15; }
+}
+
+/* 3D perspective tilt on hover (use on any card) */
+.tilt-3d {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tilt-3d:hover {
+  transform: rotateX(-3deg) rotateY(2deg) translateY(-8px);
+}
+
+/* Electric arc between two points */
+.electric-arc {
+  position: absolute;
+  pointer-events: none;
+  animation: arc-pulse var(--arc-speed, 3s) ease-in-out infinite;
+}
+
+@keyframes arc-pulse {
+  0%, 100% { opacity: 0; }
+  10% { opacity: 0.8; }
+  15% { opacity: 0.2; }
+  20% { opacity: 0.9; }
+  25% { opacity: 0.1; }
+  30%, 100% { opacity: 0; }
+}
+
+/* 3D floating ring */
+.ring-3d {
+  position: absolute;
+  border: 2px solid;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: ring-orbit var(--ring-speed, 20s) linear infinite;
+}
+
+@keyframes ring-orbit {
+  0%   { transform: rotateX(70deg) rotateZ(0deg); }
+  100% { transform: rotateX(70deg) rotateZ(360deg); }
+}
+
+/* 3D code rain wall (perspective-transformed) */
+.code-wall {
+  position: absolute;
+  transform: perspective(600px) rotateY(var(--wall-rotate, -25deg)) rotateX(5deg);
+  transform-origin: left center;
+  pointer-events: none;
+  opacity: 0.12;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--wall-color, #00ff88);
+  white-space: pre;
+  overflow: hidden;
+  animation: wall-scroll var(--wall-speed, 30s) linear infinite;
+}
+
+@keyframes wall-scroll {
+  0% { transform: perspective(600px) rotateY(var(--wall-rotate, -25deg)) rotateX(5deg) translateY(0); }
+  100% { transform: perspective(600px) rotateY(var(--wall-rotate, -25deg)) rotateX(5deg) translateY(-50%); }
+}
+
+:root .code-wall { opacity: 0.05; color: #059669; }
+:root .lightning-bolt { filter: drop-shadow(0 0 3px var(--bolt-color, #0ea5e9)); opacity: 0.1; }
+:root .cube-face { border-color: rgba(5,150,105,0.2); background: rgba(5,150,105,0.03); }
+:root .ring-3d { border-color: rgba(5,150,105,0.15); }

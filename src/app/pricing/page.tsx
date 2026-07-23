@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Scene3D } from '@/components/scene3d';
 
 const PLANS = [
   {
@@ -191,7 +192,8 @@ export default function PricingPage() {
       <PageHeader />
       <main className="flex-1 pt-16">
         {/* Hero */}
-        <section className="relative py-24 sm:py-32 overflow-hidden scanline-overlay">
+        <section className="relative py-24 sm:py-32 overflow-hidden scanline-overlay thunderstorm">
+          <Scene3D variant="medium" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none z-0" style={{ background: 'radial-gradient(ellipse at center, rgba(168,85,247,0.08) 0%, rgba(0,255,136,0.04) 30%, transparent 70%)' }} />
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#a855f7]/20 bg-[#a855f7]/5 text-xs font-semibold text-[#a855f7] uppercase tracking-widest mb-6">
@@ -226,7 +228,7 @@ export default function PricingPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.12 }}
-                  className={`relative holo-card rounded-2xl p-6 hud-corners ${plan.popular ? 'border-[#00e5ff]/50 shadow-lg shadow-[#00e5ff]/10' : ''}`}
+                  className={`relative holo-card rounded-2xl p-6 hud-corners tilt-3d ${plan.popular ? 'border-[#00e5ff]/50 shadow-lg shadow-[#00e5ff]/10' : ''}`}
                   style={plan.popular ? { boxShadow: `0 0 30px ${plan.color}20, 0 0 60px ${plan.color}10` } : {}}
                 >
                   {plan.popular && (
@@ -279,7 +281,7 @@ export default function PricingPage() {
             </motion.div>
             <div className="space-y-4">
               {FAQS.map((faq, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }} className="holo-card rounded-xl p-5 hud-corners">
+                <motion.div key={i} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }} className="holo-card rounded-xl p-5 hud-corners tilt-3d">
                   <div className="relative z-10">
                     <h3 className="font-bold text-sm mb-2 text-[#00e5ff]">{faq.q}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>

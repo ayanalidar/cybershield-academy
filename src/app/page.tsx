@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Scene3D } from '@/components/scene3d';
 
 /* ═══════════════════════════════════════════════════════════════
    DATA
@@ -363,8 +364,9 @@ function Hero() {
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   return (
-    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 scanline-overlay">
+    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 scanline-overlay thunderstorm">
       <MatrixRain />
+      <Scene3D variant="full" />
 
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none z-0" style={{ background: 'radial-gradient(ellipse at center, rgba(0,255,136,0.08) 0%, rgba(0,229,255,0.04) 30%, transparent 70%)' }} />
 
@@ -401,7 +403,7 @@ function Hero() {
                 Security
               </span>
               {' '}Like{' '}
-              <span className="neon-text">Never Before</span>
+              <span className="lightning-text">Never Before</span>
             </h1>
 
             <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
@@ -514,7 +516,7 @@ function Features() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-50px' }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                className={`group holo-card rounded-xl p-6 hud-corners cursor-default ${f.borderColor}`}
+                className={`group holo-card rounded-xl p-6 hud-corners cursor-default tilt-3d ${f.borderColor}`}
               >
                 <div className={`relative z-10`}>
                   <div className={`inline-flex p-3 rounded-lg bg-gradient-to-br ${f.gradient} mb-4 shadow-lg`} style={{ boxShadow: `0 0 20px ${f.glowColor}` }}>
@@ -580,7 +582,7 @@ function CoursesPreview() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-50px' }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className={`group holo-card rounded-xl p-5 cursor-pointer border ${c.color}/15`}
+                className={`group holo-card rounded-xl p-5 cursor-pointer border tilt-3d ${c.color}/15`}
               >
                 <div className="relative z-10">
                   <div className="flex items-start justify-between mb-4">
@@ -650,7 +652,7 @@ function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="holo-card rounded-xl p-6 hud-corners"
+              className="holo-card rounded-xl p-6 hud-corners tilt-3d"
             >
               <div className="relative z-10">
                 <div className="flex items-center gap-1 mb-4">
