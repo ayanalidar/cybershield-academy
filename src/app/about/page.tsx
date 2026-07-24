@@ -136,6 +136,12 @@ export default function AboutPage() {
       <main className="flex-1 pt-16">
         {/* Hero */}
         <section className="relative py-24 sm:py-32 overflow-hidden scanline-overlay thunderstorm">
+          {/* Cinematic background image */}
+          <div className="absolute inset-0 z-0">
+            <img src="/about-bg.png" alt="" className="w-full h-full object-cover opacity-35 dark:opacity-25" />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/75 to-background" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-background/70" />
+          </div>
           <Scene3D variant="medium" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none z-0" style={{ background: 'radial-gradient(ellipse at center, rgba(0,229,255,0.08) 0%, rgba(168,85,247,0.04) 30%, transparent 70%)' }} />
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">

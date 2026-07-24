@@ -1,0 +1,810 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useRef, useMemo } from 'react';
+     4→import Link from 'next/link';
+     5→import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+     6→import {
+     7→  Shield, Brain, Terminal, Trophy, BarChart3, BookOpen,
+     8→  ArrowRight, Star, Zap, Users, Lock, Eye,
+     9→  ChevronDown, Sparkles, Target, GraduationCap, Globe, Cpu, Flame,
+    10→  Code2,
+    11→} from 'lucide-react';
+    12→import { Button } from '@/components/ui/button';
+    13→import { ThemeToggle } from '@/components/theme-toggle';
+    14→import { Scene3D } from '@/components/scene3d';
+    15→
+    16→/* ═══════════════════════════════════════════════════════════════
+    17→   DATA
+    18→   ═══════════════════════════════════════════════════════════════ */
+    19→
+    20→const FEATURES = [
+    21→  {
+    22→    icon: Brain,
+    23→    title: 'AI Professor Shield',
+    24→    desc: 'Voice-powered AI mentor with multiple personalities. Adapts to your level, answers questions, and guides you through complex concepts in real time.',
+    25→    gradient: 'from-[#00ff88] to-[#00cc6a]',
+    26→    glowColor: 'rgba(0, 255, 136, 0.3)',
+    27→    borderColor: 'border-[#00ff88]/20',
+    28→    tagColor: 'text-[#00ff88]',
+    29→  },
+    30→  {
+    31→    icon: Terminal,
+    32→    title: 'Hands-On Lab Terminal',
+    33→    desc: 'Sandboxed Linux environments with 50+ simulated commands. Network recon, SQL injection, privilege escalation — all from your browser.',
+    34→    gradient: 'from-[#00e5ff] to-[#0091ff]',
+    35→    glowColor: 'rgba(0, 229, 255, 0.3)',
+    36→    borderColor: 'border-[#00e5ff]/20',
+    37→    tagColor: 'text-[#00e5ff]',
+    38→  },
+    39→  {
+    40→    icon: Trophy,
+    41→    title: 'CTF Arena',
+    42→    desc: 'Compete in Capture The Flag challenges across crypto, web, forensics, reverse engineering, and pwn. Global leaderboard.',
+    43→    gradient: 'from-[#ff0040] to-[#ff6b00]',
+    44→    glowColor: 'rgba(255, 0, 64, 0.3)',
+    45→    borderColor: 'border-[#ff0040]/20',
+    46→    tagColor: 'text-[#ff0040]',
+    47→  },
+    48→  {
+    49→    icon: BarChart3,
+    50→    title: 'Deep Analytics',
+    51→    desc: 'Track focus scores, learning velocity, strength maps, skill radar, and compare against the community in real-time dashboards.',
+    52→    gradient: 'from-[#a855f7] to-[#6366f1]',
+    53→    glowColor: 'rgba(168, 85, 247, 0.3)',
+    54→    borderColor: 'border-[#a855f7]/20',
+    55→    tagColor: 'text-[#a855f7]',
+    56→  },
+    57→  {
+    58→    icon: Shield,
+    59→    title: 'Real-World Curriculum',
+    60→    desc: 'Built by veterans from CrowdStrike, Mandiant, and Microsoft. Network security, web app, cryptography, pen testing, cloud.',
+    61→    gradient: 'from-[#fbbf24] to-[#f59e0b]',
+    62→    glowColor: 'rgba(251, 191, 36, 0.3)',
+    63→    borderColor: 'border-[#fbbf24]/20',
+    64→    tagColor: 'text-[#fbbf24]',
+    65→  },
+    66→  {
+    67→    icon: Target,
+    68→    title: 'Adaptive Learning',
+    69→    desc: 'AI tracks your progress, identifies weak areas, and dynamically personalizes your learning path. Never waste time on what you already know.',
+    70→    gradient: 'from-[#ff0040] to-[#a855f7]',
+    71→    glowColor: 'rgba(255, 0, 64, 0.2)',
+    72→    borderColor: 'border-[#ff0040]/20',
+    73→    tagColor: 'text-[#c084fc]',
+    74→  },
+    75→];
+    76→
+    77→const STATS = [
+    78→  { value: '50+', label: 'Hands-On Labs', color: 'from-[#00ff88] to-[#00e5ff]' },
+    79→  { value: '200+', label: 'CTF Challenges', color: 'from-[#ff0040] to-[#ff6b00]' },
+    80→  { value: '15K+', label: 'Active Learners', color: 'from-[#a855f7] to-[#6366f1]' },
+    81→  { value: '94%', label: 'Completion Rate', color: 'from-[#fbbf24] to-[#f59e0b]' },
+    82→];
+    83→
+    84→const TESTIMONIALS = [
+    85→  {
+    86→    name: 'Sarah Kim',
+    87→    role: 'Security Analyst at CrowdStrike',
+    88→    text: "CyberShield's AI Professor helped me bridge the gap between theory and practice. The labs are incredibly realistic — I felt like I was in a real SOC environment.",
+    89→    avatar: 'SK',
+    90→    rating: 5,
+    91→    color: '#00ff88',
+    92→  },
+    93→  {
+    94→    name: 'Marcus Johnson',
+    95→    role: 'Pen Tester, Independent',
+    96→    text: 'The CTF arena and adaptive learning paths are game-changers. Went from script kiddie to OSCP in 8 months. The AI lab agent is insane.',
+    97→    avatar: 'MJ',
+    98→    rating: 5,
+    99→    color: '#00e5ff',
+   100→  },
+   101→  {
+   102→    name: 'Priya Mehta',
+   103→    role: 'SOC Lead at Mandiant',
+   104→    text: "I recommend CyberShield to every junior analyst on my team. The incident response modules and real-time analytics are world-class.",
+   105→    avatar: 'PM',
+   106→    rating: 5,
+   107→    color: '#ff0040',
+   108→  },
+   109→];
+   110→
+   111→const COURSES_PREVIEW = [
+   112→  { title: 'Network Security Fundamentals', level: 'Beginner', modules: 6, icon: Lock, color: '#00ff88', gradient: 'from-[#00ff88] to-[#00cc6a]' },
+   113→  { title: 'Web Application Security', level: 'Intermediate', modules: 8, icon: Globe, color: '#00e5ff', gradient: 'from-[#00e5ff] to-[#0091ff]' },
+   114→  { title: 'Cryptography & PKI', level: 'Intermediate', modules: 7, icon: Eye, color: '#a855f7', gradient: 'from-[#a855f7] to-[#6366f1]' },
+   115→  { title: 'Penetration Testing', level: 'Advanced', modules: 10, icon: Cpu, color: '#ff0040', gradient: 'from-[#ff0040] to-[#ff6b00]' },
+   116→];
+   117→
+   118→const TERMINAL_LINES = [
+   119→  { text: '$ nmap -sV -sC 10.0.0.50', color: 'text-[#00ff88]', delay: 0 },
+   120→  { text: 'PORT    STATE  SERVICE  VERSION', color: 'text-[#00e5ff]', delay: 400 },
+   121→  { text: '22/tcp  open   ssh      OpenSSH 8.9', color: 'text-foreground/70', delay: 700 },
+   122→  { text: '80/tcp  open   http     nginx 1.24.0', color: 'text-foreground/70', delay: 900 },
+   123→  { text: '443/tcp open   ssl      nginx 1.24.0', color: 'text-foreground/70', delay: 1100 },
+   124→  { text: '3306/tcp open  mysql    MySQL 8.0.35', color: 'text-[#ff0040]/80', delay: 1300 },
+   125→  { text: '', color: '', delay: 1600 },
+   126→  { text: '$ sqlmap -u "http://target/login" --dbs', color: 'text-[#fbbf24]', delay: 1800 },
+   127→  { text: '[*] starting @ 10:00:23 /2026-07-23/', color: 'text-[#fbbf24]/60', delay: 2100 },
+   128→  { text: '[+] found 3 databases', color: 'text-[#00ff88]', delay: 2500 },
+   129→  { text: '[+] SQL injection vulnerability confirmed', color: 'text-[#ff0040]', delay: 2800 },
+   130→];
+   131→
+   132→const MATRIX_CHARS = '\u30A0\u30A1\u30A2\u30A3\u30A4\u30A5\u30A6\u30A7\u30A8\u30A9\u30AA\u30AB\u30AC\u30AD\u30AE\u30AF\u30B0\u30B1\u30B2\u30B3\u30B4\u30B5\u30B6\u30B7\u30B8\u30B9\u30BA\u30BB\u30BC\u30BD\u30BE\u30BF\u30C0\u30C10123456789ABCDEFabcdef<>{}[]|/\\$#@!%^&*';
+   133→
+   134→/* ═══════════════════════════════════════════════════════════════
+   135→   MATRIX RAIN BACKGROUND
+   136→   ═══════════════════════════════════════════════════════════════ */
+   137→
+   138→function MatrixRain() {
+   139→  const columns = useMemo(() => {
+   140→    const cols = [];
+   141→    const count = typeof window !== 'undefined' ? Math.floor(window.innerWidth / 28) : 35;
+   142→    for (let i = 0; i < count; i++) {
+   143→      const chars = [];
+   144→      const len = 15 + Math.floor(Math.random() * 25);
+   145→      for (let j = 0; j < len; j++) {
+   146→        chars.push(MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)]);
+   147→      }
+   148→      cols.push({
+   149→        left: `${(i / count) * 100}%`,
+   150→        chars: chars.join(''),
+   151→        duration: 8 + Math.random() * 15,
+   152→        delay: Math.random() * -20,
+   153→        opacity: 0.04 + Math.random() * 0.12,
+   154→        fontSize: 10 + Math.floor(Math.random() * 8),
+   155→      });
+   156→    }
+   157→    return cols;
+   158→  }, []);
+   159→
+   160→  return (
+   161→    <div className="matrix-rain">
+   162→      {columns.map((col, i) => (
+   163→        <div
+   164→          key={i}
+   165→          className="matrix-column"
+   166→          style={{
+   167→            left: col.left,
+   168→            animationDuration: `${col.duration}s`,
+   169→            animationDelay: `${col.delay}s`,
+   170→            opacity: col.opacity,
+   171→            fontSize: `${col.fontSize}px`,
+   172→          }}
+   173→        >
+   174→          {col.chars}
+   175→        </div>
+   176→      ))}
+   177→    </div>
+   178→  );
+   179→}
+   180→
+   181→/* ═══════════════════════════════════════════════════════════════
+   182→   ANIMATED TERMINAL
+   183→   ═══════════════════════════════════════════════════════════════ */
+   184→
+   185→function AnimatedTerminal() {
+   186→  const [visibleLines, setVisibleLines] = useState(0);
+   187→
+   188→  useEffect(() => {
+   189→    const timers: NodeJS.Timeout[] = [];
+   190→    TERMINAL_LINES.forEach((line, i) => {
+   191→      timers.push(
+   192→        setTimeout(() => {
+   193→          setVisibleLines(i + 1);
+   194→        }, line.delay + 1500)
+   195→      );
+   196→    });
+   197→    // Loop: reset after all lines shown
+   198→    const totalDelay = TERMINAL_LINES[TERMINAL_LINES.length - 1].delay + 4000;
+   199→    const loopTimer = setInterval(() => {
+   200→      setVisibleLines(0);
+   201→      setTimeout(() => {
+   202→        TERMINAL_LINES.forEach((line, i) => {
+   203→          timers.push(
+   204→            setTimeout(() => setVisibleLines(i + 1), line.delay)
+   205→          );
+   206→        });
+   207→      }, 300);
+   208→    }, totalDelay);
+   209→    return () => {
+   210→      timers.forEach(clearTimeout);
+   211→      clearInterval(loopTimer);
+   212→    };
+   213→  }, []);
+   214→
+   215→  return (
+   216→    <div className="rounded-xl overflow-hidden neon-border bg-[#0a0e17]/90 dark:bg-[#060a12]/95 backdrop-blur-md">
+   217→      {/* Terminal title bar */}
+   218→      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[#00ff88]/10 bg-[#00ff88]/5">
+   219→        <div className="flex gap-1.5">
+   220→          <div className="w-3 h-3 rounded-full bg-[#ff0040]/80" />
+   221→          <div className="w-3 h-3 rounded-full bg-[#fbbf24]/80" />
+   222→          <div className="w-3 h-3 rounded-full bg-[#00ff88]/80" />
+   223→        </div>
+   224→        <span className="text-xs text-[#00ff88]/60 font-mono ml-2">student@cybershield-lab:~</span>
+   225→      </div>
+   226→      {/* Terminal body */}
+   227→      <div className="p-4 font-mono text-xs leading-relaxed min-h-[200px]">
+   228→        {TERMINAL_LINES.slice(0, visibleLines).map((line, i) => (
+   229→          <motion.div
+   230→            key={`${i}-${visibleLines}`}
+   231→            initial={{ opacity: 0, x: -10 }}
+   232→            animate={{ opacity: 1, x: 0 }}
+   233→            transition={{ duration: 0.15 }}
+   234→            className={`${line.color} whitespace-pre`}
+   235→          >
+   236→            {line.text || '\u00A0'}
+   237→          </motion.div>
+   238→        ))}
+   239→        {visibleLines > 0 && (
+   240→          <span className="terminal-cursor" />
+   241→        )}
+   242→      </div>
+   243→    </div>
+   244→  );
+   245→}
+   246→
+   247→/* ═══════════════════════════════════════════════════════════════
+   248→   HEADER
+   249→   ═══════════════════════════════════════════════════════════════ */
+   250→
+   251→function Header() {
+   252→  const [scrolled, setScrolled] = useState(false);
+   253→  const [mobileOpen, setMobileOpen] = useState(false);
+   254→
+   255→  useEffect(() => {
+   256→    const handler = () => setScrolled(window.scrollY > 20);
+   257→    window.addEventListener('scroll', handler, { passive: true });
+   258→    return () => window.removeEventListener('scroll', handler);
+   259→  }, []);
+   260→
+   261→  const navLinks = [
+   262→    { label: 'Features', href: '#features' },
+   263→    { label: 'Courses', href: '#courses' },
+   264→    { label: 'About', href: '/about' },
+   265→    { label: 'Pricing', href: '/pricing' },
+   266→    { label: 'Partners', href: '/partners' },
+   267→    { label: 'Testimonials', href: '/testimonials' },
+   268→  ];
+   269→
+   270→  return (
+   271→    <motion.header
+   272→      initial={{ y: -100 }}
+   273→      animate={{ y: 0 }}
+   274→      transition={{ duration: 0.5, ease: 'easeOut' }}
+   275→      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+   276→        scrolled
+   277→          ? 'glass-strong shadow-lg shadow-black/10 dark:shadow-black/30 border-b border-[#00ff88]/10'
+   278→          : 'bg-transparent'
+   279→      }`}
+   280→    >
+   281→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   282→        <div className="flex items-center justify-between h-16">
+   283→          <Link href="/" className="flex items-center gap-2.5 group">
+   284→            <img src="/logo.png" alt="CyberShield" className="h-8 w-8 object-contain transition-transform group-hover:scale-110" />
+   285→            <span className="text-lg font-bold tracking-tight">
+   286→              Cyber<span className="v-text-mint">Shield</span>
+   287→            </span>
+   288→          </Link>
+   289→
+   290→          <nav className="hidden md:flex items-center gap-1">
+   291→            {navLinks.map((link) => (
+   292→              <a
+   293→                key={link.label}
+   294→                href={link.href}
+   295→                className="px-3.5 py-2 text-sm font-medium text-muted-foreground hover:text-[#00ff88] rounded-lg hover:bg-[#00ff88]/5 transition-colors"
+   296→              >
+   297→                {link.label}
+   298→              </a>
+   299→            ))}
+   300→          </nav>
+   301→
+   302→          <div className="flex items-center gap-2">
+   303→            <ThemeToggle />
+   304→            <Button asChild className="hidden sm:flex cyber-btn rounded-lg h-9 px-5 text-xs">
+   305→              <Link href="/academy">
+   306→                Launch Academy
+   307→                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+   308→              </Link>
+   309→            </Button>
+   310→            <button
+   311→              onClick={() => setMobileOpen(!mobileOpen)}
+   312→              className="md:hidden p-2 rounded-lg hover:bg-[#00ff88]/5 transition-colors"
+   313→              aria-label="Toggle menu"
+   314→            >
+   315→              <div className="w-5 h-4 flex flex-col justify-between">
+   316→                <span className={`block h-0.5 w-full bg-[#00ff88] rounded transition-transform ${mobileOpen ? 'rotate-45 translate-y-1.75' : ''}`} />
+   317→                <span className={`block h-0.5 w-full bg-[#00ff88] rounded transition-opacity ${mobileOpen ? 'opacity-0' : ''}`} />
+   318→                <span className={`block h-0.5 w-full bg-[#00ff88] rounded transition-transform ${mobileOpen ? '-rotate-45 -translate-y-1.75' : ''}`} />
+   319→              </div>
+   320→            </button>
+   321→          </div>
+   322→        </div>
+   323→      </div>
+   324→
+   325→      <AnimatePresence>
+   326→        {mobileOpen && (
+   327→          <motion.div
+   328→            initial={{ height: 0, opacity: 0 }}
+   329→            animate={{ height: 'auto', opacity: 1 }}
+   330→            exit={{ height: 0, opacity: 0 }}
+   331→            transition={{ duration: 0.2 }}
+   332→            className="md:hidden overflow-hidden border-t border-[#00ff88]/10"
+   333→          >
+   334→            <div className="px-4 py-3 flex flex-col gap-1 bg-background/95 backdrop-blur-xl">
+   335→              {navLinks.map((link) => (
+   336→                <a
+   337→                  key={link.label}
+   338→                  href={link.href}
+   339→                  onClick={() => setMobileOpen(false)}
+   340→                  className="px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-[#00ff88] rounded-lg hover:bg-[#00ff88]/5 transition-colors"
+   341→                >
+   342→                  {link.label}
+   343→                </a>
+   344→              ))}
+   345→              <Button asChild className="mt-2 w-full cyber-btn rounded-lg text-xs">
+   346→                <Link href="/academy">Launch Academy</Link>
+   347→              </Button>
+   348→            </div>
+   349→          </motion.div>
+   350→        )}
+   351→      </AnimatePresence>
+   352→    </motion.header>
+   353→  );
+   354→}
+   355→
+   356→/* ═══════════════════════════════════════════════════════════════
+   357→   HERO
+   358→   ═══════════════════════════════════════════════════════════════ */
+   359→
+   360→function Hero() {
+   361→  const ref = useRef(null);
+   362→  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
+   363→  const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
+   364→  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+   365→
+   366→  return (
+   367→    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 scanline-overlay thunderstorm">
+   368→      <MatrixRain />
+   369→      <Scene3D variant="full" />
+   370→
+   371→      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none z-0" style={{ background: 'radial-gradient(ellipse at center, rgba(0,255,136,0.08) 0%, rgba(0,229,255,0.04) 30%, transparent 70%)' }} />
+   372→
+   373→      <motion.div style={{ y, opacity }} className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+   374→        <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+   375→          {/* Left: Text */}
+   376→          <motion.div
+   377→            initial={{ opacity: 0, x: -40 }}
+   378→            animate={{ opacity: 1, x: 0 }}
+   379→            transition={{ duration: 0.8, ease: 'easeOut' }}
+   380→            className="text-center lg:text-left"
+   381→          >
+   382→            <motion.div
+   383→              initial={{ opacity: 0, y: 20 }}
+   384→              animate={{ opacity: 1, y: 0 }}
+   385→              transition={{ duration: 0.5, delay: 0.2 }}
+   386→              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full neon-border bg-[#00ff88]/5 text-sm font-medium text-[#00ff88] mb-6"
+   387→            >
+   388→              <span className="relative flex h-2 w-2">
+   389→                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00ff88] opacity-75" />
+   390→                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00ff88]" />
+   391→              </span>
+   392→              AI-Powered Cybersecurity Training
+   393→            </motion.div>
+   394→
+   395→            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-6">
+   396→              <span className="color-shift-text">
+   397→                Master
+   398→              </span>
+   399→              {' '}
+   400→              <span className="v-text-cyber">Cyber</span>
+   401→              <br />
+   402→              <span className="color-shift-text">
+   403→                Security
+   404→              </span>
+   405→              {' '}Like{' '}
+   406→              <span className="lightning-text">Never Before</span>
+   407→            </h1>
+   408→
+   409→            <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
+   410→              Interactive labs, adaptive AI learning paths, CTF challenges, and a voice-powered
+   411→              professor that teaches like a real mentor — not a chatbot. Step into the future of cybersecurity training.
+   412→            </p>
+   413→
+   414→            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+   415→              <Button asChild size="lg" className="h-13 px-10 text-sm font-bold cyber-btn rounded-xl">
+   416→                <Link href="/academy">
+   417→                  <GraduationCap className="mr-2 h-5 w-5" />
+   418→                  Enter the Academy
+   419→                </Link>
+   420→              </Button>
+   421→              <Button asChild variant="outline" size="lg" className="h-13 px-8 text-sm rounded-xl border-[#00e5ff]/30 text-[#00e5ff] hover:bg-[#00e5ff]/5 hover:text-[#00e5ff] hover:border-[#00e5ff]/50 transition-all">
+   422→                <a href="#features">
+   423→                  Explore Features
+   424→                  <ChevronDown className="ml-1.5 h-4 w-4" />
+   425→                </a>
+   426→              </Button>
+   427→            </div>
+   428→          </motion.div>
+   429→
+   430→          {/* Right: Terminal */}
+   431→          <motion.div
+   432→            initial={{ opacity: 0, x: 40 }}
+   433→            animate={{ opacity: 1, x: 0 }}
+   434→            transition={{ duration: 0.8, delay: 0.3 }}
+   435→            className="hidden lg:block"
+   436→          >
+   437→            <div className="relative">
+   438→              {/* Orbiting dots around terminal */}
+   439→              <div className="orbit-container" style={{ top: '50%', left: '50%', marginTop: '-120px', marginLeft: '-120px' }}>
+   440→                <div className="orbit-dot orbit-dot-1" />
+   441→                <div className="orbit-dot orbit-dot-2" />
+   442→                <div className="orbit-dot orbit-dot-3" />
+   443→              </div>
+   444→              <AnimatedTerminal />
+   445→            </div>
+   446→          </motion.div>
+   447→        </div>
+   448→
+   449→        {/* Stats strip */}
+   450→        <motion.div
+   451→          initial={{ opacity: 0, y: 40 }}
+   452→          animate={{ opacity: 1, y: 0 }}
+   453→          transition={{ duration: 0.7, delay: 0.6 }}
+   454→          className="mt-16 lg:mt-20 grid grid-cols-2 md:grid-cols-4 gap-4"
+   455→        >
+   456→          {STATS.map((s, i) => (
+   457→            <div
+   458→              key={s.label}
+   459→              className="holo-card rounded-xl p-5 text-center hud-corners"
+   460→              style={{ animationDelay: `${i * 0.1}s` }}
+   461→            >
+   462→              <div className={`text-2xl sm:text-3xl font-black bg-gradient-to-r ${s.color} bg-clip-text text-transparent`}>
+   463→                {s.value}
+   464→              </div>
+   465→              <div className="text-xs text-muted-foreground mt-1 font-medium tracking-wide uppercase">{s.label}</div>
+   466→            </div>
+   467→          ))}
+   468→        </motion.div>
+   469→      </motion.div>
+   470→
+   471→      {/* Bottom gradient fade */}
+   472→      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none z-10" />
+   473→      {/* Data stream bar at very bottom of hero */}
+   474→      <div className="absolute bottom-0 left-0 right-0 h-[2px] data-stream-bar" />
+   475→    </section>
+   476→  );
+   477→}
+   478→
+   479→/* ═══════════════════════════════════════════════════════════════
+   480→   FEATURES
+   481→   ═══════════════════════════════════════════════════════════════ */
+   482→
+   483→function Features() {
+   484→  return (
+   485→    <section id="features" className="relative py-24 sm:py-32">
+   486→      {/* Section divider glow line */}
+   487→      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#00ff88]/40 to-transparent" />
+   488→
+   489→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+   490→        <motion.div
+   491→          initial={{ opacity: 0, y: 20 }}
+   492→          whileInView={{ opacity: 1, y: 0 }}
+   493→          viewport={{ once: true, margin: '-100px' }}
+   494→          className="text-center mb-16"
+   495→        >
+   496→          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#00e5ff]/20 bg-[#00e5ff]/5 text-xs font-semibold text-[#00e5ff] uppercase tracking-widest mb-4">
+   497→            <Code2 className="h-3.5 w-3.5" />
+   498→            Capabilities
+   499→          </div>
+   500→          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-4">
+   501→            Everything You Need to{' '}
+   502→            <span className="v-text-mint">Level Up</span>
+   503→          </h2>
+   504→          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+   505→            A complete cybersecurity learning ecosystem — from fundamentals to advanced exploitation. Built for the next generation.
+   506→          </p>
+   507→        </motion.div>
+   508→
+   509→        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+   510→          {FEATURES.map((f, i) => {
+   511→            const Icon = f.icon;
+   512→            return (
+   513→              <motion.div
+   514→                key={f.title}
+   515→                initial={{ opacity: 0, y: 30 }}
+   516→                whileInView={{ opacity: 1, y: 0 }}
+   517→                viewport={{ once: true, margin: '-50px' }}
+   518→                transition={{ duration: 0.5, delay: i * 0.08 }}
+   519→                className={`group holo-card rounded-xl p-6 hud-corners cursor-default tilt-3d ${f.borderColor}`}
+   520→              >
+   521→                <div className={`relative z-10`}>
+   522→                  <div className={`inline-flex p-3 rounded-lg bg-gradient-to-br ${f.gradient} mb-4 shadow-lg`} style={{ boxShadow: `0 0 20px ${f.glowColor}` }}>
+   523→                    <Icon className="h-5 w-5 text-white" />
+   524→                  </div>
+   525→                  <h3 className={`text-lg font-bold mb-2 ${f.tagColor}`}>{f.title}</h3>
+   526→                  <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+   527→                </div>
+   528→              </motion.div>
+   529→            );
+   530→          })}
+   531→        </div>
+   532→      </div>
+   533→    </section>
+   534→  );
+   535→}
+   536→
+   537→/* ═══════════════════════════════════════════════════════════════
+   538→   COURSES PREVIEW
+   539→   ═══════════════════════════════════════════════════════════════ */
+   540→
+   541→function CoursesPreview() {
+   542→  return (
+   543→    <section id="courses" className="relative py-24 sm:py-32">
+   544→      {/* Divider */}
+   545→      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#a855f7]/40 to-transparent" />
+   546→
+   547→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+   548→        <motion.div
+   549→          initial={{ opacity: 0, y: 20 }}
+   550→          whileInView={{ opacity: 1, y: 0 }}
+   551→          viewport={{ once: true, margin: '-100px' }}
+   552→          className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-12 gap-4"
+   553→        >
+   554→          <div>
+   555→            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#a855f7]/20 bg-[#a855f7]/5 text-xs font-semibold text-[#a855f7] uppercase tracking-widest mb-4">
+   556→              <BookOpen className="h-3.5 w-3.5" />
+   557→              Curriculum
+   558→            </div>
+   559→            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-3">
+   560→              Industry-Grade{' '}
+   561→              <span className="v-text-fire">Courses</span>
+   562→            </h2>
+   563→            <p className="text-muted-foreground max-w-lg">
+   564→              Curated by professionals from CrowdStrike, Mandiant, and Microsoft Security.
+   565→            </p>
+   566→          </div>
+   567→          <Button asChild variant="outline" className="border-[#a855f7]/30 text-[#a855f7] hover:bg-[#a855f7]/5 hover:text-[#a855f7] hover:border-[#a855f7]/50 transition-all rounded-lg">
+   568→            <Link href="/academy">
+   569→              View All Courses
+   570→              <ArrowRight className="ml-1.5 h-4 w-4" />
+   571→            </Link>
+   572→          </Button>
+   573→        </motion.div>
+   574→
+   575→        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+   576→          {COURSES_PREVIEW.map((c, i) => {
+   577→            const Icon = c.icon;
+   578→            return (
+   579→              <motion.div
+   580→                key={c.title}
+   581→                initial={{ opacity: 0, y: 30 }}
+   582→                whileInView={{ opacity: 1, y: 0 }}
+   583→                viewport={{ once: true, margin: '-50px' }}
+   584→                transition={{ duration: 0.5, delay: i * 0.1 }}
+   585→                className={`group holo-card rounded-xl p-5 cursor-pointer border tilt-3d ${c.color}/15`}
+   586→              >
+   587→                <div className="relative z-10">
+   588→                  <div className="flex items-start justify-between mb-4">
+   589→                    <div className={`p-2.5 rounded-lg bg-gradient-to-br ${c.gradient}`} style={{ boxShadow: `0 0 15px ${c.color}40` }}>
+   590→                      <Icon className="h-5 w-5 text-white" />
+   591→                    </div>
+   592→                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+   593→                      c.level === 'Beginner'
+   594→                        ? 'bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/20'
+   595→                        : c.level === 'Intermediate'
+   596→                          ? 'bg-[#fbbf24]/10 text-[#fbbf24] border border-[#fbbf24]/20'
+   597→                          : 'bg-[#ff0040]/10 text-[#ff0040] border border-[#ff0040]/20'
+   598→                    }`}>
+   599→                      {c.level}
+   600→                    </span>
+   601→                  </div>
+   602→                  <h3 className="font-bold text-sm mb-1.5">{c.title}</h3>
+   603→                  <p className="text-xs text-muted-foreground">{c.modules} modules</p>
+   604→                  {/* Progress bar decoration */}
+   605→                  <div className="mt-4 h-1 rounded-full bg-muted-bg/50 overflow-hidden">
+   606→                    <div className={`h-full rounded-full bg-gradient-to-r ${c.gradient} transition-all duration-700 group-hover:w-full w-0`} />
+   607→                  </div>
+   608→                </div>
+   609→              </motion.div>
+   610→            );
+   611→          })}
+   612→        </div>
+   613→      </div>
+   614→    </section>
+   615→  );
+   616→}
+   617→
+   618→/* ═══════════════════════════════════════════════════════════════
+   619→   TESTIMONIALS
+   620→   ═══════════════════════════════════════════════════════════════ */
+   621→
+   622→function Testimonials() {
+   623→  return (
+   624→    <section id="testimonials" className="relative py-24 sm:py-32">
+   625→      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#ff0040]/40 to-transparent" />
+   626→
+   627→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+   628→        <motion.div
+   629→          initial={{ opacity: 0, y: 20 }}
+   630→          whileInView={{ opacity: 1, y: 0 }}
+   631→          viewport={{ once: true, margin: '-100px' }}
+   632→          className="text-center mb-16"
+   633→        >
+   634→          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#fbbf24]/20 bg-[#fbbf24]/5 text-xs font-semibold text-[#fbbf24] uppercase tracking-widest mb-4">
+   635→            <Star className="h-3.5 w-3.5" />
+   636→            Testimonials
+   637→          </div>
+   638→          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-4">
+   639→            Trusted by{' '}
+   640→            <span className="v-text-fire">Professionals</span>
+   641→          </h2>
+   642→          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+   643→            Hear from cybersecurity professionals who leveled up their careers with CyberShield.
+   644→          </p>
+   645→        </motion.div>
+   646→
+   647→        <div className="grid md:grid-cols-3 gap-5">
+   648→          {TESTIMONIALS.map((t, i) => (
+   649→            <motion.div
+   650→              key={t.name}
+   651→              initial={{ opacity: 0, y: 30 }}
+   652→              whileInView={{ opacity: 1, y: 0 }}
+   653→              viewport={{ once: true, margin: '-50px' }}
+   654→              transition={{ duration: 0.5, delay: i * 0.1 }}
+   655→              className="holo-card rounded-xl p-6 hud-corners tilt-3d"
+   656→            >
+   657→              <div className="relative z-10">
+   658→                <div className="flex items-center gap-1 mb-4">
+   659→                  {Array.from({ length: t.rating }).map((_, j) => (
+   660→                    <Star key={j} className="h-4 w-4 fill-[#fbbf24] text-[#fbbf24]" />
+   661→                  ))}
+   662→                </div>
+   663→                <p className="text-sm text-muted-foreground leading-relaxed mb-6">&ldquo;{t.text}&rdquo;</p>
+   664→                <div className="flex items-center gap-3">
+   665→                  <div
+   666→                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
+   667→                    style={{ background: `linear-gradient(135deg, ${t.color}, ${t.color}99)`, boxShadow: `0 0 15px ${t.color}40` }}
+   668→                  >
+   669→                    {t.avatar}
+   670→                  </div>
+   671→                  <div>
+   672→                    <div className="text-sm font-bold">{t.name}</div>
+   673→                    <div className="text-xs text-muted-foreground">{t.role}</div>
+   674→                  </div>
+   675→                </div>
+   676→              </div>
+   677→            </motion.div>
+   678→          ))}
+   679→        </div>
+   680→      </div>
+   681→    </section>
+   682→  );
+   683→}
+   684→
+   685→/* ═══════════════════════════════════════════════════════════════
+   686→   CTA
+   687→   ═══════════════════════════════════════════════════════════════ */
+   688→
+   689→function CTA() {
+   690→  return (
+   691→    <section className="relative py-24 sm:py-32">
+   692→      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#00e5ff]/40 to-transparent" />
+   693→
+   694→      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+   695→        <motion.div
+   696→          initial={{ opacity: 0, y: 20 }}
+   697→          whileInView={{ opacity: 1, y: 0 }}
+   698→          viewport={{ once: true, margin: '-100px' }}
+   699→          className="relative p-12 sm:p-16 rounded-2xl neon-border bg-[#00ff88]/[0.02] dark:bg-[#00ff88]/[0.03] overflow-hidden"
+   700→        >
+   701→          {/* Background grid */}
+   702→          <div className="absolute inset-0 cyber-grid pointer-events-none" />
+   703→          <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-[#00ff88]/5 blur-3xl pointer-events-none" />
+   704→          <div className="absolute -bottom-20 -left-20 w-60 h-60 rounded-full bg-[#00e5ff]/5 blur-3xl pointer-events-none" />
+   705→
+   706→          <div className="relative z-10">
+   707→            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ff0040]/10 border border-[#ff0040]/20 text-[#ff0040] text-xs font-bold uppercase tracking-widest mb-6">
+   708→              <Flame className="h-3.5 w-3.5" />
+   709→              Start your journey today
+   710→            </div>
+   711→            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-4">
+   712→              Ready to Become a{' '}
+   713→              <span className="neon-text">Cyber Expert</span>?
+   714→            </h2>
+   715→            <p className="text-muted-foreground max-w-lg mx-auto mb-8">
+   716→              Join thousands of learners mastering cybersecurity through hands-on practice and AI-powered guidance.
+   717→            </p>
+   718→            <Button asChild size="lg" className="h-13 px-12 text-sm font-bold cyber-btn rounded-xl">
+   719→              <Link href="/academy">
+   720→                <Zap className="mr-2 h-5 w-5" />
+   721→                Enter the Academy
+   722→              </Link>
+   723→            </Button>
+   724→          </div>
+   725→        </motion.div>
+   726→      </div>
+   727→    </section>
+   728→  );
+   729→}
+   730→
+   731→/* ═══════════════════════════════════════════════════════════════
+   732→   FOOTER
+   733→   ═══════════════════════════════════════════════════════════════ */
+   734→
+   735→function Footer() {
+   736→  return (
+   737→    <footer className="border-t border-[#00ff88]/10 bg-surface/30">
+   738→      {/* Top data stream bar */}
+   739→      <div className="h-[2px] data-stream-bar" />
+   740→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+   741→        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+   742→          <div>
+   743→            <div className="flex items-center gap-2 mb-4">
+   744→              <img src="/logo.png" alt="CyberShield" className="h-6 w-6 object-contain" />
+   745→              <span className="font-bold">
+   746→                Cyber<span className="v-text-mint">Shield</span>
+   747→              </span>
+   748→            </div>
+   749→            <p className="text-sm text-muted-foreground leading-relaxed">
+   750→              AI-powered cybersecurity training platform built for the next generation of security professionals.
+   751→            </p>
+   752→          </div>
+   753→          <div>
+   754→            <h4 className="font-bold mb-3 text-sm text-[#00e5ff] uppercase tracking-wider text-xs">Platform</h4>
+   755→            <ul className="space-y-2 text-sm text-muted-foreground">
+   756→              <li><Link href="/academy" className="hover:text-[#00ff88] transition-colors">Academy</Link></li>
+   757→              <li><a href="#features" className="hover:text-[#00ff88] transition-colors">Features</a></li>
+   758→              <li><a href="#courses" className="hover:text-[#00ff88] transition-colors">Courses</a></li>
+   759→              <li><Link href="/pricing" className="hover:text-[#00ff88] transition-colors">Pricing</Link></li>
+   760→            </ul>
+   761→          </div>
+   762→          <div>
+   763→            <h4 className="font-bold mb-3 text-sm text-[#a855f7] uppercase tracking-wider text-xs">Resources</h4>
+   764→            <ul className="space-y-2 text-sm text-muted-foreground">
+   765→              <li><span className="hover:text-[#00ff88] transition-colors cursor-default">Documentation</span></li>
+   766→              <li><span className="hover:text-[#00ff88] transition-colors cursor-default">Blog</span></li>
+   767→              <li><span className="hover:text-[#00ff88] transition-colors cursor-default">Community</span></li>
+   768→            </ul>
+   769→          </div>
+   770→          <div>
+   771→            <h4 className="font-bold mb-3 text-sm text-[#fbbf24] uppercase tracking-wider text-xs">Company</h4>
+   772→            <ul className="space-y-2 text-sm text-muted-foreground">
+   773→              <li><Link href="/about" className="hover:text-[#00ff88] transition-colors">About</Link></li>
+   774→              <li><Link href="/partners" className="hover:text-[#00ff88] transition-colors">Partners</Link></li>
+   775→              <li><Link href="/testimonials" className="hover:text-[#00ff88] transition-colors">Testimonials</Link></li>
+   776→            </ul>
+   777→          </div>
+   778→        </div>
+   779→        <div className="mt-10 pt-6 border-t border-[#00ff88]/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+   780→          <span className="font-mono text-xs">&copy; 2026 CyberShield Academy. All rights reserved.</span>
+   781→          <div className="flex items-center gap-4">
+   782→            <Users className="h-4 w-4 text-[#00ff88]/50" />
+   783→            <span className="font-mono text-xs">15K+ learners worldwide</span>
+   784→          </div>
+   785→        </div>
+   786→      </div>
+   787→    </footer>
+   788→  );
+   789→}
+   790→
+   791→/* ═══════════════════════════════════════════════════════════════
+   792→   PAGE
+   793→   ═══════════════════════════════════════════════════════════════ */
+   794→
+   795→export default function LandingPage() {
+   796→  return (
+   797→    <div className="min-h-screen flex flex-col">
+   798→      <Header />
+   799→      <main className="flex-1">
+   800→        <Hero />
+   801→        <Features />
+   802→        <CoursesPreview />
+   803→        <Testimonials />
+   804→        <CTA />
+   805→      </main>
+   806→      <Footer />
+   807→    </div>
+   808→  );
+   809→}
+   810→

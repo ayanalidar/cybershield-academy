@@ -365,6 +365,12 @@ function Hero() {
 
   return (
     <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 scanline-overlay thunderstorm">
+      {/* Cinematic background image */}
+      <div className="absolute inset-0 z-0">
+        <img src="/hero-bg.png" alt="" className="w-full h-full object-cover opacity-40 dark:opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/80" />
+      </div>
       <MatrixRain />
       <Scene3D variant="full" />
 
