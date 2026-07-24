@@ -1006,42 +1006,42 @@ html {
     conic-gradient(
       from 180deg at 50% 60%,
       transparent 0deg,
-      rgba(0, 229, 255, 0.03) 5deg,
+      rgba(0, 229, 255, 0.12) 5deg,
       transparent 10deg,
-      rgba(168, 85, 247, 0.02) 20deg,
+      rgba(168, 85, 247, 0.08) 20deg,
       transparent 25deg,
-      rgba(251, 191, 36, 0.02) 35deg,
+      rgba(251, 191, 36, 0.08) 35deg,
       transparent 40deg,
-      rgba(0, 229, 255, 0.03) 50deg,
+      rgba(0, 229, 255, 0.12) 50deg,
       transparent 55deg,
-      rgba(168, 85, 247, 0.02) 65deg,
+      rgba(168, 85, 247, 0.08) 65deg,
       transparent 70deg,
-      rgba(251, 191, 36, 0.02) 80deg,
+      rgba(251, 191, 36, 0.08) 80deg,
       transparent 85deg,
-      rgba(0, 229, 255, 0.03) 95deg,
+      rgba(0, 229, 255, 0.12) 95deg,
       transparent 100deg,
       transparent 180deg,
-      rgba(255, 0, 64, 0.015) 190deg,
+      rgba(255, 0, 64, 0.06) 190deg,
       transparent 195deg,
-      rgba(0, 229, 255, 0.02) 210deg,
+      rgba(0, 229, 255, 0.08) 210deg,
       transparent 215deg,
-      rgba(251, 191, 36, 0.02) 230deg,
+      rgba(251, 191, 36, 0.08) 230deg,
       transparent 235deg,
-      rgba(168, 85, 247, 0.02) 250deg,
+      rgba(168, 85, 247, 0.08) 250deg,
       transparent 255deg,
-      rgba(0, 229, 255, 0.015) 270deg,
+      rgba(0, 229, 255, 0.06) 270deg,
       transparent 275deg,
-      rgba(255, 0, 64, 0.02) 290deg,
+      rgba(255, 0, 64, 0.08) 290deg,
       transparent 295deg,
-      rgba(251, 191, 36, 0.02) 310deg,
+      rgba(251, 191, 36, 0.08) 310deg,
       transparent 315deg,
-      rgba(0, 229, 255, 0.015) 330deg,
+      rgba(0, 229, 255, 0.06) 330deg,
       transparent 340deg,
-      rgba(168, 85, 247, 0.02) 355deg,
+      rgba(168, 85, 247, 0.08) 355deg,
       transparent 360deg
     );
   animation: rays-rotate 60s linear infinite;
-  filter: blur(30px);
+  filter: blur(20px);
 }
 
 @keyframes rays-rotate {
@@ -1162,7 +1162,7 @@ html {
   inset: 0;
   z-index: 3;
   pointer-events: none;
-  opacity: 0.08;
+  opacity: 0.15;
   background-image:
     linear-gradient(rgba(251, 191, 36, 0.6) 1px, transparent 1px),
     linear-gradient(90deg, rgba(251, 191, 36, 0.6) 1px, transparent 1px);
@@ -1173,8 +1173,8 @@ html {
 }
 
 @keyframes holo-grid-pulse {
-  0%, 100% { opacity: 0.06; transform: perspective(800px) rotateX(15deg) scale(1); }
-  50% { opacity: 0.12; transform: perspective(800px) rotateX(15deg) scale(1.02); }
+  0%, 100% { opacity: 0.12; transform: perspective(800px) rotateX(15deg) scale(1); }
+  50% { opacity: 0.25; transform: perspective(800px) rotateX(15deg) scale(1.02); }
 }
 
 /* Radar sweep */
