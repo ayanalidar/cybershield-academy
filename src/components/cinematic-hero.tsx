@@ -1,252 +1,612 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useRef } from 'react';
 
 /* ═══════════════════════════════════════════════════════════════
-   CINEMATIC QUANTUM SUPERCOMPUTER HERO BACKGROUND
-   Multi-layered animated scene: lightning, radar, holographic grid,
-   energy particles, volumetric rays, scan beam, firewall shimmer
+   ANIMATED QUANTUM SUPERCOMPUTER HERO
+   Full canvas-rendered scene: lightning, holographic grid,
+   radar sweep, energy particles, node network, core glow
    ═══════════════════════════════════════════════════════════════ */
 
-// Lightning bolt SVG paths (jagged electric streaks)
-const LIGHTNING_PATHS = [
-  'M0,0 L12,-18 L6,-20 L22,-50 L14,-52 L30,-85 L18,-88 L38,-120 L24,-125 L42,-160 L28,-168 L48,-200',
-  'M0,0 L-8,-22 L-2,-24 L-18,-55 L-10,-58 L-28,-90 L-16,-95 L-35,-128 L-20,-135 L-40,-170 L-25,-178 L-42,-210',
-  'M0,0 L15,-12 L10,-15 L25,-40 L18,-42 L35,-70 L26,-74 L45,-105 L34,-110 L52,-145 L40,-150 L55,-180',
-  'M0,0 L-10,-15 L-5,-18 L-20,-45 L-12,-48 L-30,-80 L-22,-85 L-42,-115 L-30,-120 L-48,-155 L-35,-162',
-  'M0,0 L8,-20 L14,-22 L5,-48 L12,-50 L2,-78 L10,-82 L-5,-112 L5,-116 L-12,-148 L-2,-155 L-18,-190',
-];
+interface Bolt {
+  points: { x: number; y: number }[];
+  life: number;
+  maxLife: number;
+  color: string;
+  glow: string;
+  width: number;
+  branchChance: number;
+}
 
-// Network nodes with connections
-const NETWORK_NODES = [
-  { x: 20, y: 30, color: '#fbbf24', speed: 2.5, delay: 0 },
-  { x: 75, y: 25, color: '#00e5ff', speed: 3.2, delay: 0.5 },
-  { x: 45, y: 60, color: '#fbbf24', speed: 2.8, delay: 1.0 },
-  { x: 85, y: 55, color: '#a855f7', speed: 3.5, delay: 0.3 },
-  { x: 15, y: 70, color: '#00e5ff', speed: 2.2, delay: 1.5 },
-  { x: 60, y: 80, color: '#fbbf24', speed: 3.0, delay: 0.8 },
-  { x: 35, y: 15, color: '#a855f7', speed: 2.6, delay: 1.2 },
-  { x: 90, y: 40, color: '#00e5ff', speed: 3.3, delay: 0.2 },
-  { x: 55, y: 45, color: '#fbbf24', speed: 2.4, delay: 0.7 },
-  { x: 70, y: 70, color: '#a855f7', speed: 2.9, delay: 1.8 },
-  { x: 25, y: 50, color: '#00e5ff', speed: 3.1, delay: 0.4 },
-  { x: 80, y: 15, color: '#fbbf24', speed: 2.7, delay: 1.1 },
-];
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  color: string;
+  alpha: number;
+  life: number;
+  maxLife: number;
+}
 
-const NETWORK_LINES = [
-  { x1: 20, y1: 30, x2: 45, y2: 60, color: '#fbbf24', speed: 4, delay: 0 },
-  { x1: 75, y1: 25, x2: 90, y2: 40, color: '#00e5ff', speed: 3.5, delay: 0.5 },
-  { x1: 45, y1: 60, x2: 70, y2: 70, color: '#fbbf24', speed: 4.5, delay: 1.0 },
-  { x1: 85, y1: 55, x2: 70, y2: 70, color: '#a855f7', speed: 3.8, delay: 0.3 },
-  { x1: 15, y1: 70, x2: 25, y2: 50, color: '#00e5ff', speed: 4.2, delay: 1.5 },
-  { x1: 60, y1: 80, x2: 45, y2: 60, color: '#fbbf24', speed: 3.6, delay: 0.8 },
-  { x1: 35, y1: 15, x2: 20, y2: 30, color: '#a855f7', speed: 4.0, delay: 1.2 },
-  { x1: 55, y1: 45, x2: 45, y2: 60, color: '#fbbf24', speed: 3.4, delay: 0.7 },
-  { x1: 55, y1: 45, x2: 75, y2: 25, color: '#00e5ff', speed: 4.3, delay: 0.2 },
-  { x1: 25, y1: 50, x2: 35, y2: 15, color: '#00e5ff', speed: 3.9, delay: 1.1 },
-  { x1: 80, y1: 15, x2: 75, y2: 25, color: '#fbbf24', speed: 3.2, delay: 0.4 },
-  { x1: 60, y1: 80, x2: 85, y2: 55, color: '#a855f7', speed: 4.1, delay: 0.9 },
-];
-
-// Energy particles
-const PARTICLES = Array.from({ length: 40 }, (_, i) => ({
-  left: `${Math.random() * 100}%`,
-  bottom: `${Math.random() * 20}%`,
-  color: ['#00e5ff', '#a855f7', '#fbbf24', '#00ff88'][i % 4],
-  size: 2 + Math.random() * 4,
-  speed: 6 + Math.random() * 10,
-  delay: Math.random() * 8,
-  drift: -40 + Math.random() * 80,
-}));
+interface Node {
+  x: number;
+  y: number;
+  color: string;
+  pulse: number;
+  pulseSpeed: number;
+  pulseOffset: number;
+}
 
 export function CinematicHero() {
-  const lightningStreaks = useMemo(() => [
-    { path: LIGHTNING_PATHS[0], x: '18%', y: '10%', rotation: -15, color: '#00e5ff', anim: 'streak-flash-1', w: 55, h: 200 },
-    { path: LIGHTNING_PATHS[1], x: '72%', y: '5%', rotation: 20, color: '#a855f7', anim: 'streak-flash-2', w: 50, h: 210 },
-    { path: LIGHTNING_PATHS[2], x: '40%', y: '8%', rotation: -8, color: '#00e5ff', anim: 'streak-flash-3', w: 60, h: 180 },
-    { path: LIGHTNING_PATHS[3], x: '82%', y: '15%', rotation: 12, color: '#a855f7', anim: 'streak-flash-4', w: 52, h: 165 },
-    { path: LIGHTNING_PATHS[4], x: '30%', y: '12%', rotation: -20, color: '#7c3aed', anim: 'streak-flash-5', w: 58, h: 195 },
-    // Additional diagonal streaks across conduits
-    { path: LIGHTNING_PATHS[0], x: '55%', y: '3%', rotation: -25, color: '#00e5ff', anim: 'streak-flash-4', w: 45, h: 170 },
-    { path: LIGHTNING_PATHS[1], x: '8%', y: '20%', rotation: 30, color: '#a855f7', anim: 'streak-flash-1', w: 48, h: 185 },
-    { path: LIGHTNING_PATHS[2], x: '65%', y: '18%', rotation: -10, color: '#7c3aed', anim: 'streak-flash-2', w: 55, h: 175 },
-    { path: LIGHTNING_PATHS[3], x: '25%', y: '5%', rotation: 15, color: '#00e5ff', anim: 'streak-flash-5', w: 42, h: 160 },
-    { path: LIGHTNING_PATHS[4], x: '88%', y: '8%', rotation: -18, color: '#a855f7', anim: 'streak-flash-3', w: 50, h: 190 },
-  ], []);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animRef = useRef<number>(0);
+  const boltsRef = useRef<Bolt[]>([]);
+  const particlesRef = useRef<Particle[]>([]);
+  const timeRef = useRef(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let W = 0, H = 0;
+    let mouseX = 0.5, mouseY = 0.5;
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      initNodes();
+    };
+
+    const handleMouse = (e: MouseEvent) => {
+      mouseX = e.clientX / W;
+      mouseY = e.clientY / H;
+    };
+
+    // ── Network nodes ──
+    const nodes: Node[] = [];
+    const initNodes = () => {
+      nodes.length = 0;
+      const count = 14 + Math.floor(W / 120);
+      for (let i = 0; i < count; i++) {
+        nodes.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          color: ['#fbbf24', '#00e5ff', '#a855f7', '#fbbf24', '#00e5ff'][i % 5],
+          pulse: 0,
+          pulseSpeed: 1.5 + Math.random() * 2.5,
+          pulseOffset: Math.random() * Math.PI * 2,
+        });
+      }
+    };
+
+    // ── Lightning generation ──
+    function generateBolt(x1: number, y1: number, x2: number, y2: number, color: string, glow: string, width: number, branchChance: number): Bolt {
+      const points: { x: number; y: number }[] = [{ x: x1, y: y1 }];
+      const segments = 12 + Math.floor(Math.random() * 10);
+      const dx = (x2 - x1) / segments;
+      const dy = (y2 - y1) / segments;
+      for (let i = 1; i < segments; i++) {
+        const jitter = (Math.random() - 0.5) * 60;
+        points.push({
+          x: x1 + dx * i + jitter,
+          y: y1 + dy * i + (Math.random() - 0.5) * 30,
+        });
+      }
+      points.push({ x: x2, y: y2 });
+      return { points, life: 0, maxLife: 0.15 + Math.random() * 0.3, color, glow, width, branchChance };
+    }
+
+    function spawnLightningBolt() {
+      const isViolet = Math.random() > 0.5;
+      const color = isViolet ? '#a855f7' : '#00e5ff';
+      const glow = isViolet ? 'rgba(168,85,247,' : 'rgba(0,229,255,';
+      const side = Math.random();
+      let x1: number, y1: number, x2: number, y2: number;
+      if (side < 0.5) {
+        x1 = Math.random() * W;
+        y1 = -10;
+        x2 = x1 + (Math.random() - 0.5) * 300;
+        y2 = H * (0.4 + Math.random() * 0.5);
+      } else {
+        x1 = Math.random() < 0.5 ? -10 : W + 10;
+        y1 = Math.random() * H * 0.5;
+        x2 = W * (0.2 + Math.random() * 0.6);
+        y2 = H * (0.3 + Math.random() * 0.6);
+      }
+      boltsRef.current.push(generateBolt(x1, y1, x2, y2, color, glow, 1 + Math.random() * 2, 0.25));
+    }
+
+    // ── Particle spawn ──
+    function spawnParticle() {
+      const colors = ['#00e5ff', '#a855f7', '#fbbf24', '#00ff88'];
+      const c = colors[Math.floor(Math.random() * colors.length)];
+      particlesRef.current.push({
+        x: W * (0.2 + Math.random() * 0.6),
+        y: H * (0.3 + Math.random() * 0.5),
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: -0.3 - Math.random() * 1.2,
+        size: 1.5 + Math.random() * 3,
+        color: c,
+        alpha: 0,
+        life: 0,
+        maxLife: 3 + Math.random() * 5,
+      });
+    }
+
+    // ── Draw functions ──
+    function drawCoreGlow(t: number) {
+      const cx = W * (0.48 + Math.sin(t * 0.3) * 0.02);
+      const cy = H * (0.48 + Math.cos(t * 0.25) * 0.02);
+      const pulse = 0.5 + Math.sin(t * 1.2) * 0.3;
+      const r = Math.min(W, H) * 0.22 * (1 + pulse * 0.15);
+
+      // Outer glow
+      const grad1 = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 2);
+      grad1.addColorStop(0, `rgba(251,191,36,${0.08 * pulse})`);
+      grad1.addColorStop(0.3, `rgba(0,229,255,${0.04 * pulse})`);
+      grad1.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad1;
+      ctx.fillRect(0, 0, W, H);
+
+      // Inner hot core
+      const grad2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 0.5);
+      grad2.addColorStop(0, `rgba(255,255,255,${0.12 * pulse})`);
+      grad2.addColorStop(0.4, `rgba(251,191,36,${0.15 * pulse})`);
+      grad2.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad2;
+      ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+    }
+
+    function drawHoloGrid(t: number) {
+      ctx.save();
+      const cx = W / 2;
+      const cy = H * 0.55;
+      const gridW = W * 0.7;
+      const gridH = H * 0.5;
+      const spacing = 50;
+      const rotX = 0.45 + Math.sin(t * 0.15) * 0.05;
+      const pulse = 0.4 + Math.sin(t * 0.8) * 0.2;
+
+      ctx.globalAlpha = 0.06 * pulse * 3;
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 0.8;
+
+      // Horizontal lines with perspective
+      for (let i = -8; i <= 8; i++) {
+        const z = i * spacing;
+        const scale = 1 / (1 + z * 0.002);
+        const yOff = z * Math.sin(rotX) * 0.8;
+        ctx.beginPath();
+        for (let x = -gridW / 2; x <= gridW / 2; x += 10) {
+          const px = cx + x * scale;
+          const py = cy + yOff * scale + (x * x) * 0.00005;
+          if (x === -gridW / 2) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+
+      // Vertical lines
+      for (let i = -12; i <= 12; i++) {
+        const x = i * spacing;
+        const scale = 1 / (1 + Math.abs(x) * 0.001);
+        ctx.beginPath();
+        for (let z = -gridH / 2; z <= gridH / 2; z += 10) {
+          const xScale = 1 / (1 + z * 0.002);
+          const px = cx + x * xScale;
+          const py = cy + z * Math.sin(rotX) * xScale + (x * x) * 0.00004;
+          if (z === -gridH / 2) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function drawRadarSweep(t: number) {
+      const cx = W / 2;
+      const cy = H * 0.5;
+      const maxR = Math.min(W, H) * 0.32;
+
+      ctx.save();
+
+      // Concentric rings
+      for (let i = 1; i <= 4; i++) {
+        const r = (maxR / 4) * i;
+        const a = 0.06 + Math.sin(t * 0.5 + i) * 0.02;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(251,191,36,${a})`;
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+
+      // Sweep
+      const angle = t * 1.0;
+      const sweepGrad = ctx.createConicGradient(angle, cx, cy);
+      sweepGrad.addColorStop(0, 'rgba(251,191,36,0.18)');
+      sweepGrad.addColorStop(0.06, 'rgba(0,229,255,0.12)');
+      sweepGrad.addColorStop(0.12, 'transparent');
+      sweepGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = sweepGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, maxR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cross hairs
+      ctx.globalAlpha = 0.04;
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(cx - maxR, cy);
+      ctx.lineTo(cx + maxR, cy);
+      ctx.moveTo(cx, cy - maxR);
+      ctx.lineTo(cx, cy + maxR);
+      ctx.stroke();
+
+      // Blips on the ring (threats)
+      const blipCount = 6;
+      for (let i = 0; i < blipCount; i++) {
+        const bAngle = t * 0.3 + (i / blipCount) * Math.PI * 2;
+        const bR = maxR * (0.4 + (i % 3) * 0.2);
+        const bx = cx + Math.cos(bAngle) * bR;
+        const by = cy + Math.sin(bAngle) * bR;
+        const bPulse = 0.3 + Math.sin(t * 3 + i * 2) * 0.3;
+        ctx.beginPath();
+        ctx.arc(bx, by, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,0,64,${bPulse})`;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(bx, by, 6, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,0,64,${bPulse * 0.2})`;
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawBolts(dt: number) {
+      const bolts = boltsRef.current;
+      for (let i = bolts.length - 1; i >= 0; i--) {
+        const b = bolts[i];
+        b.life += dt;
+        if (b.life > b.maxLife) {
+          bolts.splice(i, 1);
+          continue;
+        }
+        const progress = b.life / b.maxLife;
+        let alpha: number;
+        if (progress < 0.05) alpha = progress / 0.05;
+        else if (progress < 0.15) alpha = 0.3 + Math.random() * 0.7;
+        else if (progress < 0.25) alpha = 0.2 + Math.random() * 0.5;
+        else alpha = Math.max(0, 1 - (progress - 0.25) / 0.75);
+
+        // Glow pass
+        ctx.save();
+        ctx.globalAlpha = alpha * 0.4;
+        ctx.shadowColor = b.color;
+        ctx.shadowBlur = 30;
+        ctx.strokeStyle = b.color;
+        ctx.lineWidth = b.width * 4;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(b.points[0].x, b.points[0].y);
+        for (let j = 1; j < b.points.length; j++) {
+          ctx.lineTo(b.points[j].x, b.points[j].y);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Core bright pass
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 8;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = b.width * 0.8;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(b.points[0].x, b.points[0].y);
+        for (let j = 1; j < b.points.length; j++) {
+          ctx.lineTo(b.points[j].x, b.points[j].y);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Branch lightning
+        if (Math.random() < b.branchChance && b.points.length > 4) {
+          const idx = 2 + Math.floor(Math.random() * (b.points.length - 4));
+          const p = b.points[idx];
+          const angle = Math.atan2(b.points[idx + 1].y - b.points[idx - 1].y, b.points[idx + 1].x - b.points[idx - 1].x) + (Math.random() - 0.5) * 1.5;
+          const len = 30 + Math.random() * 80;
+          const ex = p.x + Math.cos(angle) * len;
+          const ey = p.y + Math.sin(angle) * len;
+          const branch: { x: number; y: number }[] = [{ x: p.x, y: p.y }];
+          const segs = 3 + Math.floor(Math.random() * 3);
+          for (let s = 1; s <= segs; s++) {
+            branch.push({
+              x: p.x + (ex - p.x) * (s / segs) + (Math.random() - 0.5) * 25,
+              y: p.y + (ey - p.y) * (s / segs) + (Math.random() - 0.5) * 15,
+            });
+          }
+          ctx.save();
+          ctx.globalAlpha = alpha * 0.5;
+          ctx.shadowColor = b.color;
+          ctx.shadowBlur = 15;
+          ctx.strokeStyle = b.color;
+          ctx.lineWidth = b.width * 0.5;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(branch[0].x, branch[0].y);
+          for (let s = 1; s < branch.length; s++) ctx.lineTo(branch[s].x, branch[s].y);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }
+
+    function drawParticles(dt: number) {
+      const parts = particlesRef.current;
+      for (let i = parts.length - 1; i >= 0; i--) {
+        const p = parts[i];
+        p.life += dt;
+        if (p.life > p.maxLife) {
+          parts.splice(i, 1);
+          continue;
+        }
+        const progress = p.life / p.maxLife;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx += (Math.random() - 0.5) * 0.05;
+        if (progress < 0.1) p.alpha = progress / 0.1;
+        else if (progress > 0.7) p.alpha = (1 - progress) / 0.3;
+        else p.alpha = 0.6 + Math.sin(p.life * 4) * 0.3;
+
+        ctx.save();
+        ctx.globalAlpha = p.alpha * 0.7;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function drawNodeNetwork(t: number) {
+      ctx.save();
+      // Draw connections
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[j].x - nodes[i].x;
+          const dy = nodes[j].y - nodes[i].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 250) {
+            const a = (1 - dist / 250) * 0.12;
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.strokeStyle = `rgba(0,229,255,${a})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw nodes
+      for (const n of nodes) {
+        const p = 0.5 + Math.sin(t * n.pulseSpeed + n.pulseOffset) * 0.5;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, 2 + p * 2, 0, Math.PI * 2);
+        ctx.fillStyle = n.color;
+        ctx.globalAlpha = 0.3 + p * 0.7;
+        ctx.shadowColor = n.color;
+        ctx.shadowBlur = 8 + p * 10;
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawScanBeam(t: number) {
+      const period = 8;
+      const phase = (t % period) / period;
+      let beamY: number;
+      if (phase < 0.45) beamY = H * 0.08 + (H * 0.84) * (phase / 0.45);
+      else if (phase < 0.5) beamY = -100;
+      else beamY = H * 0.12 + (H * 0.76) * ((phase - 0.5) / 0.45);
+
+      if (beamY > 0 && beamY < H) {
+        const grad = ctx.createLinearGradient(0, 0, W, 0);
+        grad.addColorStop(0, 'transparent');
+        grad.addColorStop(0.3, 'rgba(0,229,255,0.25)');
+        grad.addColorStop(0.5, 'rgba(251,191,36,0.4)');
+        grad.addColorStop(0.7, 'rgba(0,229,255,0.25)');
+        grad.addColorStop(1, 'transparent');
+
+        ctx.save();
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, beamY - 1, W, 2);
+
+        // Glow above and below
+        ctx.globalAlpha = 0.15;
+        ctx.fillRect(0, beamY - 50, W, 50);
+        ctx.globalAlpha = 0.15;
+        ctx.fillRect(0, beamY + 2, W, 50);
+        ctx.restore();
+      }
+    }
+
+    function drawFirewallShimmer(t: number) {
+      const pos = (Math.sin(t * 0.4) * 0.5 + 0.5);
+      const cx = W * pos;
+      const grad = ctx.createLinearGradient(cx - 200, 0, cx + 200, 0);
+      grad.addColorStop(0, 'transparent');
+      grad.addColorStop(0.35, 'rgba(251,191,36,0.03)');
+      grad.addColorStop(0.5, 'rgba(251,191,36,0.08)');
+      grad.addColorStop(0.65, 'rgba(251,191,36,0.03)');
+      grad.addColorStop(1, 'transparent');
+      ctx.save();
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, H * 0.1, W, H * 0.8);
+      ctx.restore();
+    }
+
+    function drawHUDCorners(t: number) {
+      const a = 0.25 + Math.sin(t * 0.8) * 0.15;
+      const len = 50;
+      const pad = 30;
+      ctx.save();
+      ctx.strokeStyle = `rgba(0,229,255,${a})`;
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = 'square';
+
+      // Top-left
+      ctx.beginPath();
+      ctx.moveTo(pad, pad + len); ctx.lineTo(pad, pad); ctx.lineTo(pad + len, pad);
+      ctx.stroke();
+      // Top-right
+      ctx.beginPath();
+      ctx.moveTo(W - pad - len, pad); ctx.lineTo(W - pad, pad); ctx.lineTo(W - pad, pad + len);
+      ctx.stroke();
+      // Bottom-left
+      ctx.beginPath();
+      ctx.moveTo(pad, H - pad - len); ctx.lineTo(pad, H - pad); ctx.lineTo(pad + len, H - pad);
+      ctx.stroke();
+      // Bottom-right
+      ctx.beginPath();
+      ctx.moveTo(W - pad - len, H - pad); ctx.lineTo(W - pad, H - pad); ctx.lineTo(W - pad, H - pad - len);
+      ctx.stroke();
+
+      // Center reticle
+      const cx = W / 2, cy = H / 2;
+      ctx.globalAlpha = a * 0.4;
+      ctx.strokeStyle = '#fbbf24';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 60 + Math.sin(t) * 5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, cy, 120 + Math.cos(t * 0.7) * 8, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // ── Ambient background ──
+    function drawBackground(t: number) {
+      // Deep dark base
+      ctx.fillStyle = '#050810';
+      ctx.fillRect(0, 0, W, H);
+
+      // Subtle moving nebula blobs
+      const blobs = [
+        { x: W * 0.3, y: H * 0.4, r: 300, color: 'rgba(168,85,247,0.04)', speed: 0.2 },
+        { x: W * 0.7, y: H * 0.6, r: 250, color: 'rgba(0,229,255,0.03)', speed: 0.15 },
+        { x: W * 0.5, y: H * 0.3, r: 350, color: 'rgba(251,191,36,0.025)', speed: 0.25 },
+      ];
+      for (const b of blobs) {
+        const bx = b.x + Math.sin(t * b.speed) * 40;
+        const by = b.y + Math.cos(t * b.speed * 0.7) * 30;
+        const grad = ctx.createRadialGradient(bx, by, 0, bx, by, b.r);
+        grad.addColorStop(0, b.color);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+      }
+    }
+
+    // ── Vignette ──
+    function drawVignette() {
+      const grad = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.75);
+      grad.addColorStop(0, 'transparent');
+      grad.addColorStop(1, 'rgba(0,0,0,0.7)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Side darkening for text readability
+      const sideGrad = ctx.createLinearGradient(0, 0, W, 0);
+      sideGrad.addColorStop(0, 'rgba(5,8,16,0.75)');
+      sideGrad.addColorStop(0.2, 'rgba(5,8,16,0.25)');
+      sideGrad.addColorStop(0.5, 'rgba(5,8,16,0.05)');
+      sideGrad.addColorStop(0.8, 'rgba(5,8,16,0.25)');
+      sideGrad.addColorStop(1, 'rgba(5,8,16,0.75)');
+      ctx.fillStyle = sideGrad;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // ── Main loop ──
+    let lastTime = performance.now();
+    let boltTimer = 0;
+    let particleTimer = 0;
+
+    const frame = (now: number) => {
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+      timeRef.current += dt;
+      const t = timeRef.current;
+
+      // Spawn lightning
+      boltTimer += dt;
+      if (boltTimer > 0.8 + Math.random() * 1.5) {
+        boltTimer = 0;
+        const count = 1 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < count; i++) spawnLightningBolt();
+      }
+
+      // Spawn particles
+      particleTimer += dt;
+      if (particleTimer > 0.15 && particlesRef.current.length < 50) {
+        particleTimer = 0;
+        spawnParticle();
+      }
+
+      // ── Draw all layers ──
+      drawBackground(t);
+      drawHoloGrid(t);
+      drawRadarSweep(t);
+      drawCoreGlow(t);
+      drawNodeNetwork(t);
+      drawBolts(dt);
+      drawParticles(dt);
+      drawScanBeam(t);
+      drawFirewallShimmer(t);
+      drawVignette();
+      drawHUDCorners(t);
+
+      animRef.current = requestAnimationFrame(frame);
+    };
+
+    resize();
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', handleMouse);
+    animRef.current = requestAnimationFrame(frame);
+
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('mousemove', handleMouse);
+    };
+  }, []);
 
   return (
-    <div className="cinematic-hero">
-      {/* Layer 0: Drifting cinematic background image */}
-      <div className="cinematic-bg">
-        <img
-          src="/hero-bg.png"
-          alt=""
-          className="w-full h-full object-cover"
-          style={{ minHeight: '100vh' }}
-        />
-      </div>
-
-      {/* Layer 0.5: Deep vignette + dark gradient for text readability */}
-      <div
-        className="absolute inset-0 z-[1]"
-        style={{
-          background:
-            'radial-gradient(ellipse 80% 70% at 50% 50%, transparent 20%, rgba(0,0,0,0.5) 70%, rgba(0,0,0,0.85) 100%)',
-        }}
-      />
-      <div
-        className="absolute inset-0 z-[1]"
-        style={{
-          background:
-            'linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.15) 65%, rgba(0,0,0,0.7) 100%)',
-        }}
-      />
-      <div
-        className="absolute bottom-0 left-0 right-0 h-48 z-[1]"
-        style={{ background: 'linear-gradient(to top, var(--bg) 0%, transparent 100%)' }}
-      />
-
-      {/* Layer 1: Volumetric light rays */}
-      <div className="volumetric-rays" />
-
-      {/* Layer 2: Core glow (supercomputer heart) */}
-      <div
-        className="core-glow"
-        style={{
-          top: '50%',
-          left: '50%',
-          width: '300px',
-          height: '300px',
-          background: 'radial-gradient(circle, rgba(251,191,36,0.2) 0%, rgba(0,229,255,0.08) 40%, transparent 70%)',
-        }}
-      />
-      <div
-        className="core-glow"
-        style={{
-          top: '48%',
-          left: '52%',
-          width: '150px',
-          height: '150px',
-          background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(251,191,36,0.1) 30%, transparent 70%)',
-          animationDelay: '-2.5s',
-        }}
-      />
-
-      {/* Layer 2: Animated lightning streaks */}
-      {lightningStreaks.map((s, i) => (
-        <div
-          key={i}
-          className="lightning-streak"
-          style={{
-            left: s.x,
-            top: s.y,
-            width: s.w,
-            height: s.h,
-            '--streak-color': s.color,
-            animation: `${s.anim} ${6 + (i % 3) * 2}s ease-in-out infinite`,
-            animationDelay: `${i * 0.4}s`,
-            transform: `rotate(${s.rotation}deg)`,
-          } as React.CSSProperties}
-        >
-          <svg width={s.w} height={s.h} viewBox={`0 0 ${s.w} ${s.h}`} fill="none">
-            <path
-              d={s.path.replace(/L/g, `L`).replace(/\d+,-\d+/g, (match) => {
-                const [x, y] = match.split(',').map(Number);
-                return `${x},${y}`;
-              })}
-              stroke={s.color}
-              strokeWidth={1.5 + (i % 2)}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            {/* Glow halo around bolt */}
-            <path
-              d={s.path}
-              stroke={s.color}
-              strokeWidth={4 + (i % 3) * 2}
-              strokeLinecap="round"
-              opacity={0.15}
-            />
-          </svg>
-        </div>
-      ))}
-
-      {/* Layer 3: Holographic golden grid projection */}
-      <div className="holo-grid" />
-
-      {/* Layer 3: Node network connections */}
-      <div className="node-network">
-        {NETWORK_LINES.map((l, i) => {
-          const dx = l.x2 - l.x1;
-          const dy = l.y2 - l.y1;
-          const length = Math.sqrt(dx * dx + dy * dy);
-          const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-          return (
-            <div
-              key={`line-${i}`}
-              className="node-line"
-              style={{
-                left: `${l.x1}%`,
-                top: `${l.y1}%`,
-                width: `${length}%`,
-                background: l.color,
-                '--line-speed': `${l.speed}s`,
-                '--line-delay': `${l.delay}s`,
-                transform: `rotate(${angle}deg)`,
-              } as React.CSSProperties}
-            />
-          );
-        })}
-        {NETWORK_NODES.map((n, i) => (
-          <div
-            key={`node-${i}`}
-            className="node"
-            style={{
-              left: `${n.x}%`,
-              top: `${n.y}%`,
-              color: n.color,
-              background: n.color,
-              '--node-speed': `${n.speed}s`,
-              '--node-delay': `${n.delay}s`,
-            } as React.CSSProperties}
-          />
-        ))}
-      </div>
-
-      {/* Layer 4: Radar sweep (threat detection) */}
-      <div className="radar-sweep" />
-
-      {/* Layer 4: Floating energy particles */}
-      {PARTICLES.map((p, i) => (
-        <div
-          key={`particle-${i}`}
-          className="energy-particle"
-          style={{
-            left: p.left,
-            bottom: p.bottom,
-            background: p.color,
-            boxShadow: `0 0 6px ${p.color}, 0 0 12px ${p.color}40`,
-            '--p-size': `${p.size}px`,
-            '--p-speed': `${p.speed}s`,
-            '--p-delay': `${p.delay}s`,
-            '--p-drift': `${p.drift}px`,
-          } as React.CSSProperties}
-        />
-      ))}
-
-      {/* Layer 5: Scan beam */}
-      <div className="scan-beam" />
-
-      {/* Layer 3: Firewall shimmer */}
-      <div className="firewall-shimmer" />
-
-      {/* Layer 6: HUD frame corners */}
-      <div className="hud-frame inset-0">
-        <div className="corner corner-tl" />
-        <div className="corner corner-tr" />
-        <div className="corner corner-bl" />
-        <div className="corner corner-br" />
-      </div>
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      style={{ zIndex: 0 }}
+    />
   );
 }
