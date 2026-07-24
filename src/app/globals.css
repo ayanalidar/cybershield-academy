@@ -991,9 +991,11 @@ html {
 
 /* Base cinematic container */
 .cinematic-hero {
-  position: relative;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   background: #000;
+  z-index: 0;
 }
 
 /* Volumetric light rays from the supercomputer core */
