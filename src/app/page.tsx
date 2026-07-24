@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Scene3D } from '@/components/scene3d';
+import { CinematicHero } from '@/components/cinematic-hero';
 
 /* ═══════════════════════════════════════════════════════════════
    DATA
@@ -364,17 +364,8 @@ function Hero() {
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   return (
-    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 scanline-overlay thunderstorm">
-      {/* Cinematic background image */}
-      <div className="absolute inset-0 z-0">
-        <img src="/hero-bg.png" alt="" className="w-full h-full object-cover opacity-40 dark:opacity-30" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/80" />
-      </div>
-      <MatrixRain />
-      <Scene3D variant="full" />
-
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none z-0" style={{ background: 'radial-gradient(ellipse at center, rgba(0,255,136,0.08) 0%, rgba(0,229,255,0.04) 30%, transparent 70%)' }} />
+    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+      <CinematicHero />
 
       <motion.div style={{ y, opacity }} className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">

@@ -984,3 +984,430 @@ html {
 :root .lightning-bolt { filter: drop-shadow(0 0 3px var(--bolt-color, #0ea5e9)); opacity: 0.1; }
 :root .cube-face { border-color: rgba(5,150,105,0.2); background: rgba(5,150,105,0.03); }
 :root .ring-3d { border-color: rgba(5,150,105,0.15); }
+
+/* ═══════════════════════════════════════════════════════════════
+   CINEMATIC QUANTUM SUPERCOMPUTER HERO
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Base cinematic container */
+.cinematic-hero {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+/* Volumetric light rays from the supercomputer core */
+.cinematic-hero .volumetric-rays {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    conic-gradient(
+      from 180deg at 50% 60%,
+      transparent 0deg,
+      rgba(0, 229, 255, 0.03) 5deg,
+      transparent 10deg,
+      rgba(168, 85, 247, 0.02) 20deg,
+      transparent 25deg,
+      rgba(251, 191, 36, 0.02) 35deg,
+      transparent 40deg,
+      rgba(0, 229, 255, 0.03) 50deg,
+      transparent 55deg,
+      rgba(168, 85, 247, 0.02) 65deg,
+      transparent 70deg,
+      rgba(251, 191, 36, 0.02) 80deg,
+      transparent 85deg,
+      rgba(0, 229, 255, 0.03) 95deg,
+      transparent 100deg,
+      transparent 180deg,
+      rgba(255, 0, 64, 0.015) 190deg,
+      transparent 195deg,
+      rgba(0, 229, 255, 0.02) 210deg,
+      transparent 215deg,
+      rgba(251, 191, 36, 0.02) 230deg,
+      transparent 235deg,
+      rgba(168, 85, 247, 0.02) 250deg,
+      transparent 255deg,
+      rgba(0, 229, 255, 0.015) 270deg,
+      transparent 275deg,
+      rgba(255, 0, 64, 0.02) 290deg,
+      transparent 295deg,
+      rgba(251, 191, 36, 0.02) 310deg,
+      transparent 315deg,
+      rgba(0, 229, 255, 0.015) 330deg,
+      transparent 340deg,
+      rgba(168, 85, 247, 0.02) 355deg,
+      transparent 360deg
+    );
+  animation: rays-rotate 60s linear infinite;
+  filter: blur(30px);
+}
+
+@keyframes rays-rotate {
+  0% { transform: rotate(0deg) scale(1.5); }
+  100% { transform: rotate(360deg) scale(1.5); }
+}
+
+/* Animated lightning streaks across the image */
+.cinematic-hero .lightning-streak {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.cinematic-hero .lightning-streak svg {
+  filter: drop-shadow(0 0 8px var(--streak-color, #00e5ff))
+          drop-shadow(0 0 20px var(--streak-color, #00e5ff))
+          drop-shadow(0 0 40px var(--streak-color, #00e5ff));
+}
+
+@keyframes streak-flash-1 {
+  0%, 100% { opacity: 0; }
+  2% { opacity: 1; }
+  3% { opacity: 0.1; }
+  5% { opacity: 0.9; }
+  7% { opacity: 0; }
+  40% { opacity: 0; }
+  42% { opacity: 1; }
+  43% { opacity: 0.05; }
+  45% { opacity: 0.7; }
+  47% { opacity: 0; }
+  75% { opacity: 0; }
+  77% { opacity: 0.8; }
+  78% { opacity: 0.1; }
+  80% { opacity: 0.6; }
+  82% { opacity: 0; }
+}
+
+@keyframes streak-flash-2 {
+  0%, 100% { opacity: 0; }
+  15% { opacity: 0; }
+  17% { opacity: 1; }
+  18% { opacity: 0.05; }
+  20% { opacity: 0.85; }
+  22% { opacity: 0; }
+  55% { opacity: 0; }
+  57% { opacity: 0.9; }
+  58% { opacity: 0.1; }
+  60% { opacity: 0.7; }
+  62% { opacity: 0; }
+  88% { opacity: 0; }
+  90% { opacity: 1; }
+  91% { opacity: 0.15; }
+  93% { opacity: 0.5; }
+  95% { opacity: 0; }
+}
+
+@keyframes streak-flash-3 {
+  0%, 100% { opacity: 0; }
+  8% { opacity: 0; }
+  10% { opacity: 0.7; }
+  11% { opacity: 0; }
+  30% { opacity: 0; }
+  32% { opacity: 1; }
+  33% { opacity: 0.1; }
+  35% { opacity: 0.8; }
+  36% { opacity: 0; }
+  63% { opacity: 0; }
+  65% { opacity: 0.9; }
+  66% { opacity: 0.05; }
+  68% { opacity: 0.6; }
+  70% { opacity: 0; }
+  92% { opacity: 0; }
+  93% { opacity: 0.8; }
+  94% { opacity: 0; }
+}
+
+@keyframes streak-flash-4 {
+  0%, 100% { opacity: 0; }
+  5% { opacity: 0; }
+  7% { opacity: 0.9; }
+  8% { opacity: 0; }
+  25% { opacity: 0; }
+  27% { opacity: 0.7; }
+  28% { opacity: 0.05; }
+  30% { opacity: 0.85; }
+  31% { opacity: 0; }
+  58% { opacity: 0; }
+  60% { opacity: 1; }
+  61% { opacity: 0.1; }
+  63% { opacity: 0.7; }
+  64% { opacity: 0; }
+  85% { opacity: 0; }
+  87% { opacity: 0.8; }
+  88% { opacity: 0; }
+}
+
+@keyframes streak-flash-5 {
+  0%, 100% { opacity: 0; }
+  12% { opacity: 0; }
+  14% { opacity: 0.8; }
+  15% { opacity: 0; }
+  33% { opacity: 0; }
+  35% { opacity: 1; }
+   36% { opacity: 0.05; }
+  38% { opacity: 0.7; }
+  39% { opacity: 0; }
+  70% { opacity: 0; }
+  72% { opacity: 0.9; }
+  73% { opacity: 0.1; }
+  75% { opacity: 0.5; }
+  77% { opacity: 0; }
+}
+
+/* Holographic grid projection overlay */
+.cinematic-hero .holo-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image:
+    linear-gradient(rgba(251, 191, 36, 0.6) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(251, 191, 36, 0.6) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: holo-grid-pulse 4s ease-in-out infinite;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 55%, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 55%, black 20%, transparent 70%);
+}
+
+@keyframes holo-grid-pulse {
+  0%, 100% { opacity: 0.06; transform: perspective(800px) rotateX(15deg) scale(1); }
+  50% { opacity: 0.12; transform: perspective(800px) rotateX(15deg) scale(1.02); }
+}
+
+/* Radar sweep */
+.cinematic-hero .radar-sweep {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.cinematic-hero .radar-sweep::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(251, 191, 36, 0.15);
+  box-shadow:
+    0 0 0 40px rgba(251, 191, 36, 0.04),
+    0 0 0 80px rgba(251, 191, 36, 0.03),
+    0 0 0 120px rgba(251, 191, 36, 0.02),
+    0 0 0 160px rgba(251, 191, 36, 0.01);
+}
+
+.cinematic-hero .radar-sweep::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(251, 191, 36, 0.15) 15deg,
+    rgba(0, 229, 255, 0.1) 30deg,
+    transparent 60deg
+  );
+  animation: radar-spin 6s linear infinite;
+  mask-image: radial-gradient(circle, transparent 15%, black 20%, black 48%, transparent 50%);
+  -webkit-mask-image: radial-gradient(circle, transparent 15%, black 20%, black 48%, transparent 50%);
+}
+
+@keyframes radar-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Glowing node connections (network mesh) */
+.cinematic-hero .node-network {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.cinematic-hero .node-network .node {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  animation: node-pulse var(--node-speed, 3s) ease-in-out infinite;
+  animation-delay: var(--node-delay, 0s);
+}
+
+.cinematic-hero .node-network .node-line {
+  position: absolute;
+  height: 1px;
+  transform-origin: left center;
+  animation: line-pulse var(--line-speed, 4s) ease-in-out infinite;
+  animation-delay: var(--line-delay, 0s);
+}
+
+@keyframes node-pulse {
+  0%, 100% { opacity: 0.2; transform: scale(1); box-shadow: 0 0 4px currentColor; }
+  50% { opacity: 1; transform: scale(1.8); box-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
+}
+
+@keyframes line-pulse {
+  0%, 100% { opacity: 0.05; }
+  50% { opacity: 0.4; }
+}
+
+/* Holographic scan beam (horizontal) */
+.cinematic-hero .scan-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(0, 229, 255, 0.4),
+    rgba(251, 191, 36, 0.6),
+    rgba(0, 229, 255, 0.4),
+    transparent
+  );
+  box-shadow:
+    0 0 15px rgba(0, 229, 255, 0.4),
+    0 0 30px rgba(251, 191, 36, 0.2),
+    0 60px 0 rgba(0, 229, 255, 0.1),
+    0 -60px 0 rgba(0, 229, 255, 0.1);
+  animation: scan-beam-sweep 8s ease-in-out infinite;
+}
+
+@keyframes scan-beam-sweep {
+  0% { top: 10%; opacity: 0; }
+  5% { opacity: 1; }
+  45% { top: 85%; opacity: 1; }
+  50% { top: 85%; opacity: 0; }
+  55% { opacity: 0; }
+  56% { top: 15%; opacity: 1; }
+  95% { top: 80%; opacity: 1; }
+  100% { top: 80%; opacity: 0; }
+}
+
+/* Floating energy particles */
+.cinematic-hero .energy-particle {
+  position: absolute;
+  width: var(--p-size, 3px);
+  height: var(--p-size, 3px);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 4;
+  animation: particle-rise var(--p-speed, 8s) linear infinite;
+  animation-delay: var(--p-delay, 0s);
+}
+
+@keyframes particle-rise {
+  0% { transform: translateY(0) translateX(0) scale(0); opacity: 0; }
+  10% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; }
+  90% { opacity: 0; }
+  100% { transform: translateY(-100vh) translateX(var(--p-drift, 30px)) scale(0.5); opacity: 0; }
+}
+
+/* Core pulsing glow (the supercomputer heart) */
+.cinematic-hero .core-glow {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 50%;
+  animation: core-breathe 5s ease-in-out infinite;
+}
+
+@keyframes core-breathe {
+  0%, 100% {
+    opacity: 0.15;
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 0 60px rgba(251, 191, 36, 0.3), 0 0 120px rgba(251, 191, 36, 0.15);
+  }
+  50% {
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(1.15);
+    box-shadow: 0 0 100px rgba(251, 191, 36, 0.5), 0 0 200px rgba(251, 191, 36, 0.25), 0 0 300px rgba(0, 229, 255, 0.1);
+  }
+}
+
+/* Firewall barrier shimmer */
+.cinematic-hero .firewall-shimmer {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(251, 191, 36, 0.06) 45%,
+    rgba(251, 191, 36, 0.12) 50%,
+    rgba(251, 191, 36, 0.06) 55%,
+    transparent 60%
+  );
+  background-size: 300% 100%;
+  animation: firewall-pass 5s ease-in-out infinite;
+  mask-image: linear-gradient(to bottom, transparent 10%, black 30%, black 70%, transparent 90%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 10%, black 30%, black 70%, transparent 90%);
+}
+
+@keyframes firewall-pass {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* HUD frame corners (tech overlay) */
+.cinematic-hero .hud-frame {
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.cinematic-hero .hud-frame .corner {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-color: rgba(0, 229, 255, 0.4);
+  border-style: solid;
+  border-width: 0;
+  animation: corner-pulse 4s ease-in-out infinite;
+}
+
+.cinematic-hero .hud-frame .corner-tl { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; }
+.cinematic-hero .hud-frame .corner-tr { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; }
+.cinematic-hero .hud-frame .corner-bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
+.cinematic-hero .hud-frame .corner-br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
+
+@keyframes corner-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; border-color: rgba(251, 191, 36, 0.6); }
+}
+
+/* Ambient camera drift (subtle parallax on the base image) */
+.cinematic-hero .cinematic-bg {
+  position: absolute;
+  inset: -20px;
+  z-index: 0;
+  animation: camera-drift 20s ease-in-out infinite;
+}
+
+@keyframes camera-drift {
+  0%, 100% { transform: scale(1.08) translate(0, 0); }
+  25% { transform: scale(1.1) translate(-8px, 4px); }
+  50% { transform: scale(1.08) translate(5px, -6px); }
+  75% { transform: scale(1.1) translate(-3px, 8px); }
+}
+
+/* Light mode cinematic overrides */
+:root .cinematic-hero .holo-grid { opacity: 0.04; }
+:root .cinematic-hero .radar-sweep::before { border-color: rgba(217, 119, 6, 0.1); }
+:root .cinematic-hero .radar-sweep::after { background: conic-gradient(from 0deg, transparent 0deg, rgba(217,119,6,0.08) 15deg, transparent 60deg); }
+:root .cinematic-hero .scan-beam { box-shadow: 0 0 10px rgba(14,165,233,0.2); }
+:root .cinematic-hero .core-glow { opacity: 0.08; }
+:root .cinematic-hero .firewall-shimmer { opacity: 0.5; }
+:root .cinematic-hero .volumetric-rays { opacity: 0.5; }
